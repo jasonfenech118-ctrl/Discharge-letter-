@@ -248,6 +248,13 @@
   .cat-grid{display:grid;grid-template-columns:1.4fr .8fr 1.4fr auto;gap:8px;align-items:end}
   .cat-grid input,.cat-grid select{width:100%;font-family:var(--sans);font-size:13px;border:1px solid #b9c6d8;border-radius:7px;padding:8px;background:#fff}
   .cat-grid label{font-family:var(--sans);font-size:11.5px;font-weight:700;color:#33415a}
+  .cat-item-main{flex:1 1 auto;min-width:0}
+  .cat-phrase{width:100%;margin-top:5px;font-family:var(--sans);font-size:12.5px;border:1px solid #cdd8e8;border-radius:6px;padding:6px 8px;background:#fff;color:var(--ink)}
+  .wording-row{display:flex;flex-direction:column;gap:4px;margin:0 0 9px}
+  .wording-row label{font-family:var(--sans);font-size:12px;font-weight:700;color:#33415a}
+  .wording-row textarea{width:100%;min-height:58px;font-family:var(--sans);font-size:12.5px;line-height:1.35;border:1px solid #b9c6d8;border-radius:7px;padding:8px;background:#fff;color:var(--ink);resize:vertical}
+  .wording-sub{font-family:var(--sans);font-size:11.5px;color:#65758e;margin:0 0 8px}
+  .cat-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 
   /* ---------- PRINT ---------- */
   @media print{
@@ -295,7 +302,7 @@
       <button class="btn" onclick="saveToSharePoint()">Save to SharePoint</button>
       <button class="btn" onclick="window.print()">Print</button>
       <button class="btn ghost" onclick="openWizard()">Wizard</button>
-      <button class="btn ghost" onclick="openCatalogueManager()">Catalogue</button>
+      <button class="btn ghost" onclick="openCatalogueManager()">Catalogue &amp; Wording</button>
       <button class="btn ghost" onclick="addBullet()">+ Care-plan line</button>
       <button class="btn ghost" onclick="clearForm()">Clear</button>
       <span class="format-tools" aria-label="Text formatting tools">
@@ -339,8 +346,8 @@
   <div id="catalogueModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="catTitle" onclick="if(event.target===this) closeCatalogueManager()">
     <div class="modal-card catalogue-card">
       <button class="modal-x" onclick="closeCatalogueManager()" aria-label="Close">&times;</button>
-      <h2 id="catTitle">Catalogue &amp; Consultants</h2>
-      <p class="modal-sub">Add or remove consultants, one-piece pouches, two-piece baseplates, and two-piece bags. Lists are sorted alphabetically and saved in this browser.</p>
+      <h2 id="catTitle">Catalogue &amp; Wording</h2>
+      <p class="modal-sub">Edit consultants, appliances and their wording, the per-type body templates, and the care-plan bullets. Everything is saved in this browser and can be exported to a file to back up or share.</p>
       <div id="catBody" class="cat-wrap"></div>
     </div>
   </div>
@@ -916,32 +923,56 @@
   }
 
   /* ----------------------------------------------------------------
-     Body wording templates — one maintained template per stoma type.
-     Edit the phrasing here to keep each type's standard letter wording.
-     Placeholders in [ ] are filled in from the wizard / letter fields.
+     Body wording templates — one editable template per stoma type.
+     Each type has an "opening" line and a "discharge" paragraph.
+     Placeholders in {curly braces} are filled from the wizard/letter:
+       {who} {pron} {procedure} {type} {date} {consultant}
+       {colour} {function} {skin} {rod} {teaching} {stents}
+     These are saved in the browser and can be exported/imported.
   ----------------------------------------------------------------- */
-  var BODY_TEMPLATES = {
+  var DEFAULT_BODY_TEMPLATES = {
     colostomy: {
-      label: "colostomy",
-      // sentence describing what the patient was taught before discharge
-      careAdvice: "colostomy appliance management and given dietary advice",
-      extraClause: function(){ return ""; }
+      opening:   "{who} underwent {procedure}{formation} on {date}. {pron} is under the care of {consultant}.",
+      discharge: "On discharge, the stoma colour was {colour}, the stoma was {function}, and the peristomal skin was {skin}.{rod} During hospitalisation the patient was informed about colostomy appliance management and given dietary advice.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate colostomy care into the home environment."
     },
     ileostomy: {
-      label: "ileostomy",
-      careAdvice: "ileostomy appliance management and advised on the importance of adequate fluid and salt intake to prevent dehydration",
-      extraClause: function(){ return ""; }
+      opening:   "{who} underwent {procedure}{formation} on {date}. {pron} is under the care of {consultant}.",
+      discharge: "On discharge, the stoma colour was {colour}, the stoma was {function}, and the peristomal skin was {skin}.{rod} During hospitalisation the patient was informed about ileostomy appliance management and advised on the importance of adequate fluid and salt intake to prevent dehydration.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate ileostomy care into the home environment."
     },
     urostomy: {
-      label: "urostomy",
-      careAdvice: "urostomy appliance management",
-      extraClause: function(){ return WZ.urostomyStents === 'yes' ? ", including care of the ureteric stents in situ" : ""; }
+      opening:   "{who} underwent {procedure}{formation} on {date}. {pron} is under the care of {consultant}.",
+      discharge: "On discharge, the stoma colour was {colour}, the stoma was {function}, and the peristomal skin was {skin}.{rod} During hospitalisation the patient was informed about urostomy appliance management{stents}.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate urostomy care into the home environment."
     }
   };
-  function bodyTemplate(){
-    return BODY_TEMPLATES[WZ.type] || BODY_TEMPLATES[curType] || {
-      label: "stoma", careAdvice: "appliance management", extraClause: function(){ return ""; }
-    };
+  var BODY_TEMPLATES = loadBodyTemplates();
+  function loadBodyTemplates(){
+    try{
+      var raw = localStorage.getItem('stomaLetterBodyTemplatesV1');
+      if(raw){
+        var saved = JSON.parse(raw), out = clone(DEFAULT_BODY_TEMPLATES);
+        ['colostomy','ileostomy','urostomy'].forEach(function(t){
+          if(saved[t]){
+            if(typeof saved[t].opening === 'string')   out[t].opening = saved[t].opening;
+            if(typeof saved[t].discharge === 'string') out[t].discharge = saved[t].discharge;
+          }
+        });
+        return out;
+      }
+    }catch(e){}
+    return clone(DEFAULT_BODY_TEMPLATES);
+  }
+  function saveBodyTemplates(){
+    try{ localStorage.setItem('stomaLetterBodyTemplatesV1', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
+  }
+  function bodyTemplateFor(type){
+    return BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES.colostomy;
+  }
+  // Fill {placeholders} in a body template. Values are escaped; {procedure} is bolded.
+  function fillBodyTemplate(tpl, vars){
+    return (tpl || '').replace(/\{(\w+)\}/g, function(m, key){
+      if(key === 'procedure') return '<strong>' + _esc(vars.procedure || '') + '</strong>';
+      return (key in vars) ? _esc(vars[key]) : m;
+    });
   }
 
   function applyWizard(){
@@ -961,32 +992,34 @@
     setFld('.fld-sname', WZ.sname);
     setFld('.fld-id', WZ.id);
 
+    // Values available to the body templates as {placeholders}
+    var proc = WZ.procedure || "[procedure]";
+    var typeWord = subtypeLabel() ? subtypeLabel().toLowerCase() : (WZ.type || "[colostomy / ileostomy / urostomy]");
+    var mentionsStoma = /colostomy|ileostomy|urostomy|conduit|stoma|formation/i.test(proc);
+    var bodyVars = {
+      who: ((WZ.title ? WZ.title + " " : "") + (WZ.sname || "")).trim() || "[Patient]",
+      pron: (WZ.title === "Mr") ? "He" : ((WZ.title === "Ms" || WZ.title === "Mrs") ? "She" : "He/She"),
+      procedure: proc,
+      type: typeWord,
+      formation: mentionsStoma ? "" : (" with formation of a " + typeWord),
+      date: _fmtDate(WZ.opdate) || "[date of operation]",
+      consultant: WZ.consultant || "[consultant]",
+      colour: WZ.stomaColour || "[stoma colour]",
+      "function": WZ.stomaFunction || "[function]",
+      skin: WZ.peristomalSkin || "[peristomal skin]",
+      rod: (rodApplies() && WZ.rodInSitu === 'yes')
+        ? (" A rod is in situ" + (WZ.rodRemovalDate ? " and is expected to be removed on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
+        : "",
+      teaching: WZ.teaching === 'yes' ? (" A teaching session was done with " + (WZ.teachingWith || "the patient") + ".") : "",
+      stents: (WZ.type === 'urostomy' && WZ.urostomyStents === 'yes') ? ", including care of the ureteric stents in situ" : ""
+    };
+    var tpl = bodyTemplateFor(WZ.type || curType);
     var body = document.querySelector('.body');
     if(body && body.children[0]){
-      var who = ((WZ.title ? WZ.title + " " : "") + (WZ.sname || "")).trim() || "[Patient]";
-      var pron = (WZ.title === "Mr") ? "He" : ((WZ.title === "Ms" || WZ.title === "Mrs") ? "She" : "He/She");
-      var proc = WZ.procedure || "[procedure]";
-      var typeWord = subtypeLabel() ? subtypeLabel().toLowerCase() : (WZ.type || "[colostomy / ileostomy / urostomy]");
-      var when = _fmtDate(WZ.opdate) || "[date of operation]";
-      var cons = WZ.consultant || "[consultant]";
-      var mentionsStoma = /colostomy|ileostomy|urostomy|conduit|stoma|formation/i.test(proc);
-      var clause = mentionsStoma ? "" : (" with formation of a " + typeWord);
-      // Surgery type shown in bold, per letter house style
-      body.children[0].innerHTML = _esc(who) + " underwent <strong>" + _esc(proc) + "</strong>" + _esc(clause)
-        + " on " + _esc(when) + ". " + pron + " is under the care of " + _esc(cons) + ".";
+      body.children[0].innerHTML = fillBodyTemplate(tpl.opening, bodyVars);
     }
     if(body && body.children[1]){
-      var teach = WZ.teaching === 'yes' ? (" A teaching session was done with " + (WZ.teachingWith || "the patient") + ".") : "";
-      var rodSentence = (rodApplies() && WZ.rodInSitu === 'yes')
-        ? (" A rod is in situ" + (WZ.rodRemovalDate ? " and is expected to be removed on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
-        : "";
-      var tpl = bodyTemplate();
-      body.children[1].innerHTML = "On discharge, the stoma colour was " + _esc(WZ.stomaColour || "[stoma colour]")
-        + ", the stoma was " + _esc(WZ.stomaFunction || "[function]")
-        + ", and the peristomal skin was " + _esc(WZ.peristomalSkin || "[peristomal skin]") + "."
-        + _esc(rodSentence)
-        + " During hospitalisation the patient was informed about " + _esc(tpl.careAdvice) + _esc(tpl.extraClause()) + "." + _esc(teach)
-        + " However, the patient still needs assistance with stoma care until fully able to integrate " + _esc(tpl.label) + " care into the home environment.";
+      body.children[1].innerHTML = fillBodyTemplate(tpl.discharge, bodyVars);
     }
 
     // Discharge appliance sentence (bold, house style)
@@ -1009,6 +1042,73 @@
 
   function bold(s){ return '<strong>' + s + '</strong>'; }
 
+  /* ----------------------------------------------------------------
+     Care-plan bullet wording — every standard sentence is editable.
+     The logic below still decides WHICH bullets appear; the WORDING
+     of each comes from here. Placeholders in {curly braces} are filled
+     in (e.g. {date}, {word}, {rodWhen}, {from}, {to}).
+     Saved in the browser; included in export/import.
+  ----------------------------------------------------------------- */
+  var DEFAULT_PLAN_PHRASES = {
+    // --- two-piece systems ---
+    "two.flangeChange":   "Flange/baseplate to be changed on alternate days. Next change due: {date}.",
+    "two.uroStentsA":     "Bag is to be changed on alternate days with the flange until the stents are in situ.",
+    "two.uroStentsB":     "Once the stents come out on their own, the bag should be changed daily and emptied when one-third full.",
+    "two.uroNoStents":    "Urostomy bag should be changed daily and emptied when one-third full.",
+    "two.rodA":           "Bag is to be changed on alternate days with the flange while the rod is in situ{rodWhen}.",
+    "two.rodB":           "Empty the bag when one-third full. Once the rod is removed, the bag may be changed as required.",
+    "two.closed":         "Pouch to be changed when one-third full, from once to twice daily.",
+    "two.drainable":      "Bag to be changed daily and emptied when one-third full.",
+    "two.default":        "Bag to be changed according to outlet type and emptied/changed when one-third full.",
+    "two.drainableExtra": "If the output becomes liquid, the drainable bag may be used and emptied when one-third full.",
+    "two.removeStomahesive": "Soap and water is to be used to remove the Stomahesive baseplate gently.",
+    "two.removeOther":    "A minimal amount of adhesive remover spray must be used to remove the baseplate gently.",
+    // --- one-piece systems ---
+    "one.uroStentsA":     "While the stents are in situ, change the pouch on alternate days.",
+    "one.uroStentsB":     "Once the stents come out on their own, change the pouch daily and empty it when one-third full.",
+    "one.uroNoStents":    "Urostomy pouch should be changed daily and emptied when one-third full.",
+    "one.rodA":           "The pouch is to be changed on alternate days while the rod is in situ{rodWhen}.",
+    "one.rodB":           "Empty the pouch when one-third full. Once the rod is removed, change the pouch as required.",
+    "one.closed":         "Pouch to be changed when one-third full, from once to twice daily.",
+    "one.drainable":      "Change of pouch to be carried out daily. Pouch must be emptied when one-third full.",
+    "one.default":        "Pouch to be changed according to outlet type and emptied/changed when one-third full.",
+    "one.removeSpray":    "A minimal amount of adhesive remover spray must be used to remove the pouch gently.",
+    // --- common / accessory bullets ---
+    "common.wash":        "Wash stoma and peristomal skin well with tap water and pat dry.",
+    "common.aperture":    "Aperture of the {word} to be cut to the shape and size of the stoma; adjust the cutting template accordingly.",
+    "acc.barrierWipe":    "Use a protective wipe once daily after cleansing and drying the stoma and peristomal skin.",
+    "acc.powder":         "Apply protective powder over the skin excoriation and dust off the excess; stop once the skin heals.",
+    "acc.mucoSep":        "Apply protective powder over the mucocutaneous separation and dust off the excess; stop once the separation heals.",
+    "acc.belt":           "Stoma belt should be kept on at all times, especially during bed time.",
+    "common.hair":        "Peristomal hair shaving is to be done as necessary to prevent hair folliculitis.",
+    "acc.filler":         "Apply a generous amount of filler paste from {from} to {to} o'clock location around the stoma.",
+    "acc.mucusFistula":   "Mucus fistula: wash the stoma and peristomal skin well and pat dry. Apply Bactigras/Paraffin dressing and a dry dressing to cover. Dressing to be changed on alternate days."
+  };
+  // Bullets that are shown in bold in the letter (house style).
+  var PLAN_BOLD_KEYS = { "two.uroStentsA":1, "two.rodA":1, "one.uroStentsA":1, "one.rodA":1, "acc.belt":1, "acc.filler":1 };
+  var PLAN_PHRASES = loadPlanPhrases();
+  function loadPlanPhrases(){
+    try{
+      var raw = localStorage.getItem('stomaLetterPlanPhrasesV1');
+      if(raw){
+        var saved = JSON.parse(raw), out = clone(DEFAULT_PLAN_PHRASES);
+        Object.keys(out).forEach(function(k){ if(typeof saved[k] === 'string') out[k] = saved[k]; });
+        return out;
+      }
+    }catch(e){}
+    return clone(DEFAULT_PLAN_PHRASES);
+  }
+  function savePlanPhrases(){
+    try{ localStorage.setItem('stomaLetterPlanPhrasesV1', JSON.stringify(PLAN_PHRASES)); }catch(e){}
+  }
+  // Look up a plan phrase, fill {placeholders}, and bold it if it is a bold-key.
+  function planPhrase(key, vars){
+    var tpl = (typeof PLAN_PHRASES[key] === 'string') ? PLAN_PHRASES[key] : (DEFAULT_PLAN_PHRASES[key] || '');
+    vars = vars || {};
+    var out = tpl.replace(/\{(\w+)\}/g, function(m, k){ return (k in vars) ? _esc(vars[k]) : m; });
+    return PLAN_BOLD_KEYS[key] ? bold(out) : out;
+  }
+
   function buildPlan(){
     var b = [];
     var system = WZ.system || curSystem;
@@ -1026,81 +1126,81 @@
     var rod = rodApplies() && WZ.rodInSitu === 'yes';
     var rodWhen = WZ.rodRemovalDate ? _fmtDate(WZ.rodRemovalDate) : "";
 
+    var rodWhenClause = rodWhen ? (" (expected removal on " + rodWhen + ")") : "";
+
     if(system === "two"){
-      b.push("Flange/baseplate to be changed on alternate days. Next change due: " + (WZ.nextChange ? _fmtDate(WZ.nextChange) : "[date]") + ".");
+      b.push(planPhrase("two.flangeChange", { date: WZ.nextChange ? _fmtDate(WZ.nextChange) : "[date]" }));
 
       if(type === "urostomy" || outlet === "urostomy"){
         if(WZ.urostomyStents === 'yes'){
-          b.push(bold("Bag is to be changed on alternate days with the flange until the stents are in situ."));
-          b.push("Once the stents come out on their own, the bag should be changed daily and emptied when one-third full.");
+          b.push(planPhrase("two.uroStentsA"));
+          b.push(planPhrase("two.uroStentsB"));
         } else {
-          b.push("Urostomy bag should be changed daily and emptied when one-third full.");
+          b.push(planPhrase("two.uroNoStents"));
         }
       } else if(rod){
-        b.push(bold("Bag is to be changed on alternate days with the flange while the rod is in situ" + (rodWhen ? " (expected removal on " + rodWhen + ")" : "") + "."));
-        b.push("Empty the bag when one-third full. Once the rod is removed, the bag may be changed as required.");
+        b.push(planPhrase("two.rodA", { rodWhen: rodWhenClause }));
+        b.push(planPhrase("two.rodB"));
       } else if(outlet === "closed"){
-        b.push("Pouch to be changed when one-third full, from once to twice daily.");
+        b.push(planPhrase("two.closed"));
       } else if(outlet === "drainable"){
-        b.push("Bag to be changed daily and emptied when one-third full.");
+        b.push(planPhrase("two.drainable"));
       } else {
-        b.push("Bag to be changed according to outlet type and emptied/changed when one-third full.");
+        b.push(planPhrase("two.default"));
       }
 
       if(hasDrainableExtra && outlet !== 'drainable'){
-        b.push("If the output becomes liquid, the drainable bag may be used and emptied when one-third full.");
+        b.push(planPhrase("two.drainableExtra"));
       }
 
       if(isStomahesive){
-        b.push("Soap and water is to be used to remove the Stomahesive baseplate gently.");
+        b.push(planPhrase("two.removeStomahesive"));
       } else {
-        b.push("A minimal amount of adhesive remover spray must be used to remove the baseplate gently.");
+        b.push(planPhrase("two.removeOther"));
       }
     } else {
       if(type === "urostomy" || outlet === "urostomy"){
         if(WZ.urostomyStents === 'yes'){
-          b.push(bold("While the stents are in situ, change the pouch on alternate days."));
-          b.push("Once the stents come out on their own, change the pouch daily and empty it when one-third full.");
+          b.push(planPhrase("one.uroStentsA"));
+          b.push(planPhrase("one.uroStentsB"));
         } else {
-          b.push("Urostomy pouch should be changed daily and emptied when one-third full.");
+          b.push(planPhrase("one.uroNoStents"));
         }
       } else if(rod){
-        b.push(bold("The pouch is to be changed on alternate days while the rod is in situ" + (rodWhen ? " (expected removal on " + rodWhen + ")" : "") + "."));
-        b.push("Empty the pouch when one-third full. Once the rod is removed, change the pouch as required.");
+        b.push(planPhrase("one.rodA", { rodWhen: rodWhenClause }));
+        b.push(planPhrase("one.rodB"));
       } else if(outlet === "closed"){
-        b.push("Pouch to be changed when one-third full, from once to twice daily.");
+        b.push(planPhrase("one.closed"));
       } else if(outlet === "drainable"){
-        b.push("Change of pouch to be carried out daily. Pouch must be emptied when one-third full.");
+        b.push(planPhrase("one.drainable"));
       } else {
-        b.push("Pouch to be changed according to outlet type and emptied/changed when one-third full.");
+        b.push(planPhrase("one.default"));
       }
-      b.push("A minimal amount of adhesive remover spray must be used to remove the pouch gently.");
+      b.push(planPhrase("one.removeSpray"));
     }
 
-    b.push("Wash stoma and peristomal skin well with tap water and pat dry.");
-    b.push("Aperture of the " + word + " to be cut to the shape and size of the stoma; adjust the cutting template accordingly.");
+    b.push(planPhrase("common.wash"));
+    b.push(planPhrase("common.aperture", { word: word }));
 
     if(WZ.accessories.indexOf("Barrier / skin-protective wipe") >= 0){
-      b.push("Use a protective wipe once daily after cleansing and drying the stoma and peristomal skin.");
+      b.push(planPhrase("acc.barrierWipe"));
     }
     if(WZ.skinExcoriation === 'yes' || WZ.accessories.indexOf("Protective stoma powder") >= 0){
-      b.push("Apply protective powder over the skin excoriation and dust off the excess; stop once the skin heals.");
+      b.push(planPhrase("acc.powder"));
     }
     if(WZ.mucocutaneousSeparation === 'yes'){
-      b.push("Apply protective powder over the mucocutaneous separation and dust off the excess; stop once the separation heals.");
+      b.push(planPhrase("acc.mucoSep"));
     }
     if(WZ.accessories.indexOf("Stoma belt") >= 0){
-      b.push(bold("Stoma belt should be kept on at all times, especially during bed time."));
+      b.push(planPhrase("acc.belt"));
     }
-    b.push("Peristomal hair shaving is to be done as necessary to prevent hair folliculitis.");
+    b.push(planPhrase("common.hair"));
 
     if(WZ.accessories.indexOf("Filler paste") >= 0){
-      var from = _esc(WZ.fillerFrom || "___");
-      var to = _esc(WZ.fillerTo || "___");
-      b.push(bold("Apply a generous amount of filler paste from " + from + " to " + to + " o'clock location around the stoma."));
+      b.push(planPhrase("acc.filler", { from: WZ.fillerFrom || "___", to: WZ.fillerTo || "___" }));
     }
     if(WZ.mucusFistula === 'yes' || WZ.accessories.indexOf("Mucus fistula dressing") >= 0){
-      b.push("Mucus fistula: wash the stoma and peristomal skin well and pat dry. Apply Bactigras/Paraffin dressing and a dry dressing to cover. Dressing to be changed on alternate days.");
+      b.push(planPhrase("acc.mucusFistula"));
     }
     return b;
   }
@@ -1189,7 +1289,13 @@
       .sort(function(a,b){ return (a.item.label||'').localeCompare(b.item.label||'', undefined, {sensitivity:'base'}); });
     var html = '<div class="cat-section"><h3>'+_esc(title)+'</h3><div class="cat-list">';
     entries.forEach(function(entry){
-      html += '<div class="cat-item"><div><b>'+_esc(entry.item.label)+'</b><small>'+_esc(catSummary(entry.item))+'</small></div><button class="cat-remove" onclick="removeCatalogueItem(\''+key+'\','+entry.idx+')">Remove</button></div>';
+      html += '<div class="cat-item">'
+        + '<div class="cat-item-main">'
+        +   '<b>'+_esc(entry.item.label)+'</b><small>'+_esc(catSummary(entry.item))+'</small>'
+        +   '<input class="cat-phrase" value="'+_esc(entry.item.phrase||'')+'" oninput="updateCataloguePhrase(\''+key+'\','+entry.idx+',this.value)" placeholder="Wording inserted into the letter (use [size] where a size goes)">'
+        + '</div>'
+        + '<button class="cat-remove" onclick="removeCatalogueItem(\''+key+'\','+entry.idx+')">Remove</button>'
+        + '</div>';
     });
     html += '</div><div class="cat-grid">'
       + '<label>Label<input id="cat_'+key+'_label" placeholder="New item label"></label>'
@@ -1218,13 +1324,138 @@
     if(!addConsultant(name)){ alert('Type a consultant name first.'); return; }
     renderCatalogueManager();
   }
+  function renderBodyTemplatesSection(){
+    var types = [['colostomy','Colostomy'],['ileostomy','Ileostomy'],['urostomy','Urostomy']];
+    var html = '<div class="cat-section"><h3>Body wording &mdash; per stoma type</h3>'
+      + '<p class="wording-sub">Placeholders: {who} {pron} {procedure} {formation} {date} {consultant} {colour} {function} {skin} {rod} {teaching} {stents}. Edits are saved automatically.</p>';
+    types.forEach(function(t){
+      var tpl = bodyTemplateFor(t[0]);
+      html += '<div style="margin:0 0 12px"><b style="font-family:var(--sans);font-size:13px;color:var(--navy)">'+t[1]+'</b>'
+        + '<div class="wording-row"><label>Opening line</label>'
+        +   '<textarea oninput="updateBodyTemplate(\''+t[0]+'\',\'opening\',this.value)">'+_esc(tpl.opening)+'</textarea></div>'
+        + '<div class="wording-row"><label>Discharge paragraph</label>'
+        +   '<textarea oninput="updateBodyTemplate(\''+t[0]+'\',\'discharge\',this.value)">'+_esc(tpl.discharge)+'</textarea></div>'
+        + '</div>';
+    });
+    html += '<div class="cat-actions"><button class="mini-btn" onclick="resetBodyTemplates()">Reset body wording to default</button></div></div>';
+    return html;
+  }
+  function updateBodyTemplate(type, field, val){
+    if(!BODY_TEMPLATES[type]) BODY_TEMPLATES[type] = clone(DEFAULT_BODY_TEMPLATES[type]);
+    BODY_TEMPLATES[type][field] = val;
+    saveBodyTemplates();
+  }
+  function resetBodyTemplates(){
+    if(!confirm('Reset all body wording templates to the built-in default?')) return;
+    BODY_TEMPLATES = clone(DEFAULT_BODY_TEMPLATES);
+    saveBodyTemplates();
+    renderCatalogueManager();
+  }
+  var PLAN_PHRASE_GROUPS = [
+    ['Two-piece systems', ['two.flangeChange','two.uroStentsA','two.uroStentsB','two.uroNoStents','two.rodA','two.rodB','two.closed','two.drainable','two.default','two.drainableExtra','two.removeStomahesive','two.removeOther']],
+    ['One-piece systems', ['one.uroStentsA','one.uroStentsB','one.uroNoStents','one.rodA','one.rodB','one.closed','one.drainable','one.default','one.removeSpray']],
+    ['Common & accessories', ['common.wash','common.aperture','acc.barrierWipe','acc.powder','acc.mucoSep','acc.belt','common.hair','acc.filler','acc.mucusFistula']]
+  ];
+  function renderPlanPhrasesSection(){
+    var html = '<div class="cat-section"><h3>Care-plan bullet wording</h3>'
+      + '<p class="wording-sub">Placeholders: {date} {word} {rodWhen} {from} {to}. Bold bullets stay bold in the letter. Edits are saved automatically.</p>';
+    PLAN_PHRASE_GROUPS.forEach(function(g){
+      html += '<div style="margin:0 0 6px"><b style="font-family:var(--sans);font-size:12.5px;color:var(--navy)">'+_esc(g[0])+'</b></div>';
+      g[1].forEach(function(key){
+        var val = (typeof PLAN_PHRASES[key] === 'string') ? PLAN_PHRASES[key] : (DEFAULT_PLAN_PHRASES[key]||'');
+        html += '<div class="wording-row"><label>'+_esc(key)+(PLAN_BOLD_KEYS[key]?' (bold)':'')+'</label>'
+          + '<textarea oninput="updatePlanPhrase(\''+key+'\',this.value)">'+_esc(val)+'</textarea></div>';
+      });
+    });
+    html += '<div class="cat-actions"><button class="mini-btn" onclick="resetPlanPhrases()">Reset care-plan wording to default</button></div></div>';
+    return html;
+  }
+  function updatePlanPhrase(key, val){ PLAN_PHRASES[key] = val; savePlanPhrases(); }
+  function resetPlanPhrases(){
+    if(!confirm('Reset all care-plan bullet wording to the built-in default?')) return;
+    PLAN_PHRASES = clone(DEFAULT_PLAN_PHRASES);
+    savePlanPhrases();
+    renderCatalogueManager();
+  }
+  function renderBackupSection(){
+    return '<div class="cat-section"><h3>Backup &mdash; export / import all wording</h3>'
+      + '<p class="wording-sub">Save all wording (appliances, consultants, body templates and care-plan bullets) to a file you can keep, move to another device, or share with colleagues.</p>'
+      + '<div class="cat-actions">'
+      +   '<button class="mini-btn" onclick="exportWording()">Export wording to file</button>'
+      +   '<button class="mini-btn" onclick="document.getElementById(\'importWordingInput\').click()">Import wording from file</button>'
+      +   '<input type="file" id="importWordingInput" accept="application/json,.json" style="display:none" onchange="importWordingFile(this)">'
+      + '</div></div>';
+  }
+  function exportWording(){
+    var data = {
+      app: 'stoma-discharge-letter',
+      kind: 'wording-settings',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      catalogue: CAT,
+      consultants: consultants(),
+      bodyTemplates: BODY_TEMPLATES,
+      planPhrases: PLAN_PHRASES
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'stoma-letter-wording.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+  function importWordingFile(input){
+    var file = input.files && input.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var data;
+      try{ data = JSON.parse(e.target.result); }
+      catch(err){ alert('That file is not valid wording JSON.'); input.value=''; return; }
+      if(!data || data.kind !== 'wording-settings'){
+        if(!confirm('This file was not recognised as a wording export. Try to import it anyway?')){ input.value=''; return; }
+      }
+      if(!confirm('Import this wording? It will replace your current appliances, consultants, body templates and care-plan wording on this device.')){ input.value=''; return; }
+      try{
+        if(data.catalogue){ CAT = data.catalogue; saveCatalogue(); }
+        if(Array.isArray(data.consultants)){ saveConsultants(data.consultants); }
+        if(data.bodyTemplates){ BODY_TEMPLATES = loadBodyTemplatesFrom(data.bodyTemplates); saveBodyTemplates(); }
+        if(data.planPhrases){ PLAN_PHRASES = loadPlanPhrasesFrom(data.planPhrases); savePlanPhrases(); }
+      }catch(err){ alert('Something went wrong importing that file.'); input.value=''; return; }
+      input.value='';
+      renderCatalogueManager();
+      renderWizard();
+      alert('Wording imported successfully.');
+    };
+    reader.readAsText(file);
+  }
+  // Merge helpers so an imported file only needs to contain the fields it changed
+  function loadBodyTemplatesFrom(saved){
+    var out = clone(DEFAULT_BODY_TEMPLATES);
+    ['colostomy','ileostomy','urostomy'].forEach(function(t){
+      if(saved[t]){
+        if(typeof saved[t].opening === 'string')   out[t].opening = saved[t].opening;
+        if(typeof saved[t].discharge === 'string') out[t].discharge = saved[t].discharge;
+      }
+    });
+    return out;
+  }
+  function loadPlanPhrasesFrom(saved){
+    var out = clone(DEFAULT_PLAN_PHRASES);
+    Object.keys(out).forEach(function(k){ if(typeof saved[k] === 'string') out[k] = saved[k]; });
+    return out;
+  }
   function renderCatalogueManager(){
     document.getElementById('catBody').innerHTML =
       renderConsultantsSection()
       + renderCatSection('onePiece','One-piece pouches')
       + renderCatSection('baseplates','Two-piece baseplates')
       + renderCatSection('bags','Two-piece bags')
-      + '<button class="mini-btn" onclick="resetCatalogue()">Reset appliances to default catalogue</button>';
+      + '<button class="mini-btn" onclick="resetCatalogue()">Reset appliances to default catalogue</button>'
+      + renderBodyTemplatesSection()
+      + renderPlanPhrasesSection()
+      + renderBackupSection();
   }
   function addCatalogueItem(key){
     var label = (document.getElementById('cat_'+key+'_label').value || '').trim();
@@ -1243,6 +1474,9 @@
     CAT[key].push(item);
     saveCatalogue();
     renderCatalogueManager();
+  }
+  function updateCataloguePhrase(key, idx, val){
+    if(CAT[key] && CAT[key][idx]){ CAT[key][idx].phrase = val; saveCatalogue(); }
   }
   function removeCatalogueItem(key, idx){
     if(!confirm('Remove this item from the catalogue?')) return;
