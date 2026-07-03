@@ -915,6 +915,35 @@
     return bags.length ? bags[0] : null;
   }
 
+  /* ----------------------------------------------------------------
+     Body wording templates — one maintained template per stoma type.
+     Edit the phrasing here to keep each type's standard letter wording.
+     Placeholders in [ ] are filled in from the wizard / letter fields.
+  ----------------------------------------------------------------- */
+  var BODY_TEMPLATES = {
+    colostomy: {
+      label: "colostomy",
+      // sentence describing what the patient was taught before discharge
+      careAdvice: "colostomy appliance management and given dietary advice",
+      extraClause: function(){ return ""; }
+    },
+    ileostomy: {
+      label: "ileostomy",
+      careAdvice: "ileostomy appliance management and advised on the importance of adequate fluid and salt intake to prevent dehydration",
+      extraClause: function(){ return ""; }
+    },
+    urostomy: {
+      label: "urostomy",
+      careAdvice: "urostomy appliance management",
+      extraClause: function(){ return WZ.urostomyStents === 'yes' ? ", including care of the ureteric stents in situ" : ""; }
+    }
+  };
+  function bodyTemplate(){
+    return BODY_TEMPLATES[WZ.type] || BODY_TEMPLATES[curType] || {
+      label: "stoma", careAdvice: "appliance management", extraClause: function(){ return ""; }
+    };
+  }
+
   function applyWizard(){
     curType = WZ.type || curType;
     curSystem = WZ.system || curSystem;
@@ -951,12 +980,13 @@
       var rodSentence = (rodApplies() && WZ.rodInSitu === 'yes')
         ? (" A rod is in situ" + (WZ.rodRemovalDate ? " and is expected to be removed on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
         : "";
+      var tpl = bodyTemplate();
       body.children[1].innerHTML = "On discharge, the stoma colour was " + _esc(WZ.stomaColour || "[stoma colour]")
         + ", the stoma was " + _esc(WZ.stomaFunction || "[function]")
         + ", and the peristomal skin was " + _esc(WZ.peristomalSkin || "[peristomal skin]") + "."
         + _esc(rodSentence)
-        + " During hospitalisation the patient was informed about appliance management." + _esc(teach)
-        + " However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.";
+        + " During hospitalisation the patient was informed about " + _esc(tpl.careAdvice) + _esc(tpl.extraClause()) + "." + _esc(teach)
+        + " However, the patient still needs assistance with stoma care until fully able to integrate " + _esc(tpl.label) + " care into the home environment.";
     }
 
     // Discharge appliance sentence (bold, house style)
