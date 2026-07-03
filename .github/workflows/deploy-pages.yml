@@ -37,6 +37,29 @@ jobs:
           # Publish the whole repository (index.html lives at the root)
           path: '.'
 
-      - name: Deploy to GitHub Pages
+      # The Pages deployment API occasionally returns a transient
+      # "Deployment failed, try again later." Retry automatically so a
+      # hiccup doesn't fail the whole run.
+      - name: Deploy to GitHub Pages (attempt 1)
+        id: deploy1
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: Wait before retry
+        if: steps.deploy1.outcome == 'failure'
+        run: sleep 20
+
+      - name: Deploy to GitHub Pages (attempt 2)
+        id: deploy2
+        if: steps.deploy1.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@v4
+
+      - name: Wait before final retry
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
+        run: sleep 40
+
+      - name: Deploy to GitHub Pages (attempt 3)
         id: deployment
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
         uses: actions/deploy-pages@v4
