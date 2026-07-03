@@ -1,1 +1,1296 @@
 
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stoma Discharge Letter</title>
+<style>
+  :root{
+    --navy:#000E77;
+    --blue:#96B7CA;
+    --ink:#111;
+    --fill:#eef4fb;          /* on-screen "fillable" tint */
+    --fill-border:#b9d0e6;
+    --focus:#2f6fb0;
+    --paper:#ffffff;
+    --desk:#e9ecf1;
+    --serif:"Times New Roman", Times, Georgia, serif;
+    --sans:"Arial Narrow", Arial, "Helvetica Neue", sans-serif;
+    --body-size:11.5pt;
+    --line:1.45;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--desk);
+    font-family:var(--serif);
+    color:var(--ink);
+    padding:0 0 40px;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+
+  /* ---------- Toolbar (screen only) ---------- */
+  .toolbar{
+    position:sticky;top:0;z-index:20;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    background:var(--navy);color:#fff;
+    padding:10px 18px;
+    font-family:var(--sans);
+  }
+  .toolbar .title{font-weight:700;letter-spacing:.02em;font-size:20px;margin-right:10px}
+  .toolbar .title .stoma-type{color:#ff4d4d}
+  .toolbar .hint{font-size:12.5px;opacity:.82;flex:1 1 220px}
+  .toolbar .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .btn{
+    font-family:var(--sans);font-size:13px;font-weight:700;
+    border:1px solid rgba(255,255,255,.5);
+    background:#fff;color:var(--navy);
+    padding:7px 13px;border-radius:6px;cursor:pointer;
+  }
+  .btn:hover{background:var(--blue);color:var(--navy);border-color:var(--blue)}
+  .btn.ghost{background:transparent;color:#fff}
+  .btn.ghost:hover{background:rgba(255,255,255,.14);color:#fff}
+  .tb-select{
+    font-family:var(--sans);font-size:13px;font-weight:700;
+    border:1px solid rgba(255,255,255,.5);
+    background:#fff;color:var(--navy);
+    padding:7px 10px;border-radius:6px;cursor:pointer;
+  }
+  .tb-select:hover{background:var(--blue)}
+
+  /* ---------- Paper ---------- */
+  .page{
+    width:210mm;min-height:297mm;
+    margin:22px auto;
+    background:var(--paper);
+    padding:16mm 20mm 14mm;
+    box-shadow:0 6px 26px rgba(0,0,0,.18);
+    display:flex;flex-direction:column;
+    font-size:var(--body-size);
+    line-height:var(--line);
+  }
+
+  /* section rhythm */
+  .sec{margin:0 0 14px}
+  .sec:last-child{margin-bottom:0}
+
+  /* ---------- 1. Header ---------- */
+  .l-header{margin-bottom:16px}
+  .l-header .logo{display:block;margin:0 auto 8px;width:230px;height:auto}
+  .l-header .rule{height:2.4px;background:var(--navy);width:100%}
+
+  /* ---------- 2. Date ---------- */
+  .l-date{margin-bottom:16px}
+
+  /* ---------- 3. Patient ---------- */
+  .l-patient{font-weight:700;margin-bottom:14px;white-space:nowrap}
+  .l-patient .lbl{font-weight:700}
+
+  /* ---------- 4. Main text ---------- */
+  .l-main .salutation{margin-bottom:10px}
+  .body{min-height:120px;text-align:justify}
+  .body p{margin:0 0 10px}
+  .body p:last-child{margin-bottom:0}
+
+  /* ---------- 5. Care plan ---------- */
+  .l-plan{margin-top:16px}
+  .plan-h{font-weight:700;text-decoration:underline;margin-bottom:6px}
+  ul.plan-list{margin:0;padding-left:22px}
+  ul.plan-list li{margin:0 0 5px}
+  ul.plan-list li:last-child{margin-bottom:0}
+
+  /* ---------- 6. Regards + signature ---------- */
+  .l-sign{margin-top:18px}
+  .l-sign .regards{margin-bottom:2px}
+  .l-sign .sig-gap{height:78px}   /* room to sign with a pen */
+  .l-sign .clinic{}
+
+  /* ---------- 7. Footer ---------- */
+  .l-footer{
+    margin-top:auto;padding-top:10px;
+    font-family:var(--sans);font-size:9.5pt;line-height:1.35;text-align:center;color:#222;
+  }
+  .l-footer .frule{height:1px;background:#9aa3ad;margin-bottom:6px}
+
+  /* ---------- Fillable field styling (screen) ---------- */
+  .fld{
+    font-family:inherit;font-size:inherit;font-weight:inherit;color:var(--ink);
+    background:var(--fill);
+    border:none;border-bottom:1px solid var(--fill-border);
+    border-radius:3px 3px 0 0;
+    padding:1px 4px;margin:0 1px;
+    line-height:inherit;
+  }
+  .fld:focus{outline:none;background:#fff;border-bottom:1.5px solid var(--focus);box-shadow:0 1px 0 var(--focus)}
+  input.fld::placeholder{color:#8aa0b5;font-style:italic}
+
+  input.fld-date{width:190px}
+  input.fld-fname{width:132px}
+  input.fld-sname{width:150px}
+  input.fld-id{width:118px}
+
+  select.fld{
+    -webkit-appearance:none;appearance:none;cursor:pointer;
+    background-image:linear-gradient(var(--fill),var(--fill));
+    padding-right:16px;
+  }
+  select.fld{
+    background:
+      var(--fill) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6'><path d='M0 0l4 6 4-6z' fill='%235b7fa0'/></svg>") no-repeat right 4px center;
+  }
+  .fld-title{width:58px}
+  .fld-name{min-width:170px}
+  .fld-salutation{min-width:190px;font-weight:400}
+
+  /* editable regions on screen get the same tint */
+  [contenteditable="true"]{
+    background:var(--fill);
+    border:1px solid var(--fill-border);
+    border-radius:5px;
+    padding:8px 10px;
+  }
+  [contenteditable="true"]:focus{outline:none;background:#fff;border-color:var(--focus);box-shadow:0 0 0 2px rgba(47,111,176,.15)}
+  ul.plan-list[contenteditable="true"]{padding-left:30px}
+  #applianceSlot{background:var(--fill);border-bottom:1px solid var(--fill-border);border-radius:3px 3px 0 0;padding:1px 3px}
+  .appl-picker{
+    font-family:var(--sans);font-size:12px;font-weight:700;color:var(--navy);
+    -webkit-appearance:none;appearance:none;cursor:pointer;
+    border:1px solid var(--fill-border);border-radius:5px;
+    background:var(--fill) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='6'><path d='M0 0l4 6 4-6z' fill='%235b7fa0'/></svg>") no-repeat right 5px center;
+    padding:2px 16px 2px 7px;margin-left:6px;vertical-align:baseline;max-width:180px;
+  }
+  .appl-picker:hover{background-color:#e3edf8}
+  .appl-picker:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 2px rgba(47,111,176,.15)}
+  .appl-picker:disabled{opacity:.6;cursor:not-allowed}
+
+  /* stoma-type pop-up */
+  .modal-backdrop{
+    position:fixed;top:0;left:0;right:0;bottom:0;z-index:50;display:none;
+    align-items:center;justify-content:center;
+    background:rgba(6,14,60,.55);padding:20px;
+  }
+  .modal-backdrop.open{display:flex}
+  .modal-card{
+    background:#fff;border-radius:14px;max-width:420px;width:100%;
+    padding:26px 24px 24px;box-shadow:0 18px 50px rgba(0,0,0,.35);position:relative;
+    font-family:var(--sans);
+  }
+  .modal-x{position:absolute;top:8px;right:12px;border:none;background:none;font-size:28px;line-height:1;color:#8a97ab;cursor:pointer;padding:2px 6px}
+  .modal-x:hover{color:var(--navy)}
+  .modal-card h2{margin:0 0 6px;font-size:21px;color:var(--navy)}
+  .modal-sub{margin:0 0 18px;font-size:13.5px;color:#5b6b85}
+  .modal-choices{display:flex;flex-direction:column;gap:10px}
+  .modal-choice{
+    font-family:var(--sans);font-size:16px;font-weight:700;
+    border:1.5px solid var(--blue);border-radius:10px;background:var(--fill);color:var(--navy);
+    padding:15px 16px;cursor:pointer;text-align:left;
+  }
+  .modal-choice:hover{background:var(--blue);color:#fff}
+
+  /* ---------- setup wizard ---------- */
+  .wz-card{max-width:470px}
+  .wz-head{margin-bottom:12px}
+  .wz-step{font-size:11.5px;font-weight:700;letter-spacing:.06em;color:#5b7fa0;text-transform:uppercase}
+  .wz-head h2{margin:3px 0 9px;font-size:21px;color:var(--navy)}
+  .wz-dots{display:flex;gap:6px}
+  .wz-dots i{width:9px;height:9px;border-radius:50%;background:#cfdcea}
+  .wz-dots i.on{background:var(--navy)}
+  .wz-dots i.done{background:var(--blue)}
+  .wz-body{max-height:54vh;overflow-y:auto;margin:2px 0;padding-right:3px}
+  .wz-foot{display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid #e6ebf2}
+  .wz-btn{font-family:var(--sans);font-size:15px;font-weight:700;border-radius:9px;padding:11px 20px;cursor:pointer;border:1.5px solid transparent}
+  .wz-next{background:var(--navy);color:#fff;border-color:var(--navy);margin-left:auto}
+  .wz-next:hover{background:#001a94}
+  .wz-back{background:#fff;color:var(--navy);border-color:#c3cfde}
+  .wz-back:hover{background:#eef4fb}
+  .wz-back[hidden]{display:none}
+  .wz-field{margin:0 0 12px}
+  .wz-field > label{display:block;font-size:12.5px;font-weight:700;color:#33415a;margin-bottom:4px}
+  .wz-field input, .wz-field select{width:100%;font-family:var(--sans);font-size:15px;border:1px solid #b9c6d8;border-radius:7px;padding:9px 10px;background:#fff;color:#1c2a44}
+  .wz-field input:focus, .wz-field select:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 2px rgba(47,111,176,.15)}
+  .wz-row{display:flex;gap:10px}
+  .wz-row .wz-field{flex:1}
+  .wz-cap{font-size:12.5px;color:#5b6b85;margin:0 0 8px}
+  .wz-choice{display:block;width:100%;text-align:left;font-family:var(--sans);font-size:15.5px;font-weight:700;color:var(--navy);border:1.5px solid var(--blue);border-radius:10px;background:var(--fill);padding:13px 15px;margin:0 0 9px;cursor:pointer}
+  .wz-choice:hover{background:var(--blue);color:#fff}
+  .wz-choice.sel{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .wz-choice small{display:block;font-weight:400;font-size:12px;opacity:.85;margin-top:2px}
+  .wz-check{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid #d3ddea;border-radius:9px;margin:0 0 8px;cursor:pointer;font-family:var(--sans);font-size:15px;color:#1c2a44}
+  .wz-check input{width:18px;height:18px;flex:none}
+  .wz-check.sel{border-color:var(--blue);background:var(--fill)}
+  .wz-hint{font-size:12.5px;color:#c0392b;margin:6px 0 0}
+  .wz-added{display:flex;flex-direction:column;gap:6px;margin:2px 0 10px}
+  .wz-added-item{display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:var(--sans);font-size:13.5px;background:var(--fill);border:1px solid var(--fill-border);border-radius:8px;padding:8px 10px;color:#1c2a44}
+  .wz-added-item button{border:none;background:none;color:#b02525;font-weight:700;font-size:15px;cursor:pointer;line-height:1;padding:0 4px}
+  .wz-tag{display:inline-block;font-family:var(--sans);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#2f6fb0;background:#e3edf8;border-radius:4px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+  .wz-note{font-size:12px;color:#5b6b85;font-style:italic;margin:2px 0 10px}
+  .format-tools{display:inline-flex;align-items:center;gap:6px;border-left:1px solid rgba(255,255,255,.35);padding-left:8px;margin-left:4px}
+  .btn.fmt{min-width:30px;padding:6px 8px;text-align:center}
+  .inline-row{display:flex;gap:8px;align-items:center}
+  .inline-row .wz-field{flex:1}
+  .mini-btn{font-family:var(--sans);font-size:12px;font-weight:700;border:1px solid #b9c6d8;border-radius:7px;background:#fff;color:var(--navy);padding:8px 10px;cursor:pointer}
+  .mini-btn:hover{background:var(--fill)}
+  .catalogue-card{max-width:760px}
+  .cat-wrap{max-height:58vh;overflow-y:auto;padding-right:4px}
+  .cat-section{border:1px solid #d3ddea;border-radius:10px;padding:12px;margin:0 0 12px;background:#fbfdff}
+  .cat-section h3{margin:0 0 8px;font-size:16px;color:var(--navy)}
+  .cat-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+  .cat-item{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border:1px solid #e2e8f2;background:#fff;border-radius:8px;padding:7px 9px;font-family:var(--sans);font-size:13px}
+  .cat-item small{display:block;color:#65758e;margin-top:2px}
+  .cat-remove{border:none;background:#fff;color:#b02525;font-weight:700;cursor:pointer;font-size:14px}
+  .cat-grid{display:grid;grid-template-columns:1.4fr .8fr 1.4fr auto;gap:8px;align-items:end}
+  .cat-grid input,.cat-grid select{width:100%;font-family:var(--sans);font-size:13px;border:1px solid #b9c6d8;border-radius:7px;padding:8px;background:#fff}
+  .cat-grid label{font-family:var(--sans);font-size:11.5px;font-weight:700;color:#33415a}
+
+  /* ---------- PRINT ---------- */
+  @media print{
+    @page{ size:A4; margin:14mm 18mm 24mm 18mm; }
+    body{background:#fff;padding:0}
+    .toolbar,.catalogue-card,.format-tools{display:none !important}
+    .page{
+      width:auto;min-height:auto;margin:0;padding:0;
+      box-shadow:none;display:block;
+      font-size:var(--body-size);line-height:var(--line);
+    }
+    /* strip editing affordances but keep the form's spacing & layout */
+    .fld, input.fld, select.fld, [contenteditable="true"], #applianceSlot{
+      background:none !important;border:none !important;box-shadow:none !important;
+      border-radius:0 !important;-webkit-appearance:none;appearance:none;
+      color:#000 !important;
+    }
+    input.fld, select.fld{padding:0 !important;margin:0 !important}
+    select.fld{background-image:none !important;padding-right:0 !important}
+    input.fld{width:auto !important}
+    input.fld::placeholder{color:transparent}
+    #applianceSlot{padding:0 !important}
+    .appl-picker{display:none !important}          /* hide the inline pickers on paper */
+    .modal-backdrop{display:none !important}       /* never print the pop-up */
+    .body{padding:0 !important;min-height:0}        /* box padding off; keep paragraph spacing */
+    .body p{margin:0 0 10px}
+    .body-txt{text-align:justify}
+    /* keep the bulleted care plan exactly like the on-screen form */
+    ul.plan-list{list-style:disc outside !important;margin:0 0 10px !important;padding-left:24px !important;min-height:0}
+    ul.plan-list li{margin:0 0 5px !important;padding:0 !important}
+    /* footer repeats at the bottom of every printed page */
+    .l-footer{
+      position:fixed;left:0;right:0;bottom:6mm;margin:0;padding-top:6px;
+    }
+    .l-header,.l-plan,.l-sign,.sec{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <span class="title" id="ribbonTitle" onclick="openWizard()" title="Click to reopen the setup wizard">Stoma Discharge Letter</span>
+    <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print.</span>
+    <span class="actions">
+      <button class="btn" onclick="saveToSharePoint()">Save to SharePoint</button>
+      <button class="btn" onclick="window.print()">Print</button>
+      <button class="btn ghost" onclick="openWizard()">Wizard</button>
+      <button class="btn ghost" onclick="openCatalogueManager()">Catalogue</button>
+      <button class="btn ghost" onclick="addBullet()">+ Care-plan line</button>
+      <button class="btn ghost" onclick="clearForm()">Clear</button>
+      <span class="format-tools" aria-label="Text formatting tools">
+        <button class="btn ghost fmt" title="Bold" onclick="formatDoc('bold')"><b>B</b></button>
+        <button class="btn ghost fmt" title="Italic" onclick="formatDoc('italic')"><i>I</i></button>
+        <button class="btn ghost fmt" title="Underline" onclick="formatDoc('underline')"><u>U</u></button>
+        <select class="tb-select" title="Font" onchange="formatDoc('fontName', this.value)">
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Arial">Arial</option>
+          <option value="Calibri">Calibri</option>
+          <option value="Georgia">Georgia</option>
+        </select>
+        <select class="tb-select" title="Size" onchange="formatDoc('fontSize', this.value)">
+          <option value="3">Normal</option>
+          <option value="2">Small</option>
+          <option value="4">Large</option>
+          <option value="5">Extra large</option>
+        </select>
+      </span>
+    </span>
+  </div>
+
+  <!-- Guided setup wizard (shown on load) -->
+  <div id="wizard" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="wzTitle" onclick="if(event.target===this) closeWizard()">
+    <div class="modal-card wz-card">
+      <button class="modal-x" onclick="closeWizard()" aria-label="Close">&times;</button>
+      <div class="wz-head">
+        <div class="wz-step">Step <span id="wzNum">1</span> of <span id="wzTotal">6</span></div>
+        <h2 id="wzTitle">Stoma type</h2>
+        <div class="wz-dots" id="wzDots"></div>
+      </div>
+      <div class="wz-body" id="wzBody"></div>
+      <div class="wz-foot">
+        <button class="wz-btn wz-back" id="wzBack" onclick="wzBack()">Back</button>
+        <button class="wz-btn wz-next" id="wzNext" onclick="wzNext()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Catalogue manager (screen only) -->
+  <div id="catalogueModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="catTitle" onclick="if(event.target===this) closeCatalogueManager()">
+    <div class="modal-card catalogue-card">
+      <button class="modal-x" onclick="closeCatalogueManager()" aria-label="Close">&times;</button>
+      <h2 id="catTitle">Catalogue &amp; Consultants</h2>
+      <p class="modal-sub">Add or remove consultants, one-piece pouches, two-piece baseplates, and two-piece bags. Lists are sorted alphabetically and saved in this browser.</p>
+      <div id="catBody" class="cat-wrap"></div>
+    </div>
+  </div>
+
+  <div class="page" id="letter">
+
+    <!-- 1. HEADER -->
+    <header class="l-header">
+      <img class="logo" src="data:image/png;base64,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" alt="SPTAR Mater Dei Hospital">
+      <div class="rule"></div>
+    </header>
+
+    <!-- 2. DATE -->
+    <div class="sec l-date">
+      <input type="text" id="letterDate" class="fld fld-date" placeholder="Date">
+    </div>
+
+    <!-- 3. PATIENT NAME / SURNAME / ID -->
+    <div class="sec l-patient">
+      <span class="lbl">Re:&nbsp;</span>
+      <select class="fld fld-title" aria-label="Title">
+        <option value=""></option>
+        <option>Mr</option>
+        <option>Ms</option>
+        <option>Mrs</option>
+        <option>Sr</option>
+        <option>Dr</option>
+      </select>
+      <input type="text" class="fld fld-fname" placeholder="First name">
+      <input type="text" class="fld fld-sname" placeholder="Surname">
+      <span class="lbl">&nbsp;&nbsp;ID No:&nbsp;</span>
+      <input type="text" class="fld fld-id" placeholder="ID number">
+    </div>
+
+    <!-- 4. MAIN TEXT -->
+    <div class="sec l-main">
+      <div class="salutation">
+        <select class="fld fld-salutation" aria-label="Salutation">
+          <option>Dear Nurses,</option>
+          <option>Dear Community Nurses,</option>
+          <option>Dear Colleagues,</option>
+        </select>
+      </div>
+      <div class="body" contenteditable="true" spellcheck="true"><p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p><p>On discharge, the stoma colour was [pink/red], the stoma was [functioning/non-functioning], and the peristomal skin was [healthy/intact]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p><p>Patient discharged using <span id="applianceSlot">[appliance]</span>.</p></div>
+    </div>
+
+    <!-- 5. STOMA CARE PLAN -->
+    <div class="sec l-plan">
+      <div class="plan-h">Stoma Care Plan:</div>
+      <ul class="plan-list" id="planList" contenteditable="true" spellcheck="true">
+        <li>Flange/pouch to be changed [alternate days / daily]. Next change due: [date].</li>
+        <li>Wash stoma and peristomal skin with tap water and pat dry.</li>
+        <li>Aperture of flange/pouch to be cut to the shape and size of the stoma; adjust cutting template as needed.</li>
+        <li>Bag/pouch to be emptied or changed when one-third full.</li>
+        <li>[Additional instruction — protective powder, barrier wipe, stoma belt, filler paste, hair removal, stents, mucus fistula].</li>
+      </ul>
+    </div>
+
+    <!-- 6. REGARDS + SIGNATURE -->
+    <div class="sec l-sign">
+      <div class="regards">Regards,</div>
+      <div class="sig-gap"></div>
+      <div>
+        <select class="fld fld-name" aria-label="Nurse name">
+          <option>Jason Fenech</option>
+          <option>Jacqueline Sammut</option>
+          <option>Lorraine Stivala</option>
+        </select>
+      </div>
+      <div class="clinic">Stoma Team</div>
+      <div class="clinic">Stoma Care Clinic</div>
+    </div>
+
+    <!-- 7. FOOTER -->
+    <footer class="l-footer">
+      <div class="frule"></div>
+      <div>Mater Dei Hospital, Tal-Qroqq, Msida, MSD 2090, Malta</div>
+      <div>Tel: (+356) 2545 0000&nbsp;&nbsp;|&nbsp;&nbsp;Fax: (+356) 2124 0176&nbsp;&nbsp;|&nbsp;&nbsp;Stoma Care Clinic DDI: (+356) 2545 + Extension No.</div>
+      <div>Ministry for Health, the Elderly and Community Care</div>
+    </footer>
+
+  </div>
+
+<script>
+  // ============================================================
+  //  Stoma Discharge Letter — wizard-led appliance workflow
+  //  One-piece = Appliance → Accessories → Finish (6 steps)
+  //  Two-piece = Baseplate → Bag → Accessories → Finish (7 steps)
+  // ============================================================
+
+  var SHAREPOINT_LIBRARY_URL = "";
+  var DEFAULT_SLOT_TEXT = "[appliance]";
+
+  function _esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function _v(sel){ var el = document.querySelector(sel); return el ? (el.value || '') : ''; }
+  function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+  function formatDoc(command, value){
+    document.execCommand(command, false, value || null);
+  }
+
+  // Pre-fill today's date as "1 July 2026"
+  (function(){
+    var d = new Date();
+    var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var el = document.getElementById('letterDate');
+    if(el){ el.value = d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear(); }
+  })();
+
+  // ======================= DEFAULT CATALOGUE =======================
+  var DEFAULT_CATALOGUE = {
+    onePiece: [
+      { label:"Lentell closed pouch", outlet:"closed", stomas:["colostomy"], sizes:["70","80","90","100"], phrase:"Lentell one-piece closed pouch cutting up to [size]mm" },
+      { label:"Salts XNL1352 soft convex closed pouch", outlet:"closed", stomas:["colostomy"], sizes:[], phrase:"Salts XNL1352 soft convexity one-piece closed pouch" },
+      { label:"Salts XND1352 soft convex drainable pouch", outlet:"drainable", stomas:["ileostomy"], sizes:[], phrase:"Salts XND1352 soft convexity one-piece drainable pouch" },
+      { label:"Salts XND1338 one-piece pouch", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Salts XND1338 one-piece pouch" },
+      { label:"Salts NAL13", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Salts NAL13 one-piece pouch" },
+      { label:"Salts NA13", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Salts NA13 one-piece pouch" },
+      { label:"Welland MHCS513", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland MHCS513 one-piece pouch" },
+      { label:"Welland XFM535", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland XFM535 one-piece pouch" },
+      { label:"Welland XMHDX213", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland XMHDX213 one-piece pouch" },
+      { label:"Welland XMHCS513", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland XMHCS513 one-piece pouch" },
+      { label:"Welland XMHNDS513", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland XMHNDS513 one-piece pouch" },
+      { label:"Welland XNHNDL913", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland XNHNDL913 one-piece pouch" },
+      { label:"Welland XMDS513", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland XMDS513 one-piece pouch" },
+      { label:"Welland 202248", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland 202248 one-piece pouch" },
+      { label:"Little Ones", outlet:"closed", stomas:["colostomy"], sizes:[], phrase:"Little Ones one-piece pouch" },
+      { label:"Hollister 29500", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Hollister 29500 one-piece pouch" }
+    ],
+    baseplates: [
+      { label:"Deep convexity 22/45mm", kind:"deep", sizes:["22/45"], phrase:"deep convexity baseplate 22/45mm" },
+      { label:"Deep convexity 35/45mm", kind:"deep", sizes:["35/45"], phrase:"deep convexity baseplate 35/45mm" },
+      { label:"Deep convexity 32/45mm", kind:"deep", sizes:["32/45"], phrase:"deep convexity baseplate 32/45mm" },
+      { label:"Deep convexity 25/45mm", kind:"deep", sizes:["25/45"], phrase:"deep convexity baseplate 25/45mm" },
+      { label:"Deep convexity 28/45mm", kind:"deep", sizes:["28/45"], phrase:"deep convexity baseplate 28/45mm" },
+      { label:"Deep convexity 38/57mm", kind:"deep", sizes:["38/57"], phrase:"deep convexity baseplate 38/57mm" },
+      { label:"Deep convexity 41/57mm", kind:"deep", sizes:["41/57"], phrase:"deep convexity baseplate 41/57mm" },
+      { label:"Microporous collar 45mm", kind:"microporous", sizes:["45"], phrase:"microporous collar flange size 45mm" },
+      { label:"Microporous collar 57mm", kind:"microporous", sizes:["57"], phrase:"microporous collar flange size 57mm" },
+      { label:"Microporous collar 70mm", kind:"microporous", sizes:["70"], phrase:"microporous collar flange size 70mm" },
+      { label:"Stomahesive 45mm", kind:"stomahesive", sizes:["45"], phrase:"Stomahesive flange size 45mm" },
+      { label:"Stomahesive 57mm", kind:"stomahesive", sizes:["57"], phrase:"Stomahesive flange size 57mm" },
+      { label:"Stomahesive 70mm", kind:"stomahesive", sizes:["70"], phrase:"Stomahesive flange size 70mm" },
+      { label:"Stomahesive 100mm", kind:"stomahesive", sizes:["100"], phrase:"Stomahesive flange size 100mm" },
+      { label:"Hollister 34200", kind:"hollister", sizes:[], phrase:"Hollister 34200 baseplate" },
+      { label:"Hollister 27300", kind:"hollister", sizes:[], phrase:"Hollister 27300 baseplate" }
+    ],
+    bags: [
+      { label:"Closed bag 45mm", outlet:"closed", stomas:["colostomy"], sizes:["45"], phrase:"closed bag 45mm" },
+      { label:"Closed bag 57mm", outlet:"closed", stomas:["colostomy"], sizes:["57"], phrase:"closed bag 57mm" },
+      { label:"Closed bag 70mm", outlet:"closed", stomas:["colostomy"], sizes:["70"], phrase:"closed bag 70mm" },
+      { label:"Drainable bag with Velcro 45mm", outlet:"drainable", stomas:["ileostomy"], sizes:["45"], phrase:"drainable bag with Velcro 45mm" },
+      { label:"Drainable bag with Velcro 57mm", outlet:"drainable", stomas:["ileostomy"], sizes:["57"], phrase:"drainable bag with Velcro 57mm" },
+      { label:"Drainable bag with Velcro 70mm", outlet:"drainable", stomas:["ileostomy"], sizes:["70"], phrase:"drainable bag with Velcro 70mm" },
+      { label:"Drainable bag with Velcro 100mm", outlet:"drainable", stomas:["ileostomy"], sizes:["100"], phrase:"drainable bag with Velcro 100mm" },
+      { label:"Urostomy bag 45mm", outlet:"urostomy", stomas:["urostomy"], sizes:["45"], phrase:"urostomy bag 45mm" },
+      { label:"Urostomy bag 57mm", outlet:"urostomy", stomas:["urostomy"], sizes:["57"], phrase:"urostomy bag 57mm" },
+      { label:"Urostomy bag 70mm", outlet:"urostomy", stomas:["urostomy"], sizes:["70"], phrase:"urostomy bag 70mm" },
+      { label:"Hollister 27420", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Hollister 27420 bag" },
+      { label:"Hollister 27830", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Hollister 27830 bag" },
+      { label:"Hollister 25760", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Hollister 25760 bag" },
+      { label:"Hollister 24730", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Hollister 24730 bag" }
+    ]
+  };
+
+  var CAT = loadCatalogue();
+  function loadCatalogue(){
+    try{
+      var raw = localStorage.getItem('stomaLetterCatalogueV2');
+      if(raw){ return JSON.parse(raw); }
+    }catch(e){}
+    return clone(DEFAULT_CATALOGUE);
+  }
+  function saveCatalogue(){
+    try{ localStorage.setItem('stomaLetterCatalogueV2', JSON.stringify(CAT)); }catch(e){}
+  }
+
+  // ======================= CONSULTANTS =======================
+  var DEFAULT_CONSULTANTS = [
+    "Mr M Zammit Vincenti", "Mr Andrejovic", "Mr B Axisa", "Mr N Cassar",
+    "Mr M Sammut", "Mr G Busuttil", "Mr J Agius",
+    "Ms A Sultana", "Ms Gingell-Littlejohn", "Ms Abela"
+  ];
+  function consultants(){
+    try{
+      var full = JSON.parse(localStorage.getItem('stomaConsultantsFullV1') || 'null');
+      if(Array.isArray(full)) return full;
+      // migrate old "extra list" storage if present
+      var saved = JSON.parse(localStorage.getItem('stomaLetterConsultantsV1') || '[]');
+      var merged = DEFAULT_CONSULTANTS.concat(saved.filter(function(x){ return DEFAULT_CONSULTANTS.indexOf(x) < 0; }));
+      return merged;
+    }catch(e){ return DEFAULT_CONSULTANTS.slice(); }
+  }
+  function saveConsultants(arr){
+    try{ localStorage.setItem('stomaConsultantsFullV1', JSON.stringify(arr)); }catch(e){}
+  }
+  function addConsultant(name){
+    name = (name || '').trim();
+    if(!name) return false;
+    var list = consultants();
+    if(list.indexOf(name) < 0){ list.push(name); saveConsultants(list); }
+    return true;
+  }
+  function saveConsultantFromWizard(){
+    if(!addConsultant(WZ.consultant)){ alert('Type a consultant name first.'); return; }
+    renderWizard();
+  }
+  function removeConsultant(idx){
+    if(!confirm('Remove this consultant from the list?')) return;
+    var list = consultants();
+    list.splice(idx, 1);
+    saveConsultants(list);
+    renderCatalogueManager();
+  }
+  function resetConsultants(){
+    if(!confirm('Reset the consultant list to the built-in default?')) return;
+    saveConsultants(DEFAULT_CONSULTANTS.slice());
+    renderCatalogueManager();
+  }
+
+  var ACCESSORIES = [
+    "Stoma belt", "Protective stoma powder", "Barrier / skin-protective wipe",
+    "Adhesive removal spray", "Filler paste", "Mucus fistula dressing"
+  ];
+
+  // current state
+  var curType = "";
+  var curSystem = "";
+  var curOutlet = "";
+  var curBaseplateKind = "";
+  var lastAutoPlan = "";
+
+  var WZ;
+  var wzStep = 0;
+  resetWZ();
+
+  function resetWZ(){
+    WZ = {
+      type:"", subtype:"", title:"", fname:"", sname:"", id:"",
+      procedure:"", opdate:"", nextChange:"", consultant:"",
+      stomaColour:"pink/red", stomaFunction:"functioning", peristomalSkin:"healthy/intact",
+      skinHealthy:"yes", skinExcoriation:"no", mucocutaneousSeparation:"no",
+      teaching:"yes", teachingWith:"patient",
+      urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"no",
+      system:"", onePieceIdx:"", onePieceSize:"", onePieceOutlet:"",
+      baseplateIdx:"", bagIdx:"", bagOutlet:"", bags:[], bagsShowAll:false,
+      accessories:[], fillerFrom:"", fillerTo:""
+    };
+  }
+
+  // Sub-type options per stoma type
+  var SUBTYPES = {
+    colostomy: [
+      { v:"end",          label:"End colostomy" },
+      { v:"transverse",   label:"Transverse colostomy" },
+      { v:"loop",         label:"Loop colostomy" },
+      { v:"double-barrel",label:"Double barrel colostomy" }
+    ],
+    ileostomy: [
+      { v:"end",          label:"End ileostomy" },
+      { v:"loop",         label:"Loop ileostomy" },
+      { v:"double-barrel",label:"Double barrel ileostomy" }
+    ]
+  };
+  function subtypeLabel(){
+    var list = SUBTYPES[WZ.type] || [];
+    for(var i=0;i<list.length;i++){ if(list[i].v === WZ.subtype) return list[i].label; }
+    return "";
+  }
+  // Rod is only relevant for loop colostomy, transverse colostomy, and loop ileostomy
+  function rodApplies(){
+    if(WZ.type === 'colostomy') return (WZ.subtype === 'transverse' || WZ.subtype === 'loop');
+    if(WZ.type === 'ileostomy') return (WZ.subtype === 'loop');
+    return false;
+  }
+  function typeHasSubtype(t){ return t === 'colostomy' || t === 'ileostomy'; }
+
+  // Brand / stoma-type helpers for bag filtering
+  function isHollister(item){ return !!item && (/hollister/i.test(item.label||'') || (item.kind||'') === 'hollister' || (item.brand||'') === 'hollister'); }
+  function recommendedOutletForType(t){
+    return t === 'colostomy' ? 'closed' : (t === 'ileostomy' ? 'drainable' : (t === 'urostomy' ? 'urostomy' : ''));
+  }
+
+  function stepsForWizard(){
+    var head = ["type"];
+    if(typeHasSubtype(WZ.type)) head.push("subtype");
+    head = head.concat(["patient","surgery","system"]);
+    if(WZ.system === 'two') return head.concat(["baseplate","bag","accessories"]);
+    return head.concat(["appliance","accessories"]);
+  }
+  function titleForStep(step){
+    return ({type:"Stoma type", subtype:"Stoma sub-type", patient:"Patient information", surgery:"Surgery details and assessment", system:"Appliance system", appliance:"One-piece pouch", baseplate:"Baseplate", bag:"Bag", accessories:"Accessories"})[step] || step;
+  }
+
+  function openWizard(){ wzStep = 0; renderWizard(); document.getElementById('wizard').classList.add('open'); }
+  function closeWizard(){ document.getElementById('wizard').classList.remove('open'); }
+
+  function _opt(list, val){
+    return list.map(function(x){ return '<option'+(x===val?' selected':'')+'>'+_esc(x)+'</option>'; }).join('');
+  }
+  function _dl(id, list){
+    return '<datalist id="'+id+'">'+list.map(function(x){return '<option value="'+_esc(x)+'"></option>';}).join('')+'</datalist>';
+  }
+  function _checked(value){ return value === 'yes' ? ' checked' : ''; }
+  function _visibleForStoma(item){ return !item.stomas || item.stomas.indexOf(WZ.type) >= 0 || item.stomas.indexOf('all') >= 0 || item.outlet === ''; }
+  // Return [{item, idx}] sorted alphabetically by label, keeping original catalogue index
+  function _sortedWithIndex(listName){
+    return (CAT[listName] || []).map(function(item, i){ return { item:item, idx:i }; })
+      .sort(function(a,b){ return (a.item.label||'').localeCompare(b.item.label||'', undefined, {sensitivity:'base'}); });
+  }
+  function _catalogueButtons(listName, selectedField){
+    var out = '';
+    _sortedWithIndex(listName).forEach(function(entry){
+      var item = entry.item, i = entry.idx;
+      if(listName === 'onePiece' && !_visibleForStoma(item)) return;
+      var sub = [];
+      if(item.outlet) sub.push(item.outlet);
+      if(item.sizes && item.sizes.length) sub.push('sizes: '+item.sizes.join(', '));
+      if(!item.outlet && listName === 'onePiece') sub.push('outlet to confirm');
+      out += '<button class="wz-choice'+(String(WZ[selectedField])===String(i)?' sel':'')+'" onclick="wzPick(\''+selectedField+'\',\''+i+'\')">'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+'</small></button>';
+    });
+    if(!out) out = '<p class="wz-cap">No matching items. Open Catalogue to add one or change outlet/stoma type.</p>';
+    return out;
+  }
+
+  // Dedicated bag renderer: brand-lock to Hollister baseplates, otherwise filter by stoma type,
+  // with a "+ add another bag type" override for real-world clinical exceptions.
+  function _bagButtons(){
+    var base = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+    var lockHollister = isHollister(base);
+    var rec = recommendedOutletForType(WZ.type);           // closed / drainable / urostomy
+    var showAll = WZ.bagsShowAll === true;
+
+    var out = '';
+    _sortedWithIndex('bags').forEach(function(entry){
+      var item = entry.item, i = entry.idx, hol = isHollister(item);
+      // Brand rule: Hollister baseplate → only Hollister bags. Non-Hollister baseplate → hide Hollister bags.
+      if(lockHollister && !hol) return;
+      if(!lockHollister && hol) return;
+      // Stoma-type rule (only for the non-Hollister branch, unless the nurse opens "show all")
+      if(!lockHollister && !showAll && rec && item.outlet && item.outlet !== rec) return;
+
+      var picked = WZ.bags.indexOf(i) >= 0;
+      var sub = [];
+      if(item.outlet) sub.push(item.outlet);
+      if(item.sizes && item.sizes.length) sub.push('sizes: '+item.sizes.join(', '));
+      out += '<button class="wz-choice'+(picked?' sel':'')+'" onclick="wzToggleBag('+i+')">'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+(picked?' · selected':'')+'</small></button>';
+    });
+    if(!out) out = '<p class="wz-cap">No matching bags. Use “Show all bag types” below, or add one in the Catalogue.</p>';
+    return out;
+  }
+
+  function wzStepHTML(step){
+    if(step === "type"){
+      return ['colostomy','ileostomy','urostomy'].map(function(t){
+        var lab = t.charAt(0).toUpperCase()+t.slice(1);
+        return '<button class="wz-choice'+(WZ.type===t?' sel':'')+'" onclick="wzPick(\'type\',\''+t+'\')">'+lab+'</button>';
+      }).join('') + '<p class="wz-hint" id="wzHint" style="display:none">Please choose a stoma type to continue.</p>';
+    }
+    if(step === "subtype"){
+      var list = SUBTYPES[WZ.type] || [];
+      var caption = WZ.type === 'colostomy' ? 'Which type of colostomy?' : 'Which type of ileostomy?';
+      return '<p class="wz-cap">'+caption+'</p>'
+        + list.map(function(s){
+            var rodTag = ((WZ.type==='colostomy' && (s.v==='transverse'||s.v==='loop')) || (WZ.type==='ileostomy' && s.v==='loop'))
+              ? '<span class="wz-tag">rod option</span>' : '';
+            return '<button class="wz-choice'+(WZ.subtype===s.v?' sel':'')+'" onclick="wzPick(\'subtype\',\''+s.v+'\')">'+_esc(s.label)+rodTag+'</button>';
+          }).join('')
+        + '<p class="wz-hint" id="wzHint" style="display:none">Please choose a sub-type to continue.</p>';
+    }
+    if(step === "patient"){
+      return '<div class="wz-field"><label>Title</label><select onchange="WZ.title=this.value"><option value=""></option>'
+        + _opt(["Mr","Ms","Mrs","Sr","Dr"], WZ.title) + '</select></div>'
+        + '<div class="wz-row"><div class="wz-field"><label>First name</label><input value="'+_esc(WZ.fname)+'" oninput="WZ.fname=this.value"></div>'
+        + '<div class="wz-field"><label>Surname</label><input value="'+_esc(WZ.sname)+'" oninput="WZ.sname=this.value"></div></div>'
+        + '<div class="wz-field"><label>ID number</label><input value="'+_esc(WZ.id)+'" oninput="WZ.id=this.value"></div>';
+    }
+    if(step === "surgery"){
+      var html = '<div class="wz-field"><label>Procedure / operation</label><input value="'+_esc(WZ.procedure)+'" oninput="WZ.procedure=this.value" placeholder="e.g. anterior resection with formation of colostomy"></div>'
+        + '<div class="wz-row"><div class="wz-field"><label>Date of surgery</label><input type="date" value="'+_esc(WZ.opdate)+'" oninput="WZ.opdate=this.value"></div>'
+        + '<div class="wz-field"><label>Next flange/baseplate change due</label><input type="date" value="'+_esc(WZ.nextChange)+'" oninput="WZ.nextChange=this.value"></div></div>'
+        + '<div class="inline-row"><div class="wz-field"><label>Consultant</label><input list="wzCons" value="'+_esc(WZ.consultant)+'" oninput="WZ.consultant=this.value" placeholder="e.g. Mr M Zammit Vincenti"></div><button type="button" class="mini-btn" onclick="saveConsultantFromWizard()">+ Save</button></div>' + _dl("wzCons", consultants())
+        + '<div class="wz-row"><div class="wz-field"><label>Stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="pink/red"></div>'
+        + '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning, high output"></div></div>'
+        + '<div class="wz-field"><label>Peristomal skin</label><input value="'+_esc(WZ.peristomalSkin)+'" oninput="WZ.peristomalSkin=this.value" placeholder="healthy/intact"></div>'
+        + '<p class="wz-cap">Additional checks</p>'
+        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.skinHealthy)+' onchange="WZ.skinHealthy=this.checked?\'yes\':\'no\'"> Peristomal skin healthy</label>'
+        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.skinExcoriation)+' onchange="WZ.skinExcoriation=this.checked?\'yes\':\'no\'"> Skin excoriation present</label>'
+        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.mucocutaneousSeparation)+' onchange="WZ.mucocutaneousSeparation=this.checked?\'yes\':\'no\'"> Mucocutaneous separation present</label>'
+        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.teaching)+' onchange="WZ.teaching=this.checked?\'yes\':\'no\'"> Teaching session done</label>'
+        + '<div class="wz-field"><label>Teaching session with</label><input value="'+_esc(WZ.teachingWith)+'" oninput="WZ.teachingWith=this.value" placeholder="patient, wife, husband, relatives"></div>';
+      if(rodApplies()){
+        html += '<label class="wz-check'+(WZ.rodInSitu==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.rodInSitu)+' onchange="WZ.rodInSitu=this.checked?\'yes\':\'no\'; renderWizard();"> Rod in situ ('+_esc(subtypeLabel())+')</label>';
+        if(WZ.rodInSitu === 'yes'){
+          html += '<div class="wz-field"><label>Expected date of rod removal</label><input type="date" value="'+_esc(WZ.rodRemovalDate)+'" oninput="WZ.rodRemovalDate=this.value"></div>';
+        }
+      }
+      if(WZ.type === 'urostomy'){
+        html += '<label class="wz-check'+(WZ.urostomyStents==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.urostomyStents)+' onchange="WZ.urostomyStents=this.checked?\'yes\':\'no\'"> Urostomy stents in situ</label>';
+      }
+      html += '<label class="wz-check'+(WZ.mucusFistula==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.mucusFistula)+' onchange="WZ.mucusFistula=this.checked?\'yes\':\'no\'"> Mucus fistula / ulcer / fistula present</label>';
+      return html;
+    }
+    if(step === "system"){
+      return '<p class="wz-cap">Is the appliance a one-piece or a two-piece system?</p>'
+        + '<button class="wz-choice'+(WZ.system==='one'?' sel':'')+'" onclick="wzPick(\'system\',\'one\')">One-piece<small>flange and pouch are a single unit</small></button>'
+        + '<button class="wz-choice'+(WZ.system==='two'?' sel':'')+'" onclick="wzPick(\'system\',\'two\')">Two-piece<small>separate baseplate/flange and bag</small></button>'
+        + '<p class="wz-hint" id="wzHint" style="display:none">Please choose one-piece or two-piece to continue.</p>';
+    }
+    if(step === "appliance"){
+      var selected = CAT.onePiece[parseInt(WZ.onePieceIdx,10)] || null;
+      var outlet = WZ.onePieceOutlet || (selected ? selected.outlet : '');
+      return '<p class="wz-cap">Choose the one-piece pouch. Items matching the selected stoma type are shown first; items with unknown outlet remain available for confirmation.</p>'
+        + _catalogueButtons('onePiece','onePieceIdx')
+        + '<div class="wz-row" style="margin-top:12px"><div class="wz-field"><label>Size / cut to (mm) — optional</label><input value="'+_esc(WZ.onePieceSize)+'" oninput="WZ.onePieceSize=this.value" placeholder="e.g. 70"></div>'
+        + '<div class="wz-field"><label>Outlet type</label><select onchange="WZ.onePieceOutlet=this.value"><option value=""></option><option value="closed"'+(outlet==='closed'?' selected':'')+'>closed</option><option value="drainable"'+(outlet==='drainable'?' selected':'')+'>drainable</option><option value="urostomy"'+(outlet==='urostomy'?' selected':'')+'>urostomy</option></select></div></div>';
+    }
+    if(step === "baseplate"){
+      return '<p class="wz-cap">Choose the two-piece baseplate/flange:</p>'
+        + _catalogueButtons('baseplates','baseplateIdx');
+    }
+    if(step === "bag"){
+      var base = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+      var lockHollister = isHollister(base);
+      var rec = recommendedOutletForType(WZ.type);
+      var recWord = rec ? (rec === 'closed' ? 'closed bags' : (rec === 'drainable' ? 'drainable bags' : 'urostomy bags')) : 'bags';
+
+      var note = lockHollister
+        ? 'This is a Hollister baseplate, so only Hollister bags are shown (brands are not interchangeable).'
+        : 'For a ' + (WZ.type || 'this') + ' the recommended bags are ' + recWord + '. You can add another type below for clinical exceptions (e.g. a high-output colostomy needing a drainable bag).';
+
+      // Chips for already-selected bags
+      var chips = '';
+      if(WZ.bags.length){
+        chips = '<div class="wz-added">' + WZ.bags.map(function(idx){
+          var it = CAT.bags[idx]; if(!it) return '';
+          return '<div class="wz-added-item"><span>'+_esc(it.label)+(it.outlet?' <span class="wz-tag">'+_esc(it.outlet)+'</span>':'')+'</span><button title="Remove" onclick="wzToggleBag('+idx+')">&times;</button></div>';
+        }).join('') + '</div>';
+      }
+
+      var toggle = lockHollister ? '' :
+        '<label class="wz-check'+(WZ.bagsShowAll?' sel':'')+'" style="margin-top:6px"><input type="checkbox"'+(WZ.bagsShowAll?' checked':'')+' onchange="WZ.bagsShowAll=this.checked; renderWizard();"> Show all bag types (clinical override)</label>';
+
+      return '<p class="wz-note">'+_esc(note)+'</p>'
+        + (WZ.bags.length ? '<p class="wz-cap">Selected bag(s):</p>' + chips : '')
+        + '<p class="wz-cap">Tap to select one or more bags:</p>'
+        + _bagButtons()
+        + toggle;
+    }
+    if(step === "accessories"){
+      var rows = '<p class="wz-cap">Tick any accessories or extra instructions needed:</p>'
+        + ACCESSORIES.map(function(a, i){
+            var on = WZ.accessories.indexOf(a) >= 0;
+            return '<label class="wz-check'+(on?' sel':'')+'"><input type="checkbox"'+(on?' checked':'')+' onchange="wzToggleAcc('+i+', this.checked); this.closest(\'.wz-check\').classList.toggle(\'sel\', this.checked); renderWizard();"> '+_esc(a)+'</label>';
+          }).join('');
+      if(WZ.accessories.indexOf('Filler paste') >= 0){
+        rows += '<div class="wz-row"><div class="wz-field"><label>Filler paste from</label><input value="'+_esc(WZ.fillerFrom)+'" oninput="WZ.fillerFrom=this.value" placeholder="e.g. 3"></div><div class="wz-field"><label>Filler paste to</label><input value="'+_esc(WZ.fillerTo)+'" oninput="WZ.fillerTo=this.value" placeholder="e.g. 9"></div></div>';
+      }
+      return rows;
+    }
+    return "";
+  }
+
+  function renderWizard(){
+    var steps = stepsForWizard();
+    if(wzStep >= steps.length) wzStep = steps.length - 1;
+    var step = steps[wzStep];
+    document.getElementById('wzNum').textContent = wzStep + 1;
+    document.getElementById('wzTotal').textContent = steps.length;
+    document.getElementById('wzTitle').textContent = titleForStep(step);
+    var dots = "";
+    for(var i=0;i<steps.length;i++){ dots += '<i class="'+(i<wzStep?'done':(i===wzStep?'on':''))+'"></i>'; }
+    document.getElementById('wzDots').innerHTML = dots;
+    document.getElementById('wzBody').innerHTML = wzStepHTML(step);
+    document.getElementById('wzBack').hidden = (wzStep === 0);
+    document.getElementById('wzNext').textContent = (wzStep === steps.length - 1) ? 'Finish' : 'Next';
+  }
+
+  function wzPick(field, val){
+    if(field === 'type'){
+      if(WZ.type !== val){ WZ.subtype = ""; WZ.rodInSitu = "no"; WZ.rodRemovalDate = ""; WZ.bags = []; WZ.bagsShowAll = false; }
+      WZ.type = val;
+    }
+    else if(field === 'subtype'){
+      if(WZ.subtype !== val){ WZ.rodInSitu = "no"; WZ.rodRemovalDate = ""; }
+      WZ.subtype = val;
+    }
+    else if(field === 'system'){
+      if(WZ.system !== val){ WZ.onePieceIdx = ""; WZ.baseplateIdx = ""; WZ.bagIdx = ""; WZ.onePieceOutlet = ""; WZ.bagOutlet = ""; WZ.bags = []; WZ.bagsShowAll = false; }
+      WZ.system = val;
+    }
+    else if(field === 'onePieceIdx'){
+      WZ.onePieceIdx = val;
+      var item = CAT.onePiece[parseInt(val,10)];
+      WZ.onePieceOutlet = item ? (item.outlet || "") : "";
+    }
+    else if(field === 'baseplateIdx'){
+      // Changing baseplate brand can change which bags are valid; clear picks if brand class changes
+      var prev = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+      var next = CAT.baseplates[parseInt(val,10)] || null;
+      if(isHollister(prev) !== isHollister(next)){ WZ.bags = []; WZ.bagsShowAll = false; }
+      WZ.baseplateIdx = val;
+    }
+    else if(field === 'bagIdx'){
+      WZ.bagIdx = val;
+      var b = CAT.bags[parseInt(val,10)];
+      WZ.bagOutlet = b ? (b.outlet || "") : "";
+    }
+    renderWizard();
+  }
+  function wzToggleBag(idx){
+    var at = WZ.bags.indexOf(idx);
+    if(at >= 0) WZ.bags.splice(at, 1);
+    else WZ.bags.push(idx);
+    renderWizard();
+  }
+  function wzToggleAcc(i, on){
+    var a = ACCESSORIES[i];
+    var idx = WZ.accessories.indexOf(a);
+    if(on && idx < 0) WZ.accessories.push(a);
+    if(!on && idx >= 0) WZ.accessories.splice(idx, 1);
+  }
+
+  function wzValidate(){
+    var step = stepsForWizard()[wzStep];
+    if(step === 'type' && !WZ.type){ var h=document.getElementById('wzHint'); if(h) h.style.display='block'; return false; }
+    if(step === 'subtype' && !WZ.subtype){ var hs=document.getElementById('wzHint'); if(hs) hs.style.display='block'; return false; }
+    if(step === 'system' && !WZ.system){ var h2=document.getElementById('wzHint'); if(h2) h2.style.display='block'; return false; }
+    return true;
+  }
+  function wzNext(){
+    if(!wzValidate()) return;
+    var steps = stepsForWizard();
+    if(wzStep < steps.length - 1){ wzStep++; renderWizard(); }
+    else { applyWizard(); }
+  }
+  function wzBack(){ if(wzStep > 0){ wzStep--; renderWizard(); } }
+
+  function _fmtDate(iso){
+    if(!iso) return "";
+    var p = iso.split("-"); if(p.length !== 3) return iso;
+    var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var d = parseInt(p[2],10), m = parseInt(p[1],10)-1, y = p[0];
+    if(isNaN(d) || m<0 || m>11) return iso;
+    return d + " " + months[m] + " " + y;
+  }
+  function _humanList(arr){
+    if(arr.length === 0) return "";
+    if(arr.length === 1) return arr[0];
+    return arr.slice(0,-1).join(", ") + " and " + arr[arr.length-1];
+  }
+  function formatItemPhrase(item, fallbackSize){
+    if(!item) return "";
+    var phrase = item.phrase || item.label || "";
+    var size = fallbackSize || (item.sizes && item.sizes.length === 1 ? item.sizes[0] : "");
+    phrase = phrase.replace(/\[size\]/g, size || "___");
+    return phrase;
+  }
+
+  function selectedBagItems(){
+    return WZ.bags.map(function(i){ return CAT.bags[i]; }).filter(Boolean);
+  }
+  function primaryBag(){
+    var bags = selectedBagItems();
+    return bags.length ? bags[0] : null;
+  }
+
+  function applyWizard(){
+    curType = WZ.type || curType;
+    curSystem = WZ.system || curSystem;
+    var one = CAT.onePiece[parseInt(WZ.onePieceIdx,10)] || null;
+    var base = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+    var bag = primaryBag();
+    curBaseplateKind = base ? (base.kind || "") : "";
+    curOutlet = curSystem === 'two'
+      ? (bag ? (bag.outlet || "") : (WZ.bagOutlet || "")) || recommendedOutletForType(WZ.type)
+      : (WZ.onePieceOutlet || (one ? one.outlet : "") || recommendedOutletForType(WZ.type));
+
+    function setFld(sel, v){ var el = document.querySelector(sel); if(el) el.value = v; }
+    setFld('.fld-title', WZ.title);
+    setFld('.fld-fname', WZ.fname);
+    setFld('.fld-sname', WZ.sname);
+    setFld('.fld-id', WZ.id);
+
+    var body = document.querySelector('.body');
+    if(body && body.children[0]){
+      var who = ((WZ.title ? WZ.title + " " : "") + (WZ.sname || "")).trim() || "[Patient]";
+      var pron = (WZ.title === "Mr") ? "He" : ((WZ.title === "Ms" || WZ.title === "Mrs") ? "She" : "He/She");
+      var proc = WZ.procedure || "[procedure]";
+      var typeWord = subtypeLabel() ? subtypeLabel().toLowerCase() : (WZ.type || "[colostomy / ileostomy / urostomy]");
+      var when = _fmtDate(WZ.opdate) || "[date of operation]";
+      var cons = WZ.consultant || "[consultant]";
+      var mentionsStoma = /colostomy|ileostomy|urostomy|conduit|stoma|formation/i.test(proc);
+      var clause = mentionsStoma ? "" : (" with formation of a " + typeWord);
+      // Surgery type shown in bold, per letter house style
+      body.children[0].innerHTML = _esc(who) + " underwent <strong>" + _esc(proc) + "</strong>" + _esc(clause)
+        + " on " + _esc(when) + ". " + pron + " is under the care of " + _esc(cons) + ".";
+    }
+    if(body && body.children[1]){
+      var teach = WZ.teaching === 'yes' ? (" A teaching session was done with " + (WZ.teachingWith || "the patient") + ".") : "";
+      var rodSentence = (rodApplies() && WZ.rodInSitu === 'yes')
+        ? (" A rod is in situ" + (WZ.rodRemovalDate ? " and is expected to be removed on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
+        : "";
+      body.children[1].innerHTML = "On discharge, the stoma colour was " + _esc(WZ.stomaColour || "[stoma colour]")
+        + ", the stoma was " + _esc(WZ.stomaFunction || "[function]")
+        + ", and the peristomal skin was " + _esc(WZ.peristomalSkin || "[peristomal skin]") + "."
+        + _esc(rodSentence)
+        + " During hospitalisation the patient was informed about appliance management." + _esc(teach)
+        + " However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.";
+    }
+
+    // Discharge appliance sentence (bold, house style)
+    var applianceText = "[appliance]";
+    if(curSystem === 'one'){
+      applianceText = formatItemPhrase(one, WZ.onePieceSize) || "[one-piece pouch]";
+    } else if(curSystem === 'two'){
+      var bagPhrases = selectedBagItems().map(function(b){ return formatItemPhrase(b); });
+      var bagsText = bagPhrases.length ? _humanList(bagPhrases) : "[bag]";
+      applianceText = (formatItemPhrase(base) || "[baseplate]") + " with " + bagsText;
+    }
+    if(WZ.accessories.length){
+      applianceText += ", with " + _humanList(WZ.accessories.map(function(a){ return a.toLowerCase(); }));
+    }
+    setApplianceSlot(applianceText);
+    renderPlan(buildPlan());
+    updateRibbon();
+    closeWizard();
+  }
+
+  function bold(s){ return '<strong>' + s + '</strong>'; }
+
+  function buildPlan(){
+    var b = [];
+    var system = WZ.system || curSystem;
+    var type = WZ.type || curType;
+    var outlet = curOutlet || recommendedOutletForType(type) || "";
+    var base = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+    var isStomahesive = base && /stomahesive/i.test(base.label + " " + (base.kind||""));
+    var word = system === "two" ? "baseplate/flange" : "pouch";
+
+    // Which outlets are actually represented among selected bags (two-piece), for override handling
+    var bagItems = (system === "two") ? selectedBagItems() : [];
+    var outletsPresent = {};
+    bagItems.forEach(function(x){ if(x.outlet) outletsPresent[x.outlet] = true; });
+    var hasDrainableExtra = outletsPresent['drainable'] && (type === 'colostomy');
+    var rod = rodApplies() && WZ.rodInSitu === 'yes';
+    var rodWhen = WZ.rodRemovalDate ? _fmtDate(WZ.rodRemovalDate) : "";
+
+    if(system === "two"){
+      b.push("Flange/baseplate to be changed on alternate days. Next change due: " + (WZ.nextChange ? _fmtDate(WZ.nextChange) : "[date]") + ".");
+
+      if(type === "urostomy" || outlet === "urostomy"){
+        if(WZ.urostomyStents === 'yes'){
+          b.push(bold("Bag is to be changed on alternate days with the flange until the stents are in situ."));
+          b.push("Once the stents come out on their own, the bag should be changed daily and emptied when one-third full.");
+        } else {
+          b.push("Urostomy bag should be changed daily and emptied when one-third full.");
+        }
+      } else if(rod){
+        b.push(bold("Bag is to be changed on alternate days with the flange while the rod is in situ" + (rodWhen ? " (expected removal on " + rodWhen + ")" : "") + "."));
+        b.push("Empty the bag when one-third full. Once the rod is removed, the bag may be changed as required.");
+      } else if(outlet === "closed"){
+        b.push("Pouch to be changed when one-third full, from once to twice daily.");
+      } else if(outlet === "drainable"){
+        b.push("Bag to be changed daily and emptied when one-third full.");
+      } else {
+        b.push("Bag to be changed according to outlet type and emptied/changed when one-third full.");
+      }
+
+      if(hasDrainableExtra && outlet !== 'drainable'){
+        b.push("If the output becomes liquid, the drainable bag may be used and emptied when one-third full.");
+      }
+
+      if(isStomahesive){
+        b.push("Soap and water is to be used to remove the Stomahesive baseplate gently.");
+      } else {
+        b.push("A minimal amount of adhesive remover spray must be used to remove the baseplate gently.");
+      }
+    } else {
+      if(type === "urostomy" || outlet === "urostomy"){
+        if(WZ.urostomyStents === 'yes'){
+          b.push(bold("While the stents are in situ, change the pouch on alternate days."));
+          b.push("Once the stents come out on their own, change the pouch daily and empty it when one-third full.");
+        } else {
+          b.push("Urostomy pouch should be changed daily and emptied when one-third full.");
+        }
+      } else if(rod){
+        b.push(bold("The pouch is to be changed on alternate days while the rod is in situ" + (rodWhen ? " (expected removal on " + rodWhen + ")" : "") + "."));
+        b.push("Empty the pouch when one-third full. Once the rod is removed, change the pouch as required.");
+      } else if(outlet === "closed"){
+        b.push("Pouch to be changed when one-third full, from once to twice daily.");
+      } else if(outlet === "drainable"){
+        b.push("Change of pouch to be carried out daily. Pouch must be emptied when one-third full.");
+      } else {
+        b.push("Pouch to be changed according to outlet type and emptied/changed when one-third full.");
+      }
+      b.push("A minimal amount of adhesive remover spray must be used to remove the pouch gently.");
+    }
+
+    b.push("Wash stoma and peristomal skin well with tap water and pat dry.");
+    b.push("Aperture of the " + word + " to be cut to the shape and size of the stoma; adjust the cutting template accordingly.");
+
+    if(WZ.accessories.indexOf("Barrier / skin-protective wipe") >= 0){
+      b.push("Use a protective wipe once daily after cleansing and drying the stoma and peristomal skin.");
+    }
+    if(WZ.skinExcoriation === 'yes' || WZ.accessories.indexOf("Protective stoma powder") >= 0){
+      b.push("Apply protective powder over the skin excoriation and dust off the excess; stop once the skin heals.");
+    }
+    if(WZ.mucocutaneousSeparation === 'yes'){
+      b.push("Apply protective powder over the mucocutaneous separation and dust off the excess; stop once the separation heals.");
+    }
+    if(WZ.accessories.indexOf("Stoma belt") >= 0){
+      b.push(bold("Stoma belt should be kept on at all times, especially during bed time."));
+    }
+    b.push("Peristomal hair shaving is to be done as necessary to prevent hair folliculitis.");
+
+    if(WZ.accessories.indexOf("Filler paste") >= 0){
+      var from = _esc(WZ.fillerFrom || "___");
+      var to = _esc(WZ.fillerTo || "___");
+      b.push(bold("Apply a generous amount of filler paste from " + from + " to " + to + " o'clock location around the stoma."));
+    }
+    if(WZ.mucusFistula === 'yes' || WZ.accessories.indexOf("Mucus fistula dressing") >= 0){
+      b.push("Mucus fistula: wash the stoma and peristomal skin well and pat dry. Apply Bactigras/Paraffin dressing and a dry dressing to cover. Dressing to be changed on alternate days.");
+    }
+    return b;
+  }
+
+  function planText(){
+    var ul = document.getElementById('planList');
+    return ul ? ul.textContent.replace(/\s+/g,' ').trim() : "";
+  }
+  function renderPlan(bullets){
+    var ul = document.getElementById('planList');
+    if(!ul) return;
+    ul.innerHTML = "";
+    bullets.forEach(function(t){
+      var li = document.createElement('li');
+      li.innerHTML = t;   // bullets are built from escaped user data + intentional <strong> tags
+      ul.appendChild(li);
+    });
+    lastAutoPlan = planText();
+  }
+  function setApplianceSlot(text){
+    var slot = document.getElementById('applianceSlot');
+    if(slot){ slot.textContent = text; return; }
+    var body = document.querySelector('.body');
+    if(body){
+      var p = document.createElement('p');
+      p.innerHTML = 'Patient discharged using <span id="applianceSlot"></span>.';
+      body.appendChild(p);
+      document.getElementById('applianceSlot').textContent = text;
+    }
+  }
+  function updateRibbon(){
+    var t = document.getElementById('ribbonTitle');
+    if(!curType){ t.textContent = "Stoma Discharge Letter"; return; }
+    var label = subtypeLabel() || (curType.charAt(0).toUpperCase() + curType.slice(1));
+    var sys = curSystem ? (curSystem === "one" ? " (One-piece)" : " (Two-piece)") : "";
+    t.innerHTML = 'Stoma Discharge Letter — <span class="stoma-type">' + _esc(label) + '</span>' + sys;
+  }
+
+  // Backwards-compatible simple setters
+  function loadPlan(type){ WZ.type = type; curType = type; renderPlan(buildPlan()); updateRibbon(); }
+  function setType(type){ loadPlan(type); }
+  function setSystem(system){ WZ.system = system; curSystem = system; updateRibbon(); }
+  function chooseAppliance(){ openWizard(); }
+
+  function addBullet(){
+    var ul = document.getElementById('planList');
+    var li = document.createElement('li');
+    li.textContent = '';
+    ul.appendChild(li);
+    var range = document.createRange();
+    range.selectNodeContents(li);
+    range.collapse(true);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function clearForm(){
+    if(!confirm('Clear all fields and start a new letter?')) return;
+    document.querySelectorAll('input.fld').forEach(function(i){ if(i.id!=='letterDate') i.value=''; });
+    document.querySelectorAll('select.fld').forEach(function(s){ s.selectedIndex = 0; });
+    document.querySelector('.body').innerHTML =
+      '<p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p>' +
+      '<p>On discharge, the stoma colour was [pink/red], the stoma was [functioning/non-functioning], and the peristomal skin was [healthy/intact]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p>' +
+      '<p>Patient discharged using <span id="applianceSlot">' + DEFAULT_SLOT_TEXT + '</span>.</p>';
+    curType = ""; curSystem = ""; curOutlet = ""; curBaseplateKind = ""; lastAutoPlan = "";
+    document.getElementById('planList').innerHTML = '<li><br></li>';
+    document.getElementById('ribbonTitle').textContent = 'Stoma Discharge Letter';
+    resetWZ(); openWizard();
+  }
+
+  // ======================= CATALOGUE MANAGER =======================
+  function openCatalogueManager(){ renderCatalogueManager(); document.getElementById('catalogueModal').classList.add('open'); }
+  function closeCatalogueManager(){ document.getElementById('catalogueModal').classList.remove('open'); }
+  function catSummary(item){
+    var bits=[];
+    if(item.outlet) bits.push(item.outlet);
+    if(item.kind) bits.push(item.kind);
+    if(item.sizes && item.sizes.length) bits.push('sizes: '+item.sizes.join(', '));
+    if(item.stomas && item.stomas.length) bits.push('for: '+item.stomas.join(', '));
+    return bits.join(' · ');
+  }
+  function renderCatSection(key, title){
+    // display sorted alphabetically, but remove by ORIGINAL index
+    var entries = (CAT[key] || []).map(function(item, i){ return { item:item, idx:i }; })
+      .sort(function(a,b){ return (a.item.label||'').localeCompare(b.item.label||'', undefined, {sensitivity:'base'}); });
+    var html = '<div class="cat-section"><h3>'+_esc(title)+'</h3><div class="cat-list">';
+    entries.forEach(function(entry){
+      html += '<div class="cat-item"><div><b>'+_esc(entry.item.label)+'</b><small>'+_esc(catSummary(entry.item))+'</small></div><button class="cat-remove" onclick="removeCatalogueItem(\''+key+'\','+entry.idx+')">Remove</button></div>';
+    });
+    html += '</div><div class="cat-grid">'
+      + '<label>Label<input id="cat_'+key+'_label" placeholder="New item label"></label>'
+      + '<label>Outlet/kind<select id="cat_'+key+'_outlet"><option value=""></option><option value="closed">closed</option><option value="drainable">drainable</option><option value="urostomy">urostomy</option><option value="stomahesive">stomahesive</option><option value="microporous">microporous</option><option value="deep">deep</option><option value="hollister">hollister</option></select></label>'
+      + '<label>Sizes<input id="cat_'+key+'_sizes" placeholder="45, 57, 70"></label>'
+      + '<button class="mini-btn" onclick="addCatalogueItem(\''+key+'\')">+ Add</button>'
+      + '</div></div>';
+    return html;
+  }
+  function renderConsultantsSection(){
+    var list = consultants().slice().map(function(name, i){ return { name:name, idx:i }; })
+      .sort(function(a,b){ return a.name.localeCompare(b.name, undefined, {sensitivity:'base'}); });
+    var html = '<div class="cat-section"><h3>Consultants</h3><div class="cat-list">';
+    list.forEach(function(entry){
+      html += '<div class="cat-item"><div><b>'+_esc(entry.name)+'</b></div><button class="cat-remove" onclick="removeConsultant('+entry.idx+')">Remove</button></div>';
+    });
+    html += '</div><div class="cat-grid" style="grid-template-columns:1fr auto">'
+      + '<label>Consultant name<input id="cat_consultant_name" placeholder="e.g. Mr M Zammit Vincenti"></label>'
+      + '<button class="mini-btn" onclick="addConsultantFromManager()">+ Add</button>'
+      + '</div><div style="margin-top:8px"><button class="mini-btn" onclick="resetConsultants()">Reset consultants to default</button></div></div>';
+    return html;
+  }
+  function addConsultantFromManager(){
+    var el = document.getElementById('cat_consultant_name');
+    var name = el ? el.value : '';
+    if(!addConsultant(name)){ alert('Type a consultant name first.'); return; }
+    renderCatalogueManager();
+  }
+  function renderCatalogueManager(){
+    document.getElementById('catBody').innerHTML =
+      renderConsultantsSection()
+      + renderCatSection('onePiece','One-piece pouches')
+      + renderCatSection('baseplates','Two-piece baseplates')
+      + renderCatSection('bags','Two-piece bags')
+      + '<button class="mini-btn" onclick="resetCatalogue()">Reset appliances to default catalogue</button>';
+  }
+  function addCatalogueItem(key){
+    var label = (document.getElementById('cat_'+key+'_label').value || '').trim();
+    if(!label){ alert('Type an item label first.'); return; }
+    var outlet = document.getElementById('cat_'+key+'_outlet').value;
+    var sizes = (document.getElementById('cat_'+key+'_sizes').value || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean);
+    var item = { label: label, sizes: sizes };
+    if(key === 'baseplates'){
+      item.kind = outlet || '';
+      item.phrase = label;
+    } else {
+      item.outlet = outlet || '';
+      item.stomas = outlet === 'closed' ? ['colostomy'] : (outlet === 'drainable' ? ['ileostomy'] : (outlet === 'urostomy' ? ['urostomy'] : ['colostomy','ileostomy','urostomy']));
+      item.phrase = label;
+    }
+    CAT[key].push(item);
+    saveCatalogue();
+    renderCatalogueManager();
+  }
+  function removeCatalogueItem(key, idx){
+    if(!confirm('Remove this item from the catalogue?')) return;
+    CAT[key].splice(idx,1);
+    saveCatalogue();
+    renderCatalogueManager();
+  }
+  function resetCatalogue(){
+    if(!confirm('Reset the catalogue to the built-in default list?')) return;
+    CAT = clone(DEFAULT_CATALOGUE);
+    saveCatalogue();
+    renderCatalogueManager();
+  }
+
+  // ======================= EXPORT =======================
+  function buildFilename(){
+    var parts = [ _v('.fld-fname'), _v('.fld-sname'), _v('.fld-id') ]
+      .map(function(x){ return x.trim().replace(/[^A-Za-z0-9]+/g,''); })
+      .filter(Boolean);
+    return parts.length ? parts.join('_') : 'Stoma_Discharge_Letter';
+  }
+
+  function buildLetterHTML(){
+    var logo = document.querySelector('.l-header .logo');
+    var logoSrc = logo ? logo.src : '';
+    var date = _esc(_v('#letterDate') || _v('.fld-date'));
+    var title = _esc(_v('.fld-title'));
+    var first = _esc(_v('.fld-fname'));
+    var surname = _esc(_v('.fld-sname'));
+    var idno = _esc(_v('.fld-id'));
+    var salutation = _esc(_v('.fld-salutation'));
+    var name = _esc(_v('.fld-name'));
+    var bodyEl = document.querySelector('.body');
+    var bodyHTML = bodyEl ? bodyEl.innerHTML : '';
+    var planHTML = document.getElementById('planList') ? document.getElementById('planList').innerHTML : '';
+
+    var css = '@page{size:A4;margin:1.6cm 2cm;}'
+      + "body{font-family:'Times New Roman',serif;font-size:11.5pt;line-height:1.4;color:#000;}"
+      + '.logo{display:block;margin:0 auto 8px;width:230px;}'
+      + '.rule{border-bottom:2.4px solid #000E77;margin-bottom:14px;}'
+      + 'p{margin:0 0 10px;}'
+      + '.patient{font-weight:bold;}'
+      + '.body-txt{text-align:justify;}'
+      + '.plan-h{font-weight:bold;text-decoration:underline;margin-bottom:6px;}'
+      + 'ul{margin:0 0 10px;padding-left:24px;}li{margin:0 0 5px;}'
+      + ".footer{font-family:'Arial Narrow',sans-serif;font-size:9.5pt;line-height:1.35;text-align:center;color:#222;border-top:1px solid #9aa3ad;margin-top:26px;padding-top:6px;}";
+
+    var html =
+      '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
+      + '<head><meta charset="utf-8"><title>Discharge Letter</title>'
+      + '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->'
+      + '<style>' + css + '</style></head><body>'
+      + (logoSrc ? '<img class="logo" width="230" src="' + logoSrc + '" alt="Mater Dei Hospital">' : '')
+      + '<div class="rule"></div>'
+      + '<p>' + date + '</p>'
+      + '<p class="patient">Re: ' + [title, first, surname].filter(Boolean).join(' ')
+        + '&nbsp;&nbsp;&nbsp;ID No: ' + idno + '</p>'
+      + '<p>' + salutation + '</p>'
+      + '<div class="body-txt">' + bodyHTML + '</div>'
+      + '<p class="plan-h">Stoma Care Plan:</p>'
+      + '<ul>' + planHTML + '</ul>'
+      + '<p>Regards,</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>'
+      + '<p>' + (name ? name + '<br>' : '') + 'Stoma Team<br>Stoma Care Clinic</p>'
+      + '<div class="footer">Mater Dei Hospital, Tal-Qroqq, Msida, MSD 2090, Malta<br>'
+        + 'Tel: (+356) 2545 0000 &nbsp;|&nbsp; Fax: (+356) 2124 0176 &nbsp;|&nbsp; Stoma Care Clinic DDI: (+356) 2545 + Extension No.<br>'
+        + 'Ministry for Health, the Elderly and Community Care</div>'
+      + '</body></html>';
+    return html;
+  }
+
+  function exportWord(){
+    var html = buildLetterHTML();
+    var blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = buildFilename() + '.doc';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+  }
+  function saveToSharePoint(){
+    exportWord();
+    if (SHAREPOINT_LIBRARY_URL) window.open(SHAREPOINT_LIBRARY_URL, '_blank');
+  }
+
+  lastAutoPlan = planText();
+  openWizard();
+</script>
+</body>
+</html>
