@@ -255,6 +255,23 @@
   .wording-row textarea{width:100%;min-height:58px;font-family:var(--sans);font-size:12.5px;line-height:1.35;border:1px solid #b9c6d8;border-radius:7px;padding:8px;background:#fff;color:var(--ink);resize:vertical}
   .wording-sub{font-family:var(--sans);font-size:11.5px;color:#65758e;margin:0 0 8px}
   .cat-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  /* Edits dropdown */
+  .dropdown{position:relative;display:inline-block}
+  .dropdown-menu{display:none;position:absolute;right:0;top:calc(100% + 4px);z-index:40;background:#fff;border:1px solid #cdd8e8;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.16);min-width:210px;padding:4px}
+  .dropdown-menu.open{display:block}
+  .dropdown-menu button{display:block;width:100%;text-align:left;border:none;background:none;font-family:var(--sans);font-size:13px;color:var(--navy);padding:9px 11px;border-radius:6px;cursor:pointer}
+  .dropdown-menu button:hover{background:var(--fill)}
+  /* Edits tabs + Save bar inside the modal */
+  .edits-tabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+  .edits-tab{font-family:var(--sans);font-size:12px;font-weight:700;border:1px solid #cdd8e8;background:#fff;color:var(--navy);border-radius:999px;padding:6px 12px;cursor:pointer}
+  .edits-tab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .edits-savebar{position:sticky;bottom:0;left:0;right:0;display:none;align-items:center;gap:12px;justify-content:flex-end;background:#fff;border-top:1px solid #e2e8f2;margin:10px -4px -4px;padding:12px 4px 4px}
+  .edits-savebar.show{display:flex}
+  .edits-savebar .unsaved{margin-right:auto;font-family:var(--sans);font-size:12.5px;color:#b45309;font-weight:700}
+  .edits-save-btn{font-family:var(--sans);font-size:14px;font-weight:700;border:none;background:var(--navy);color:#fff;border-radius:8px;padding:10px 18px;cursor:pointer}
+  .edits-save-btn:hover{background:#001a99}
+  .edits-saved-note{display:none;font-family:var(--sans);font-size:12.5px;color:#137333;font-weight:700}
+  .edits-saved-note.show{display:inline}
 
   /* ---------- PRINT ---------- */
   @media print{
@@ -302,7 +319,17 @@
       <button class="btn" onclick="saveToSharePoint()">Save to SharePoint</button>
       <button class="btn" onclick="window.print()">Print</button>
       <button class="btn ghost" onclick="openWizard()">Wizard</button>
-      <button class="btn ghost" onclick="openCatalogueManager()">Catalogue &amp; Wording</button>
+      <span class="dropdown">
+        <button class="btn ghost" onclick="toggleEditsMenu(event)" aria-haspopup="true" aria-expanded="false" id="editsBtn">Edits &#9662;</button>
+        <div class="dropdown-menu" id="editsMenu" role="menu">
+          <button role="menuitem" onclick="openEdits('catalogue')">Catalogue &amp; consultants</button>
+          <button role="menuitem" onclick="openEdits('wording')">Body &amp; care-plan wording</button>
+          <button role="menuitem" onclick="openEdits('printing')">Printing &amp; letterhead</button>
+          <button role="menuitem" onclick="openEdits('wizard')">Wizard</button>
+          <button role="menuitem" onclick="openEdits('custom')">Custom wording</button>
+          <button role="menuitem" onclick="openEdits('backup')">Export / import file</button>
+        </div>
+      </span>
       <button class="btn ghost" onclick="addBullet()">+ Care-plan line</button>
       <button class="btn ghost" onclick="clearForm()">Clear</button>
       <span class="format-tools" aria-label="Text formatting tools">
@@ -342,13 +369,19 @@
     </div>
   </div>
 
-  <!-- Catalogue manager (screen only) -->
+  <!-- Edits manager (screen only) -->
   <div id="catalogueModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="catTitle" onclick="if(event.target===this) closeCatalogueManager()">
     <div class="modal-card catalogue-card">
       <button class="modal-x" onclick="closeCatalogueManager()" aria-label="Close">&times;</button>
-      <h2 id="catTitle">Catalogue &amp; Wording</h2>
-      <p class="modal-sub">Edit consultants, appliances and their wording, the per-type body templates, and the care-plan bullets. Everything is saved in this browser and can be exported to a file to back up or share.</p>
+      <h2 id="catTitle">Edits</h2>
+      <p class="modal-sub" id="catSub">Make your changes, then press <b>Save changes</b>. Everything is stored in this browser and can be exported to a file to back up or share.</p>
+      <div class="edits-tabs" id="editsTabs"></div>
       <div id="catBody" class="cat-wrap"></div>
+      <div class="edits-savebar" id="editsSaveBar">
+        <span class="unsaved">You have unsaved edits</span>
+        <span class="edits-saved-note" id="editsSavedNote">Saved</span>
+        <button class="edits-save-btn" onclick="saveAllEdits()">Save changes</button>
+      </div>
     </div>
   </div>
 
@@ -575,10 +608,161 @@
     renderCatalogueManager();
   }
 
-  var ACCESSORIES = [
+  var DEFAULT_ACCESSORIES = [
     "Stoma belt", "Protective stoma powder", "Barrier / skin-protective wipe",
     "Adhesive removal spray", "Filler paste", "Mucus fistula dressing"
   ];
+  var ACCESSORIES = loadAccessories();
+  function loadAccessories(){
+    try{
+      var raw = localStorage.getItem('stomaLetterAccessoriesV1');
+      if(raw){ var a = JSON.parse(raw); if(Array.isArray(a) && a.length) return a; }
+    }catch(e){}
+    return DEFAULT_ACCESSORIES.slice();
+  }
+  function saveAccessories(){
+    try{ localStorage.setItem('stomaLetterAccessoriesV1', JSON.stringify(ACCESSORIES)); }catch(e){}
+  }
+
+  // ================= PRINTING / LETTERHEAD SETTINGS =================
+  // Bold with **double asterisks**; applied to on-screen letter and Word/print export.
+  var DEFAULT_LETTER = {
+    headerTitle:   "Stoma care service",
+    headerTel:     "Tel No 25454431",
+    footerAddress: "Mater Dei Hospital, Tal-Qroqq, Msida, MSD 2090, Malta",
+    footerContact: "**Tel** (+356) 2545 0000   **Facsimile** (+356) 2124 0176   **DDI**: (+356) 2545 + Extension No.",
+    footerMinistry:"**M**inistry **o**f **H**ealth, **T**he **E**lderly and **C**ommunity **C**are",
+    closing:       "Regards,",
+    signRole1:     "Stoma Team",
+    signRole2:     "Stoma Care Clinic",
+    pageSize:      "A4",
+    pageMargin:    "1.6cm 2cm",
+    fontSize:      "11.5pt"
+  };
+  var LETTER = loadLetter();
+  function loadLetter(){
+    var out = clone(DEFAULT_LETTER);
+    try{
+      var saved = JSON.parse(localStorage.getItem('stomaLetterPrintV1') || 'null');
+      if(saved){ Object.keys(out).forEach(function(k){ if(typeof saved[k] === 'string') out[k] = saved[k]; }); }
+    }catch(e){}
+    return out;
+  }
+  function saveLetter(){
+    try{ localStorage.setItem('stomaLetterPrintV1', JSON.stringify(LETTER)); }catch(e){}
+  }
+  // Escape, then turn **bold** into <strong>, and leave the rest as text.
+  function mdBold(s){
+    return _esc(s || '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  }
+  // Apply the letterhead / sign-off settings to the on-screen letter.
+  function applyLetterChrome(){
+    function setHTML(sel, html){ var el = document.querySelector(sel); if(el) el.innerHTML = html; }
+    setHTML('.l-header .lh-title', mdBold(LETTER.headerTitle));
+    setHTML('.l-header .lh-tel', mdBold(LETTER.headerTel));
+    setHTML('.l-footer .footer-addr', mdBold(LETTER.footerAddress));
+    setHTML('.l-footer .footer-contact', mdBold(LETTER.footerContact));
+    setHTML('.l-footer .footer-ministry', mdBold(LETTER.footerMinistry));
+    setHTML('.l-sign .regards', mdBold(LETTER.closing));
+    var clinics = document.querySelectorAll('.l-sign .clinic');
+    if(clinics[0]) clinics[0].innerHTML = mdBold(LETTER.signRole1);
+    if(clinics[1]) clinics[1].innerHTML = mdBold(LETTER.signRole2);
+    var letter = document.getElementById('letter');
+    if(letter && LETTER.fontSize){ letter.style.fontSize = LETTER.fontSize; }
+  }
+
+  // Track the caret inside the letter body so custom wording inserts there.
+  var lastBodyRange = null;
+  function trackBodyCaret(){
+    var sel = window.getSelection();
+    if(sel && sel.rangeCount){
+      var r = sel.getRangeAt(0);
+      var body = document.querySelector('.body');
+      if(body && body.contains(r.commonAncestorContainer)){ lastBodyRange = r.cloneRange(); }
+    }
+  }
+  function initBodyCaretTracking(){
+    var body = document.querySelector('.body');
+    if(!body) return;
+    ['keyup','mouseup','blur'].forEach(function(ev){ body.addEventListener(ev, trackBodyCaret); });
+  }
+  function insertTextIntoBody(text){
+    var body = document.querySelector('.body');
+    if(!body || !text) return;
+    body.focus();
+    var sel = window.getSelection();
+    if(lastBodyRange && body.contains(lastBodyRange.commonAncestorContainer)){
+      sel.removeAllRanges(); sel.addRange(lastBodyRange);
+      document.execCommand('insertText', false, text);
+    } else {
+      var p = document.createElement('p'); p.textContent = text; body.appendChild(p);
+    }
+    lastBodyRange = null;
+  }
+
+  // ================= CUSTOM WORDING (user-added snippets) =================
+  var CUSTOM_WORDING = loadCustomWording();
+  function loadCustomWording(){
+    try{
+      var raw = localStorage.getItem('stomaLetterCustomWordingV1');
+      if(raw){ var a = JSON.parse(raw); if(Array.isArray(a)) return a; }
+    }catch(e){}
+    return [];
+  }
+  function saveCustomWording(){
+    try{ localStorage.setItem('stomaLetterCustomWordingV1', JSON.stringify(CUSTOM_WORDING)); }catch(e){}
+  }
+
+  // ================= WIZARD TEXT (editable prompts) =================
+  var DEFAULT_WIZARD_TEXT = {
+    title_type: "Stoma type",
+    title_subtype: "Stoma sub-type",
+    title_patient: "Patient details",
+    title_surgery: "Surgery & stoma assessment",
+    title_system: "Appliance system",
+    title_appliance: "One-piece pouch",
+    title_baseplate: "Baseplate / flange",
+    title_bag: "Bag(s)",
+    title_accessories: "Accessories & extras",
+    cap_subtypeColostomy: "Which type of colostomy?",
+    cap_subtypeIleostomy: "Which type of ileostomy?",
+    cap_system: "Is the appliance a one-piece or a two-piece system?",
+    cap_accessories: "Tick any accessories or extra instructions needed:"
+  };
+  var WIZARD_TEXT = loadWizardText();
+  function loadWizardText(){
+    var out = clone(DEFAULT_WIZARD_TEXT);
+    try{
+      var saved = JSON.parse(localStorage.getItem('stomaLetterWizardTextV1') || 'null');
+      if(saved){ Object.keys(out).forEach(function(k){ if(typeof saved[k] === 'string') out[k] = saved[k]; }); }
+    }catch(e){}
+    return out;
+  }
+  function saveWizardText(){
+    try{ localStorage.setItem('stomaLetterWizardTextV1', JSON.stringify(WIZARD_TEXT)); }catch(e){}
+  }
+  function wtext(key){ return (typeof WIZARD_TEXT[key] === 'string') ? WIZARD_TEXT[key] : (DEFAULT_WIZARD_TEXT[key] || ''); }
+
+  // ================= EDIT STAGING (Save button appears on change) =========
+  // Edits update the in-memory models immediately (for preview) but are only
+  // written to storage when the user presses Save.
+  var editsDirty = false;
+  function markEdited(){
+    editsDirty = true;
+    var bar = document.getElementById('editsSaveBar');
+    if(bar) bar.classList.add('show');
+  }
+  function saveAllEdits(){
+    saveCatalogue(); saveBodyTemplates(); savePlanPhrases();
+    saveAccessories(); saveLetter(); saveCustomWording(); saveWizardText();
+    editsDirty = false;
+    var bar = document.getElementById('editsSaveBar');
+    if(bar) bar.classList.remove('show');
+    applyLetterChrome();
+    renderWizard();
+    var note = document.getElementById('editsSavedNote');
+    if(note){ note.classList.add('show'); setTimeout(function(){ note.classList.remove('show'); }, 1800); }
+  }
 
   // current state
   var curType = "";
@@ -646,7 +830,7 @@
     return head.concat(["appliance","accessories"]);
   }
   function titleForStep(step){
-    return ({type:"Stoma type", subtype:"Stoma sub-type", patient:"Patient information", surgery:"Surgery details and assessment", system:"Appliance system", appliance:"One-piece pouch", baseplate:"Baseplate", bag:"Bag", accessories:"Accessories"})[step] || step;
+    return wtext('title_' + step) || step;
   }
 
   function openWizard(){ wzStep = 0; renderWizard(); document.getElementById('wizard').classList.add('open'); }
@@ -716,7 +900,7 @@
     }
     if(step === "subtype"){
       var list = SUBTYPES[WZ.type] || [];
-      var caption = WZ.type === 'colostomy' ? 'Which type of colostomy?' : 'Which type of ileostomy?';
+      var caption = WZ.type === 'colostomy' ? wtext('cap_subtypeColostomy') : wtext('cap_subtypeIleostomy');
       return '<p class="wz-cap">'+caption+'</p>'
         + list.map(function(s){
             var rodTag = ((WZ.type==='colostomy' && (s.v==='transverse'||s.v==='loop')) || (WZ.type==='ileostomy' && s.v==='loop'))
@@ -759,7 +943,7 @@
       return html;
     }
     if(step === "system"){
-      return '<p class="wz-cap">Is the appliance a one-piece or a two-piece system?</p>'
+      return '<p class="wz-cap">'+_esc(wtext('cap_system'))+'</p>'
         + '<button class="wz-choice'+(WZ.system==='one'?' sel':'')+'" onclick="wzPick(\'system\',\'one\')">One-piece<small>flange and pouch are a single unit</small></button>'
         + '<button class="wz-choice'+(WZ.system==='two'?' sel':'')+'" onclick="wzPick(\'system\',\'two\')">Two-piece<small>separate baseplate/flange and bag</small></button>'
         + '<p class="wz-hint" id="wzHint" style="display:none">Please choose one-piece or two-piece to continue.</p>';
@@ -805,7 +989,7 @@
         + toggle;
     }
     if(step === "accessories"){
-      var rows = '<p class="wz-cap">Tick any accessories or extra instructions needed:</p>'
+      var rows = '<p class="wz-cap">'+_esc(wtext('cap_accessories'))+'</p>'
         + ACCESSORIES.map(function(a, i){
             var on = WZ.accessories.indexOf(a) >= 0;
             return '<label class="wz-check'+(on?' sel':'')+'"><input type="checkbox"'+(on?' checked':'')+' onchange="wzToggleAcc('+i+', this.checked); this.closest(\'.wz-check\').classList.toggle(\'sel\', this.checked); renderWizard();"> '+_esc(a)+'</label>';
@@ -1273,8 +1457,34 @@
   }
 
   // ======================= CATALOGUE MANAGER =======================
-  function openCatalogueManager(){ renderCatalogueManager(); document.getElementById('catalogueModal').classList.add('open'); }
-  function closeCatalogueManager(){ document.getElementById('catalogueModal').classList.remove('open'); }
+  var editsView = 'catalogue';
+  var EDITS_TABS = [
+    ['catalogue','Catalogue'],
+    ['wording','Wording'],
+    ['printing','Printing'],
+    ['wizard','Wizard'],
+    ['custom','Custom'],
+    ['backup','Backup']
+  ];
+  function toggleEditsMenu(ev){
+    if(ev) ev.stopPropagation();
+    var m = document.getElementById('editsMenu');
+    m.classList.toggle('open');
+  }
+  function closeEditsMenu(){ var m=document.getElementById('editsMenu'); if(m) m.classList.remove('open'); }
+  document.addEventListener('click', function(){ closeEditsMenu(); });
+  function openEdits(view){
+    closeEditsMenu();
+    editsView = view || 'catalogue';
+    renderCatalogueManager();
+    document.getElementById('catalogueModal').classList.add('open');
+    document.querySelector('#catalogueModal .modal-card').scrollTop = 0;
+  }
+  function openCatalogueManager(){ openEdits('catalogue'); }
+  function closeCatalogueManager(){
+    if(editsDirty && !confirm('You have unsaved edits. Close without saving?')) return;
+    document.getElementById('catalogueModal').classList.remove('open');
+  }
   function catSummary(item){
     var bits=[];
     if(item.outlet) bits.push(item.outlet);
@@ -1327,7 +1537,7 @@
   function renderBodyTemplatesSection(){
     var types = [['colostomy','Colostomy'],['ileostomy','Ileostomy'],['urostomy','Urostomy']];
     var html = '<div class="cat-section"><h3>Body wording &mdash; per stoma type</h3>'
-      + '<p class="wording-sub">Placeholders: {who} {pron} {procedure} {formation} {date} {consultant} {colour} {function} {skin} {rod} {teaching} {stents}. Edits are saved automatically.</p>';
+      + '<p class="wording-sub">Placeholders: {who} {pron} {procedure} {formation} {date} {consultant} {colour} {function} {skin} {rod} {teaching} {stents}. Press <b>Save changes</b> when done.</p>';
     types.forEach(function(t){
       var tpl = bodyTemplateFor(t[0]);
       html += '<div style="margin:0 0 12px"><b style="font-family:var(--sans);font-size:13px;color:var(--navy)">'+t[1]+'</b>'
@@ -1343,7 +1553,7 @@
   function updateBodyTemplate(type, field, val){
     if(!BODY_TEMPLATES[type]) BODY_TEMPLATES[type] = clone(DEFAULT_BODY_TEMPLATES[type]);
     BODY_TEMPLATES[type][field] = val;
-    saveBodyTemplates();
+    markEdited();
   }
   function resetBodyTemplates(){
     if(!confirm('Reset all body wording templates to the built-in default?')) return;
@@ -1358,7 +1568,7 @@
   ];
   function renderPlanPhrasesSection(){
     var html = '<div class="cat-section"><h3>Care-plan bullet wording</h3>'
-      + '<p class="wording-sub">Placeholders: {date} {word} {rodWhen} {from} {to}. Bold bullets stay bold in the letter. Edits are saved automatically.</p>';
+      + '<p class="wording-sub">Placeholders: {date} {word} {rodWhen} {from} {to}. Bold bullets stay bold in the letter. Press <b>Save changes</b> when done.</p>';
     PLAN_PHRASE_GROUPS.forEach(function(g){
       html += '<div style="margin:0 0 6px"><b style="font-family:var(--sans);font-size:12.5px;color:var(--navy)">'+_esc(g[0])+'</b></div>';
       g[1].forEach(function(key){
@@ -1370,7 +1580,7 @@
     html += '<div class="cat-actions"><button class="mini-btn" onclick="resetPlanPhrases()">Reset care-plan wording to default</button></div></div>';
     return html;
   }
-  function updatePlanPhrase(key, val){ PLAN_PHRASES[key] = val; savePlanPhrases(); }
+  function updatePlanPhrase(key, val){ PLAN_PHRASES[key] = val; markEdited(); }
   function resetPlanPhrases(){
     if(!confirm('Reset all care-plan bullet wording to the built-in default?')) return;
     PLAN_PHRASES = clone(DEFAULT_PLAN_PHRASES);
@@ -1378,11 +1588,11 @@
     renderCatalogueManager();
   }
   function renderBackupSection(){
-    return '<div class="cat-section"><h3>Backup &mdash; export / import all wording</h3>'
-      + '<p class="wording-sub">Save all wording (appliances, consultants, body templates and care-plan bullets) to a file you can keep, move to another device, or share with colleagues.</p>'
+    return '<div class="cat-section"><h3>Backup &mdash; export / import everything</h3>'
+      + '<p class="wording-sub">Save all your edits (appliances, consultants, body templates, care-plan bullets, printing/letterhead, wizard wording and custom wording) to a file you can keep, move to another device, or share with colleagues.</p>'
       + '<div class="cat-actions">'
-      +   '<button class="mini-btn" onclick="exportWording()">Export wording to file</button>'
-      +   '<button class="mini-btn" onclick="document.getElementById(\'importWordingInput\').click()">Import wording from file</button>'
+      +   '<button class="mini-btn" onclick="exportWording()">Export to file</button>'
+      +   '<button class="mini-btn" onclick="document.getElementById(\'importWordingInput\').click()">Import from file</button>'
       +   '<input type="file" id="importWordingInput" accept="application/json,.json" style="display:none" onchange="importWordingFile(this)">'
       + '</div></div>';
   }
@@ -1390,12 +1600,16 @@
     var data = {
       app: 'stoma-discharge-letter',
       kind: 'wording-settings',
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       catalogue: CAT,
       consultants: consultants(),
       bodyTemplates: BODY_TEMPLATES,
-      planPhrases: PLAN_PHRASES
+      planPhrases: PLAN_PHRASES,
+      accessories: ACCESSORIES,
+      letter: LETTER,
+      wizardText: WIZARD_TEXT,
+      customWording: CUSTOM_WORDING
     };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     var url = URL.createObjectURL(blob);
@@ -1416,17 +1630,24 @@
       if(!data || data.kind !== 'wording-settings'){
         if(!confirm('This file was not recognised as a wording export. Try to import it anyway?')){ input.value=''; return; }
       }
-      if(!confirm('Import this wording? It will replace your current appliances, consultants, body templates and care-plan wording on this device.')){ input.value=''; return; }
+      if(!confirm('Import this file? It will replace your current edits on this device.')){ input.value=''; return; }
       try{
         if(data.catalogue){ CAT = data.catalogue; saveCatalogue(); }
         if(Array.isArray(data.consultants)){ saveConsultants(data.consultants); }
         if(data.bodyTemplates){ BODY_TEMPLATES = loadBodyTemplatesFrom(data.bodyTemplates); saveBodyTemplates(); }
         if(data.planPhrases){ PLAN_PHRASES = loadPlanPhrasesFrom(data.planPhrases); savePlanPhrases(); }
+        if(Array.isArray(data.accessories) && data.accessories.length){ ACCESSORIES = data.accessories.slice(); saveAccessories(); }
+        if(data.letter){ Object.keys(DEFAULT_LETTER).forEach(function(k){ if(typeof data.letter[k]==='string') LETTER[k]=data.letter[k]; }); saveLetter(); }
+        if(data.wizardText){ Object.keys(DEFAULT_WIZARD_TEXT).forEach(function(k){ if(typeof data.wizardText[k]==='string') WIZARD_TEXT[k]=data.wizardText[k]; }); saveWizardText(); }
+        if(Array.isArray(data.customWording)){ CUSTOM_WORDING = data.customWording; saveCustomWording(); }
       }catch(err){ alert('Something went wrong importing that file.'); input.value=''; return; }
       input.value='';
+      editsDirty = false;
+      var bar = document.getElementById('editsSaveBar'); if(bar) bar.classList.remove('show');
+      applyLetterChrome();
       renderCatalogueManager();
       renderWizard();
-      alert('Wording imported successfully.');
+      alert('Imported successfully.');
     };
     reader.readAsText(file);
   }
@@ -1446,16 +1667,169 @@
     Object.keys(out).forEach(function(k){ if(typeof saved[k] === 'string') out[k] = saved[k]; });
     return out;
   }
+  // ---------- Printing & letterhead editor ----------
+  var PRINT_FIELDS = [
+    ['headerTitle','Header title','text'],
+    ['headerTel','Header phone line','text'],
+    ['footerAddress','Footer line 1 — address','text'],
+    ['footerContact','Footer line 2 — contact','text'],
+    ['footerMinistry','Footer line 3 — ministry','text'],
+    ['closing','Closing (e.g. Regards,)','text'],
+    ['signRole1','Sign-off line 1 (e.g. Stoma Team)','text'],
+    ['signRole2','Sign-off line 2 (e.g. Stoma Care Clinic)','text'],
+    ['pageSize','Page size (e.g. A4)','text'],
+    ['pageMargin','Page margins (e.g. 1.6cm 2cm)','text'],
+    ['fontSize','Base font size (e.g. 11.5pt)','text']
+  ];
+  function renderPrintingSection(){
+    var html = '<div class="cat-section"><h3>Printing &amp; letterhead</h3>'
+      + '<p class="wording-sub">Edit the header, footer, sign-off and page layout used on screen and in the Word / print export. Use **double asterisks** around text to make it bold.</p>';
+    PRINT_FIELDS.forEach(function(f){
+      html += '<div class="wording-row"><label>'+_esc(f[1])+'</label>'
+        + '<input type="text" value="'+_esc(LETTER[f[0]])+'" oninput="updateLetterField(\''+f[0]+'\',this.value)"></div>';
+    });
+    html += '<div class="cat-actions"><button class="mini-btn" onclick="resetLetterSettings()">Reset printing to default</button></div></div>';
+    return html;
+  }
+  function updateLetterField(key, val){ LETTER[key] = val; markEdited(); }
+  function resetLetterSettings(){
+    if(!confirm('Reset all printing / letterhead settings to the built-in default?')) return;
+    LETTER = clone(DEFAULT_LETTER); saveLetter(); applyLetterChrome(); renderCatalogueManager();
+  }
+
+  // ---------- Wizard editor (separate section) ----------
+  var WIZARD_TITLE_FIELDS = [
+    ['title_type','Step title — Stoma type'],
+    ['title_subtype','Step title — Sub-type'],
+    ['title_patient','Step title — Patient'],
+    ['title_surgery','Step title — Surgery / assessment'],
+    ['title_system','Step title — Appliance system'],
+    ['title_appliance','Step title — One-piece pouch'],
+    ['title_baseplate','Step title — Baseplate'],
+    ['title_bag','Step title — Bag(s)'],
+    ['title_accessories','Step title — Accessories']
+  ];
+  var WIZARD_CAP_FIELDS = [
+    ['cap_subtypeColostomy','Prompt — which colostomy?'],
+    ['cap_subtypeIleostomy','Prompt — which ileostomy?'],
+    ['cap_system','Prompt — one-piece or two-piece?'],
+    ['cap_accessories','Prompt — accessories step']
+  ];
+  function renderWizardEditorSection(){
+    var html = '<div class="cat-section"><h3>Wizard &mdash; step titles &amp; prompts</h3>'
+      + '<p class="wording-sub">Edit the wording shown in the setup wizard.</p>';
+    WIZARD_TITLE_FIELDS.concat(WIZARD_CAP_FIELDS).forEach(function(f){
+      html += '<div class="wording-row"><label>'+_esc(f[1])+'</label>'
+        + '<input type="text" value="'+_esc(wtext(f[0]))+'" oninput="updateWizardText(\''+f[0]+'\',this.value)"></div>';
+    });
+    html += '<div class="cat-actions"><button class="mini-btn" onclick="resetWizardText()">Reset wizard wording to default</button></div></div>';
+
+    // Accessories list editor
+    html += '<div class="cat-section"><h3>Wizard &mdash; accessories list</h3>'
+      + '<p class="wording-sub">These options appear on the wizard\'s accessories step.</p><div class="cat-list">';
+    ACCESSORIES.forEach(function(a, i){
+      html += '<div class="cat-item"><div class="cat-item-main">'
+        + '<input class="cat-phrase" value="'+_esc(a)+'" oninput="updateAccessory('+i+',this.value)"></div>'
+        + '<button class="cat-remove" onclick="removeAccessory('+i+')">Remove</button></div>';
+    });
+    html += '</div><div class="cat-grid" style="grid-template-columns:1fr auto">'
+      + '<label>New accessory<input id="wiz_new_acc" placeholder="e.g. Convex insert"></label>'
+      + '<button class="mini-btn" onclick="addAccessory()">+ Add</button>'
+      + '</div><div class="cat-actions"><button class="mini-btn" onclick="resetAccessories()">Reset accessories to default</button></div></div>';
+    return html;
+  }
+  function updateWizardText(key, val){ WIZARD_TEXT[key] = val; markEdited(); }
+  function resetWizardText(){
+    if(!confirm('Reset all wizard wording to the built-in default?')) return;
+    WIZARD_TEXT = clone(DEFAULT_WIZARD_TEXT); saveWizardText(); renderWizard(); renderCatalogueManager();
+  }
+  function updateAccessory(i, val){ if(i>=0 && i<ACCESSORIES.length){ ACCESSORIES[i] = val; markEdited(); } }
+  function addAccessory(){
+    var el = document.getElementById('wiz_new_acc');
+    var v = (el && el.value || '').trim();
+    if(!v){ alert('Type an accessory name first.'); return; }
+    ACCESSORIES.push(v); markEdited(); renderCatalogueManager();
+  }
+  function removeAccessory(i){
+    if(!confirm('Remove this accessory?')) return;
+    ACCESSORIES.splice(i,1); markEdited(); renderCatalogueManager();
+  }
+  function resetAccessories(){
+    if(!confirm('Reset the accessories list to default?')) return;
+    ACCESSORIES = DEFAULT_ACCESSORIES.slice(); saveAccessories(); renderWizard(); renderCatalogueManager();
+  }
+
+  // ---------- Custom wording (user-added snippets, insertable into the letter) ----------
+  function renderCustomWordingSection(){
+    var html = '<div class="cat-section"><h3>Custom wording</h3>'
+      + '<p class="wording-sub">Add your own sections and wording snippets. Use the <b>Insert</b> button to drop a snippet into the letter where your cursor is. Everything here is saved and included in export/import.</p>';
+    if(!CUSTOM_WORDING.length){
+      html += '<p class="wording-sub">No custom sections yet. Add one below.</p>';
+    }
+    CUSTOM_WORDING.forEach(function(sec, si){
+      html += '<div class="cat-section" style="background:#fff">'
+        + '<div class="cat-grid" style="grid-template-columns:1fr auto;margin-bottom:8px">'
+        +   '<label>Section name<input value="'+_esc(sec.name)+'" oninput="updateCustomSectionName('+si+',this.value)"></label>'
+        +   '<button class="cat-remove" onclick="removeCustomSection('+si+')">Remove section</button>'
+        + '</div>';
+      (sec.items||[]).forEach(function(item, ii){
+        html += '<div class="wording-row"><label>'+_esc(item.label||('Item '+(ii+1)))
+          +   ' <button class="mini-btn" style="padding:3px 8px;font-size:11px" onclick="insertCustomWording('+si+','+ii+')">Insert into letter</button>'
+          +   ' <button class="mini-btn" style="padding:3px 8px;font-size:11px" onclick="removeCustomItem('+si+','+ii+')">Remove</button></label>'
+          + '<input value="'+_esc(item.label||'')+'" placeholder="Item name" oninput="updateCustomItem('+si+','+ii+',\'label\',this.value)" style="margin-bottom:4px;font-family:var(--sans);font-size:12.5px;border:1px solid #cdd8e8;border-radius:6px;padding:6px 8px">'
+          + '<textarea placeholder="Wording to insert" oninput="updateCustomItem('+si+','+ii+',\'text\',this.value)">'+_esc(item.text||'')+'</textarea></div>';
+      });
+      html += '<div class="cat-actions"><button class="mini-btn" onclick="addCustomItem('+si+')">+ Add wording</button></div>';
+      html += '</div>';
+    });
+    html += '<div class="cat-actions"><button class="mini-btn" onclick="addCustomSection()">+ Add section</button></div></div>';
+    return html;
+  }
+  function addCustomSection(){ CUSTOM_WORDING.push({ name:'New section', items:[] }); markEdited(); renderCatalogueManager(); }
+  function removeCustomSection(si){ if(!confirm('Remove this whole section?')) return; CUSTOM_WORDING.splice(si,1); markEdited(); renderCatalogueManager(); }
+  function updateCustomSectionName(si, val){ if(CUSTOM_WORDING[si]){ CUSTOM_WORDING[si].name = val; markEdited(); } }
+  function addCustomItem(si){ if(CUSTOM_WORDING[si]){ CUSTOM_WORDING[si].items = CUSTOM_WORDING[si].items||[]; CUSTOM_WORDING[si].items.push({label:'New wording', text:''}); markEdited(); renderCatalogueManager(); } }
+  function removeCustomItem(si, ii){ if(CUSTOM_WORDING[si] && CUSTOM_WORDING[si].items){ CUSTOM_WORDING[si].items.splice(ii,1); markEdited(); renderCatalogueManager(); } }
+  function updateCustomItem(si, ii, field, val){ if(CUSTOM_WORDING[si] && CUSTOM_WORDING[si].items && CUSTOM_WORDING[si].items[ii]){ CUSTOM_WORDING[si].items[ii][field] = val; markEdited(); } }
+  function insertCustomWording(si, ii){
+    var it = (CUSTOM_WORDING[si] && CUSTOM_WORDING[si].items) ? CUSTOM_WORDING[si].items[ii] : null;
+    if(!it){ return; }
+    if(editsDirty && !confirm('You have unsaved edits. Insert this wording and continue (your edits stay unsaved)?')) return;
+    insertTextIntoBody(it.text || '');
+    document.getElementById('catalogueModal').classList.remove('open');
+  }
+
+  function renderEditsTabs(){
+    var el = document.getElementById('editsTabs');
+    if(!el) return;
+    el.innerHTML = EDITS_TABS.map(function(t){
+      return '<button class="edits-tab'+(editsView===t[0]?' active':'')+'" onclick="openEdits(\''+t[0]+'\')">'+_esc(t[1])+'</button>';
+    }).join('');
+  }
   function renderCatalogueManager(){
-    document.getElementById('catBody').innerHTML =
-      renderConsultantsSection()
-      + renderCatSection('onePiece','One-piece pouches')
-      + renderCatSection('baseplates','Two-piece baseplates')
-      + renderCatSection('bags','Two-piece bags')
-      + '<button class="mini-btn" onclick="resetCatalogue()">Reset appliances to default catalogue</button>'
-      + renderBodyTemplatesSection()
-      + renderPlanPhrasesSection()
-      + renderBackupSection();
+    renderEditsTabs();
+    var body = document.getElementById('catBody');
+    if(editsView === 'catalogue'){
+      body.innerHTML =
+        renderConsultantsSection()
+        + renderCatSection('onePiece','One-piece pouches')
+        + renderCatSection('baseplates','Two-piece baseplates')
+        + renderCatSection('bags','Two-piece bags')
+        + '<button class="mini-btn" onclick="resetCatalogue()">Reset appliances to default catalogue</button>';
+    } else if(editsView === 'wording'){
+      body.innerHTML = renderBodyTemplatesSection() + renderPlanPhrasesSection();
+    } else if(editsView === 'printing'){
+      body.innerHTML = renderPrintingSection();
+    } else if(editsView === 'wizard'){
+      body.innerHTML = renderWizardEditorSection();
+    } else if(editsView === 'custom'){
+      body.innerHTML = renderCustomWordingSection();
+    } else if(editsView === 'backup'){
+      body.innerHTML = renderBackupSection();
+    }
+    // keep the Save bar visible if there are pending edits
+    var bar = document.getElementById('editsSaveBar');
+    if(bar) bar.classList.toggle('show', editsDirty);
   }
   function addCatalogueItem(key){
     var label = (document.getElementById('cat_'+key+'_label').value || '').trim();
@@ -1476,7 +1850,7 @@
     renderCatalogueManager();
   }
   function updateCataloguePhrase(key, idx, val){
-    if(CAT[key] && CAT[key][idx]){ CAT[key][idx].phrase = val; saveCatalogue(); }
+    if(CAT[key] && CAT[key][idx]){ CAT[key][idx].phrase = val; markEdited(); }
   }
   function removeCatalogueItem(key, idx){
     if(!confirm('Remove this item from the catalogue?')) return;
@@ -1513,8 +1887,8 @@
     var bodyHTML = bodyEl ? bodyEl.innerHTML : '';
     var planHTML = document.getElementById('planList') ? document.getElementById('planList').innerHTML : '';
 
-    var css = '@page{size:A4;margin:1.6cm 2cm;}'
-      + "body{font-family:'Times New Roman',serif;font-size:11.5pt;line-height:1.4;color:#000;}"
+    var css = '@page{size:' + (LETTER.pageSize || 'A4') + ';margin:' + (LETTER.pageMargin || '1.6cm 2cm') + ';}'
+      + "body{font-family:'Times New Roman',serif;font-size:" + (LETTER.fontSize || '11.5pt') + ";line-height:1.4;color:#000;}"
       + '.logo{display:block;width:205px;}'
       + '.rule{border-bottom:0.75pt solid #000080;margin-bottom:14px;}'
       + '.lh-tbl{width:100%;border-collapse:collapse;margin-bottom:2px;}'
@@ -1536,7 +1910,7 @@
       + '<style>' + css + '</style></head><body>'
       + '<table class="lh-tbl"><tr>'
         + '<td class="lh-logo-cell">' + (logoSrc ? '<img class="logo" width="205" src="' + logoSrc + '" alt="Sptar Mater Dei Hospital">' : '') + '</td>'
-        + '<td class="lh-text-cell"><div class="lh-title">Stoma care service</div><div class="lh-tel">Tel No 25454431</div></td>'
+        + '<td class="lh-text-cell"><div class="lh-title">' + mdBold(LETTER.headerTitle) + '</div><div class="lh-tel">' + mdBold(LETTER.headerTel) + '</div></td>'
         + '</tr></table>'
       + '<div class="rule"></div>'
       + '<p>' + date + '</p>'
@@ -1546,11 +1920,11 @@
       + '<div class="body-txt">' + bodyHTML + '</div>'
       + '<p class="plan-h">Stoma Care Plan:</p>'
       + '<ul>' + planHTML + '</ul>'
-      + '<p>Regards,</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>'
-      + '<p>' + (name ? name + '<br>' : '') + 'Stoma Team<br>Stoma Care Clinic</p>'
-      + '<div class="footer">Mater Dei Hospital, Tal-Qroqq, Msida, MSD 2090, Malta<br>'
-        + '<b>Tel</b> (+356) 2545 0000 &nbsp; <b>Facsimile</b> (+356) 2124 0176 &nbsp; <b>DDI</b>: (+356) 2545 + Extension No.<br>'
-        + '<b>M</b>inistry <b>o</b>f <b>H</b>ealth, <b>T</b>he <b>E</b>lderly and <b>C</b>ommunity <b>C</b>are</div>'
+      + '<p>' + mdBold(LETTER.closing) + '</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>'
+      + '<p>' + (name ? name + '<br>' : '') + mdBold(LETTER.signRole1) + '<br>' + mdBold(LETTER.signRole2) + '</p>'
+      + '<div class="footer">' + mdBold(LETTER.footerAddress) + '<br>'
+        + mdBold(LETTER.footerContact) + '<br>'
+        + mdBold(LETTER.footerMinistry) + '</div>'
       + '</body></html>';
     return html;
   }
@@ -1573,6 +1947,8 @@
   }
 
   lastAutoPlan = planText();
+  applyLetterChrome();
+  initBodyCaretTracking();
   openWizard();
 </script>
 </body>
