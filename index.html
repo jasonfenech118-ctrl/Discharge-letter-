@@ -865,30 +865,41 @@
     return out;
   }
 
-  // Dedicated bag renderer: brand-lock to Hollister baseplates, otherwise filter by stoma type,
-  // with a "+ add another bag type" override for real-world clinical exceptions.
+  function _baseplateFlange(bp){
+    if(!bp || !bp.sizes || !bp.sizes.length) return '';
+    var s = bp.sizes[0], slash = s.indexOf('/');
+    return slash >= 0 ? s.substring(slash + 1) : s;
+  }
+  function _isStandardBaseplate(bp){
+    if(!bp) return false;
+    var k = (bp.kind || '').toLowerCase();
+    return k === 'stomahesive' || k === 'microporous' || k === 'deep';
+  }
   function _bagButtons(){
     var base = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
     var lockHollister = isHollister(base);
-    var rec = recommendedOutletForType(WZ.type);           // closed / drainable / urostomy
+    var standard = _isStandardBaseplate(base);
+    var flangeSize = standard ? _baseplateFlange(base) : '';
+    var rec = recommendedOutletForType(WZ.type);
     var showAll = WZ.bagsShowAll === true;
 
     var out = '';
     _sortedWithIndex('bags').forEach(function(entry){
       var item = entry.item, i = entry.idx, hol = isHollister(item);
-      // Brand rule: Hollister baseplate → only Hollister bags. Non-Hollister baseplate → hide Hollister bags.
       if(lockHollister && !hol) return;
       if(!lockHollister && hol) return;
-      // Stoma-type rule (only for the non-Hollister branch, unless the nurse opens "show all")
-      if(!lockHollister && !showAll && rec && item.outlet && item.outlet !== rec) return;
+      if(standard && !showAll){
+        if(item.outlet && item.outlet !== 'closed' && item.outlet !== 'drainable') return;
+        if(flangeSize && item.sizes && item.sizes.length && item.sizes.indexOf(flangeSize) < 0) return;
+      } else if(!lockHollister && !showAll && rec && item.outlet && item.outlet !== rec) return;
 
       var picked = WZ.bags.indexOf(i) >= 0;
       var sub = [];
       if(item.outlet) sub.push(item.outlet);
       if(item.sizes && item.sizes.length) sub.push('sizes: '+item.sizes.join(', '));
-      out += '<button class="wz-choice'+(picked?' sel':'')+'" onclick="wzToggleBag('+i+')">'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+(picked?' · selected':'')+'</small></button>';
+      out += '<button class=”wz-choice'+(picked?' sel':'')+'” onclick=”wzToggleBag('+i+')”>'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+(picked?' · selected':'')+'</small></button>';
     });
-    if(!out) out = '<p class="wz-cap">No matching bags. Use “Show all bag types” below, or add one in the Catalogue.</p>';
+    if(!out) out = '<p class=”wz-cap”>No matching bags. Use “Show all bag types” below, or add one in the Catalogue.</p>';
     return out;
   }
 
@@ -969,9 +980,13 @@
       var rec = recommendedOutletForType(WZ.type);
       var recWord = rec ? (rec === 'closed' ? 'closed bags' : (rec === 'drainable' ? 'drainable bags' : 'urostomy bags')) : 'bags';
 
+      var standard = _isStandardBaseplate(base);
+      var flangeSize = standard ? _baseplateFlange(base) : '';
       var note = lockHollister
         ? 'This is a Hollister baseplate, so only Hollister bags are shown (brands are not interchangeable).'
-        : 'For a ' + (WZ.type || 'this') + ' the recommended bags are ' + recWord + '. You can add another type below for clinical exceptions (e.g. a high-output colostomy needing a drainable bag).';
+        : standard
+          ? 'Showing both drainable and closed bags' + (flangeSize ? ' for flange size ' + flangeSize + 'mm' : '') + '.'
+          : 'For a ' + (WZ.type || 'this') + ' the recommended bags are ' + recWord + '. You can add another type below for clinical exceptions (e.g. a high-output colostomy needing a drainable bag).';
 
       // Chips for already-selected bags
       var chips = '';
