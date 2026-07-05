@@ -509,13 +509,8 @@
       { label:"Deep convexity 28/45mm", kind:"deep", sizes:["28/45"], phrase:"deep convexity flange 28/45mm" },
       { label:"Deep convexity 38/57mm", kind:"deep", sizes:["38/57"], phrase:"deep convexity flange 38/57mm" },
       { label:"Deep convexity 41/57mm", kind:"deep", sizes:["41/57"], phrase:"deep convexity flange 41/57mm" },
-      { label:"Microporous collar 45mm", kind:"microporous", sizes:["45"], phrase:"microporous collar flange size 45mm" },
-      { label:"Microporous collar 57mm", kind:"microporous", sizes:["57"], phrase:"microporous collar flange size 57mm" },
-      { label:"Microporous collar 70mm", kind:"microporous", sizes:["70"], phrase:"microporous collar flange size 70mm" },
-      { label:"Stomahesive 45mm", kind:"stomahesive", sizes:["45"], phrase:"Stomahesive flange size 45mm" },
-      { label:"Stomahesive 57mm", kind:"stomahesive", sizes:["57"], phrase:"Stomahesive flange size 57mm" },
-      { label:"Stomahesive 70mm", kind:"stomahesive", sizes:["70"], phrase:"Stomahesive flange size 70mm" },
-      { label:"Stomahesive 100mm", kind:"stomahesive", sizes:["100"], phrase:"Stomahesive flange size 100mm" },
+      { label:"Microporous collar", kind:"microporous", sizes:["45","57","70"], phrase:"microporous collar flange size [size]mm" },
+      { label:"Stomahesive", kind:"stomahesive", sizes:["45","57","70","100"], phrase:"Stomahesive flange size [size]mm" },
       { label:"Hollister 34200", kind:"hollister", sizes:[], phrase:"Hollister 34200 flange" },
       { label:"Hollister 27300", kind:"hollister", sizes:[], phrase:"Hollister 27300 flange" }
     ],
@@ -540,13 +535,13 @@
   var CAT = loadCatalogue();
   function loadCatalogue(){
     try{
-      var raw = localStorage.getItem('stomaLetterCatalogueV2');
+      var raw = localStorage.getItem('stomaLetterCatalogueV3');
       if(raw){ return JSON.parse(raw); }
     }catch(e){}
     return clone(DEFAULT_CATALOGUE);
   }
   function saveCatalogue(){
-    try{ localStorage.setItem('stomaLetterCatalogueV2', JSON.stringify(CAT)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterCatalogueV3', JSON.stringify(CAT)); }catch(e){}
   }
 
   // ======================= CONSULTANTS =======================
@@ -714,6 +709,8 @@
     title_appliance: "One-piece pouch",
     title_onePieceSize: "Pouch size",
     title_baseplate: "Flange",
+    title_flangeSize: "Flange size",
+    title_flangeDue: "Flange change due",
     title_bag: "Bag(s)",
     title_accessories: "Accessories & extras",
     cap_subtypeColostomy: "Which type of colostomy?",
@@ -778,7 +775,7 @@
       teaching:"", teachingWith:"",
       urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"no", mucusFistulaLocation:"",
       system:"", onePieceIdx:"", onePieceSize:"", onePieceOutlet:"",
-      baseplateIdx:"", bagIdx:"", bagOutlet:"", bagsShowAll:false,
+      baseplateIdx:"", baseplateSize:"", nextChange:"", nextChangeLater:"", bagIdx:"", bagOutlet:"", bagsShowAll:false,
       accessories:[], fillerFrom:"", fillerTo:""
     };
   }
@@ -820,7 +817,14 @@
     var head = ["type"];
     if(typeHasSubtype(WZ.type)) head.push("subtype");
     head = head.concat(["patient","surgery","skin","teaching","system"]);
-    if(WZ.system === 'two') return head.concat(["baseplate","bag","accessories"]);
+    if(WZ.system === 'two'){
+      var twoTail = ["baseplate"];
+      var selectedBase = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+      if(selectedBase && selectedBase.sizes && selectedBase.sizes.length > 1 && !WZ.baseplateSize){
+        twoTail.push("flangeSize");
+      }
+      return head.concat(twoTail).concat(["bag","flangeDue","accessories"]);
+    }
     var tail = ["appliance"];
     var selectedOne = CAT.onePiece[parseInt(WZ.onePieceIdx,10)] || null;
     if(selectedOne && selectedOne.sizes && selectedOne.sizes.length && !WZ.onePieceSize){
@@ -864,7 +868,8 @@
 
   function _baseplateFlange(bp){
     if(!bp || !bp.sizes || !bp.sizes.length) return '';
-    var s = bp.sizes[0], slash = s.indexOf('/');
+    var s = bp.sizes.length > 1 ? (WZ.baseplateSize || '') : bp.sizes[0];
+    var slash = s.indexOf('/');
     return slash >= 0 ? s.substring(slash + 1) : s;
   }
   function _isStandardBaseplate(bp){
@@ -1029,6 +1034,21 @@
       return '<p class="wz-cap">Choose the two-piece flange:</p>'
         + _catalogueButtons('baseplates','baseplateIdx');
     }
+    if(step === "flangeSize"){
+      var selBase = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+      var bSizes = selBase ? (selBase.sizes || []) : [];
+      var html = '<p class="wz-cap">Choose the size for '+_esc(selBase ? selBase.label : '')+':</p>';
+      bSizes.forEach(function(s){
+        html += '<button class="wz-choice'+(WZ.baseplateSize===s?' sel':'')+'" onclick="WZ.baseplateSize=\''+s+'\'; renderWizard();">'+_esc(s)+'mm</button>';
+      });
+      return html;
+    }
+    if(step === "flangeDue"){
+      var html = '<p class="wz-cap">When is the next flange change due?</p>'
+        + '<div class="wz-field"><label>Date of next change</label><input type="date" value="'+_esc(WZ.nextChange)+'" oninput="WZ.nextChange=this.value; WZ.nextChangeLater=\'\';"></div>'
+        + '<button class="wz-choice'+(WZ.nextChangeLater==='yes'?' sel':'')+'" onclick="WZ.nextChangeLater=\'yes\'; WZ.nextChange=\'\'; renderWizard();">Later date<small>leave blank — the letter shows a line to write the date by hand</small></button>';
+      return html;
+    }
     if(step === "bag"){
       var base = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
       var lockHollister = isHollister(base);
@@ -1092,7 +1112,7 @@
       WZ.subtype = val;
     }
     else if(field === 'system'){
-      if(WZ.system !== val){ WZ.onePieceIdx = ""; WZ.baseplateIdx = ""; WZ.bagIdx = ""; WZ.onePieceOutlet = ""; WZ.bagOutlet = ""; WZ.bagIdx = ""; WZ.bagsShowAll = false; }
+      if(WZ.system !== val){ WZ.onePieceIdx = ""; WZ.baseplateIdx = ""; WZ.baseplateSize = ""; WZ.nextChange = ""; WZ.nextChangeLater = ""; WZ.bagIdx = ""; WZ.onePieceOutlet = ""; WZ.bagOutlet = ""; WZ.bagsShowAll = false; }
       WZ.system = val;
     }
     else if(field === 'onePieceIdx'){
@@ -1107,6 +1127,7 @@
       var next = CAT.baseplates[parseInt(val,10)] || null;
       if(isHollister(prev) !== isHollister(next)){ WZ.bagIdx = ""; WZ.bagsShowAll = false; }
       WZ.baseplateIdx = val;
+      WZ.baseplateSize = "";
     }
     else if(field === 'bagIdx'){
       WZ.bagIdx = val;
@@ -1273,7 +1294,7 @@
     } else if(curSystem === 'two'){
       var bagPhrases = selectedBagItems().map(function(b){ return formatItemPhrase(b); });
       var bagsText = bagPhrases.length ? _humanList(bagPhrases) : "[bag]";
-      applianceText = (formatItemPhrase(base) || "[flange]") + " with " + bagsText;
+      applianceText = (formatItemPhrase(base, WZ.baseplateSize) || "[flange]") + " with " + bagsText;
     }
     if(WZ.accessories.length){
       applianceText += ", with " + _humanList(WZ.accessories.map(function(a){ return a.toLowerCase(); }));
@@ -1374,7 +1395,7 @@
     var rodWhenClause = rodWhen ? (" (expected removal on " + rodWhen + ")") : "";
 
     if(system === "two"){
-      b.push(planPhrase("two.flangeChange", { date: "[date]" }));
+      b.push(planPhrase("two.flangeChange", { date: WZ.nextChange ? _fmtDate(WZ.nextChange) : "_______________" }));
 
       if(type === "urostomy" || outlet === "urostomy"){
         if(WZ.urostomyStents === 'yes'){
@@ -1783,6 +1804,8 @@
     ['title_appliance','Step title — One-piece pouch'],
     ['title_onePieceSize','Step title — Pouch size'],
     ['title_baseplate','Step title — Flange'],
+    ['title_flangeSize','Step title — Flange size'],
+    ['title_flangeDue','Step title — Flange change due'],
     ['title_bag','Step title — Bag(s)'],
     ['title_accessories','Step title — Accessories']
   ];
