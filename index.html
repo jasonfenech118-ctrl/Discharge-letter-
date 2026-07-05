@@ -704,6 +704,7 @@
     title_patient: "Patient details",
     title_surgery: "Surgery information",
     title_stoma: "Stoma assessment",
+    title_mucusFistula: "Mucus fistula",
     title_skin: "Peristomal skin assessment",
     title_teaching: "Teaching session",
     title_system: "Appliance system",
@@ -769,7 +770,7 @@
     WZ = {
       type:"", subtype:"", title:"", fname:"", sname:"", id:"",
       procedure:"", opdate:"", consultant:"",
-      stomaColourHealthy:"", stomaColour:"", stomaFunction:"", skinHealthy:"", peristomalSkin:"",
+      stomaColourHealthy:"", stomaColour:"", stomaFunctionWell:"", stomaFunction:"", skinHealthy:"", peristomalSkin:"",
       skinExcoriation:"no", skinExcoriationTreatment:"", skinExcoriationTreatmentOther:"",
       skinRedness:"no",
       mucocutaneousSeparation:"no", mucoSepFrom:"", mucoSepTill:"", mucoSepTreatment:"", mucoSepTreatmentOther:"",
@@ -817,7 +818,7 @@
   function stepsForWizard(){
     var head = ["type"];
     if(typeHasSubtype(WZ.type)) head.push("subtype");
-    head = head.concat(["patient","surgery","stoma","skin","teaching","system"]);
+    head = head.concat(["patient","surgery","stoma","mucusFistula","skin","teaching","system"]);
     if(WZ.system === 'two'){
       var twoTail = ["baseplate"];
       var selectedBase = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
@@ -946,7 +947,12 @@
       if(WZ.stomaColourHealthy === 'no'){
         html += '<div class="wz-field"><label>Elaborate on stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="e.g. dusky, pale, dark red"></div>';
       }
-      html += '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning well, high output"></div>';
+      html += '<p class="wz-cap">Is the stoma functioning well?</p>'
+        + '<button class="wz-choice'+(WZ.stomaFunctionWell==='yes'?' sel':'')+'" onclick="WZ.stomaFunctionWell=\'yes\'; WZ.stomaFunction=\'functioning well\'; renderWizard();">Yes</button>'
+        + '<button class="wz-choice'+(WZ.stomaFunctionWell==='no'?' sel':'')+'" onclick="WZ.stomaFunctionWell=\'no\'; WZ.stomaFunction=\'\'; renderWizard();">No</button>';
+      if(WZ.stomaFunctionWell === 'no'){
+        html += '<div class="wz-field"><label>Elaborate on stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. high output, minimal output, non-functioning"></div>';
+      }
       if(rodApplies()){
         html += '<label class="wz-check'+(WZ.rodInSitu==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.rodInSitu)+' onchange="WZ.rodInSitu=this.checked?\'yes\':\'no\'; renderWizard();"> Rod in situ ('+_esc(subtypeLabel())+')</label>';
         if(WZ.rodInSitu === 'yes'){
@@ -956,16 +962,24 @@
       if(WZ.type === 'urostomy'){
         html += '<label class="wz-check'+(WZ.urostomyStents==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.urostomyStents)+' onchange="WZ.urostomyStents=this.checked?\'yes\':\'no\'"> Urostomy stents in situ</label>';
       }
-      html += '<label class="wz-check'+(WZ.mucusFistula==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.mucusFistula)+' onchange="WZ.mucusFistula=this.checked?\'yes\':\'no\'; if(!this.checked) WZ.mucusFistulaLocation=\'\'; renderWizard();"> Mucus Fistula present</label>';
-      if(WZ.mucusFistula === 'yes'){
+      return html;
+    }
+    if(step === "mucusFistula"){
+      var html = '';
+      if(WZ.mucusFistula !== 'yes'){
+        html += '<p class="wz-cap">Does the patient have a mucus fistula?</p>'
+          + '<button class="wz-choice" onclick="WZ.mucusFistula=\'yes\'; renderWizard();">+ Add Mucus Fistula</button>';
+      } else {
         var mfLoc = WZ.mucusFistulaLocation;
-        html += '<div class="wz-field"><label>Location</label><select onchange="WZ.mucusFistulaLocation=this.value">'
+        html += '<p class="wz-cap">Mucus fistula details</p>'
+          + '<div class="wz-field"><label>Location</label><select onchange="WZ.mucusFistulaLocation=this.value">'
           + '<option value=""'+(mfLoc===''?' selected':'')+'></option>'
           + '<option value="Right Upper Quadrant (RUQ)"'+(mfLoc==='Right Upper Quadrant (RUQ)'?' selected':'')+'>Right Upper Quadrant (RUQ)</option>'
           + '<option value="Right Lower Quadrant (RLQ)"'+(mfLoc==='Right Lower Quadrant (RLQ)'?' selected':'')+'>Right Lower Quadrant (RLQ)</option>'
           + '<option value="Left Upper Quadrant (LUQ)"'+(mfLoc==='Left Upper Quadrant (LUQ)'?' selected':'')+'>Left Upper Quadrant (LUQ)</option>'
           + '<option value="Left Lower Quadrant (LLQ)"'+(mfLoc==='Left Lower Quadrant (LLQ)'?' selected':'')+'>Left Lower Quadrant (LLQ)</option>'
-          + '</select></div>';
+          + '</select></div>'
+          + '<button class="wz-choice" style="background:#fff;color:#b02525;border-color:#b02525" onclick="WZ.mucusFistula=\'no\'; WZ.mucusFistulaLocation=\'\'; renderWizard();">Remove mucus fistula</button>';
       }
       return html;
     }
@@ -1802,6 +1816,7 @@
     ['title_patient','Step title — Patient'],
     ['title_surgery','Step title — Surgery information'],
     ['title_stoma','Step title — Stoma assessment'],
+    ['title_mucusFistula','Step title — Mucus fistula'],
     ['title_skin','Step title — Peristomal skin'],
     ['title_teaching','Step title — Teaching session'],
     ['title_system','Step title — Appliance system'],
