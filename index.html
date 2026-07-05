@@ -889,7 +889,11 @@
       if(lockHollister && !hol) return;
       if(!lockHollister && hol) return;
       if(standard && !showAll){
-        if(item.outlet && item.outlet !== 'closed' && item.outlet !== 'drainable') return;
+        if(rec === 'urostomy'){
+          if(item.outlet && item.outlet !== 'urostomy') return;
+        } else {
+          if(item.outlet && item.outlet !== 'closed' && item.outlet !== 'drainable') return;
+        }
         if(flangeSize && item.sizes && item.sizes.length && item.sizes.indexOf(flangeSize) < 0) return;
       } else if(!lockHollister && !showAll && rec && item.outlet && item.outlet !== rec) return;
 
@@ -985,7 +989,9 @@
       var note = lockHollister
         ? 'This is a Hollister baseplate, so only Hollister bags are shown (brands are not interchangeable).'
         : standard
-          ? 'Showing both drainable and closed bags' + (flangeSize ? ' for flange size ' + flangeSize + 'mm' : '') + '.'
+          ? (rec === 'urostomy'
+            ? 'Showing urostomy bags' + (flangeSize ? ' for flange size ' + flangeSize + 'mm' : '') + '.'
+            : 'Showing both drainable and closed bags' + (flangeSize ? ' for flange size ' + flangeSize + 'mm' : '') + '.')
           : 'For a ' + (WZ.type || 'this') + ' the recommended bags are ' + recWord + '. You can add another type below for clinical exceptions (e.g. a high-output colostomy needing a drainable bag).';
 
       var toggle = lockHollister ? '' :
