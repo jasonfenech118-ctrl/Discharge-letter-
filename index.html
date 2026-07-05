@@ -502,13 +502,13 @@
       { label:"Hollister 29500", outlet:"urostomy", stomas:["urostomy"], sizes:[], phrase:"Hollister 29500 one-piece pouch" }
     ],
     baseplates: [
-      { label:"Deep convexity 22/45mm", kind:"deep", sizes:["22/45"], phrase:"deep convexity baseplate 22/45mm" },
-      { label:"Deep convexity 35/45mm", kind:"deep", sizes:["35/45"], phrase:"deep convexity baseplate 35/45mm" },
-      { label:"Deep convexity 32/45mm", kind:"deep", sizes:["32/45"], phrase:"deep convexity baseplate 32/45mm" },
-      { label:"Deep convexity 25/45mm", kind:"deep", sizes:["25/45"], phrase:"deep convexity baseplate 25/45mm" },
-      { label:"Deep convexity 28/45mm", kind:"deep", sizes:["28/45"], phrase:"deep convexity baseplate 28/45mm" },
-      { label:"Deep convexity 38/57mm", kind:"deep", sizes:["38/57"], phrase:"deep convexity baseplate 38/57mm" },
-      { label:"Deep convexity 41/57mm", kind:"deep", sizes:["41/57"], phrase:"deep convexity baseplate 41/57mm" },
+      { label:"Deep convexity 22/45mm", kind:"deep", sizes:["22/45"], phrase:"deep convexity flange 22/45mm" },
+      { label:"Deep convexity 35/45mm", kind:"deep", sizes:["35/45"], phrase:"deep convexity flange 35/45mm" },
+      { label:"Deep convexity 32/45mm", kind:"deep", sizes:["32/45"], phrase:"deep convexity flange 32/45mm" },
+      { label:"Deep convexity 25/45mm", kind:"deep", sizes:["25/45"], phrase:"deep convexity flange 25/45mm" },
+      { label:"Deep convexity 28/45mm", kind:"deep", sizes:["28/45"], phrase:"deep convexity flange 28/45mm" },
+      { label:"Deep convexity 38/57mm", kind:"deep", sizes:["38/57"], phrase:"deep convexity flange 38/57mm" },
+      { label:"Deep convexity 41/57mm", kind:"deep", sizes:["41/57"], phrase:"deep convexity flange 41/57mm" },
       { label:"Microporous collar 45mm", kind:"microporous", sizes:["45"], phrase:"microporous collar flange size 45mm" },
       { label:"Microporous collar 57mm", kind:"microporous", sizes:["57"], phrase:"microporous collar flange size 57mm" },
       { label:"Microporous collar 70mm", kind:"microporous", sizes:["70"], phrase:"microporous collar flange size 70mm" },
@@ -516,8 +516,8 @@
       { label:"Stomahesive 57mm", kind:"stomahesive", sizes:["57"], phrase:"Stomahesive flange size 57mm" },
       { label:"Stomahesive 70mm", kind:"stomahesive", sizes:["70"], phrase:"Stomahesive flange size 70mm" },
       { label:"Stomahesive 100mm", kind:"stomahesive", sizes:["100"], phrase:"Stomahesive flange size 100mm" },
-      { label:"Hollister 34200", kind:"hollister", sizes:[], phrase:"Hollister 34200 baseplate" },
-      { label:"Hollister 27300", kind:"hollister", sizes:[], phrase:"Hollister 27300 baseplate" }
+      { label:"Hollister 34200", kind:"hollister", sizes:[], phrase:"Hollister 34200 flange" },
+      { label:"Hollister 27300", kind:"hollister", sizes:[], phrase:"Hollister 27300 flange" }
     ],
     bags: [
       { label:"Closed bag 45mm", outlet:"closed", stomas:["colostomy"], sizes:["45"], phrase:"closed bag 45mm" },
@@ -713,7 +713,7 @@
     title_system: "Appliance system",
     title_appliance: "One-piece pouch",
     title_onePieceSize: "Pouch size",
-    title_baseplate: "Baseplate / flange",
+    title_baseplate: "Flange",
     title_bag: "Bag(s)",
     title_accessories: "Accessories & extras",
     cap_subtypeColostomy: "Which type of colostomy?",
@@ -1004,7 +1004,7 @@
     if(step === "system"){
       return '<p class="wz-cap">'+_esc(wtext('cap_system'))+'</p>'
         + '<button class="wz-choice'+(WZ.system==='one'?' sel':'')+'" onclick="wzPick(\'system\',\'one\')">One-piece<small>flange and pouch are a single unit</small></button>'
-        + '<button class="wz-choice'+(WZ.system==='two'?' sel':'')+'" onclick="wzPick(\'system\',\'two\')">Two-piece<small>separate baseplate/flange and bag</small></button>'
+        + '<button class="wz-choice'+(WZ.system==='two'?' sel':'')+'" onclick="wzPick(\'system\',\'two\')">Two-piece<small>separate flange and bag</small></button>'
         + '<p class="wz-hint" id="wzHint" style="display:none">Please choose one-piece or two-piece to continue.</p>';
     }
     if(step === "appliance"){
@@ -1021,7 +1021,7 @@
       return html;
     }
     if(step === "baseplate"){
-      return '<p class="wz-cap">Choose the two-piece baseplate/flange:</p>'
+      return '<p class="wz-cap">Choose the two-piece flange:</p>'
         + _catalogueButtons('baseplates','baseplateIdx');
     }
     if(step === "bag"){
@@ -1033,7 +1033,7 @@
       var standard = _isStandardBaseplate(base);
       var flangeSize = standard ? _baseplateFlange(base) : '';
       var note = lockHollister
-        ? 'This is a Hollister baseplate, so only Hollister bags are shown (brands are not interchangeable).'
+        ? 'This is a Hollister flange, so only Hollister bags are shown (brands are not interchangeable).'
         : standard
           ? (rec === 'urostomy'
             ? 'Showing urostomy bags' + (flangeSize ? ' for flange size ' + flangeSize + 'mm' : '') + '.'
@@ -1268,7 +1268,7 @@
     } else if(curSystem === 'two'){
       var bagPhrases = selectedBagItems().map(function(b){ return formatItemPhrase(b); });
       var bagsText = bagPhrases.length ? _humanList(bagPhrases) : "[bag]";
-      applianceText = (formatItemPhrase(base) || "[baseplate]") + " with " + bagsText;
+      applianceText = (formatItemPhrase(base) || "[flange]") + " with " + bagsText;
     }
     if(WZ.accessories.length){
       applianceText += ", with " + _humanList(WZ.accessories.map(function(a){ return a.toLowerCase(); }));
@@ -1290,7 +1290,7 @@
   ----------------------------------------------------------------- */
   var DEFAULT_PLAN_PHRASES = {
     // --- two-piece systems ---
-    "two.flangeChange":   "Flange/baseplate to be changed on alternate days. Next change due: {date}.",
+    "two.flangeChange":   "Flange to be changed on alternate days. Next change due: {date}.",
     "two.uroStentsA":     "Bag is to be changed on alternate days with the flange until the stents are in situ.",
     "two.uroStentsB":     "Once the stents come out on their own, the bag should be changed daily and emptied when one-third full.",
     "two.uroNoStents":    "Urostomy bag should be changed daily and emptied when one-third full.",
@@ -1300,8 +1300,8 @@
     "two.drainable":      "Bag to be changed daily and emptied when one-third full.",
     "two.default":        "Bag to be changed according to outlet type and emptied/changed when one-third full.",
     "two.drainableExtra": "If the output becomes liquid, the drainable bag may be used and emptied when one-third full.",
-    "two.removeStomahesive": "Soap and water is to be used to remove the Stomahesive baseplate gently.",
-    "two.removeOther":    "A minimal amount of adhesive remover spray must be used to remove the baseplate gently.",
+    "two.removeStomahesive": "Soap and water is to be used to remove the Stomahesive flange gently.",
+    "two.removeOther":    "A minimal amount of adhesive remover spray must be used to remove the flange gently.",
     // --- one-piece systems ---
     "one.uroStentsA":     "While the stents are in situ, change the pouch on alternate days.",
     "one.uroStentsB":     "Once the stents come out on their own, change the pouch daily and empty it when one-third full.",
@@ -1356,7 +1356,7 @@
     var outlet = curOutlet || recommendedOutletForType(type) || "";
     var base = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
     var isStomahesive = base && /stomahesive/i.test(base.label + " " + (base.kind||""));
-    var word = system === "two" ? "baseplate/flange" : "pouch";
+    var word = system === "two" ? "flange" : "pouch";
 
     // Which outlets are actually represented among selected bags (two-piece), for override handling
     var bagItems = (system === "two") ? selectedBagItems() : [];
@@ -1777,7 +1777,7 @@
     ['title_system','Step title — Appliance system'],
     ['title_appliance','Step title — One-piece pouch'],
     ['title_onePieceSize','Step title — Pouch size'],
-    ['title_baseplate','Step title — Baseplate'],
+    ['title_baseplate','Step title — Flange'],
     ['title_bag','Step title — Bag(s)'],
     ['title_accessories','Step title — Accessories']
   ];
@@ -1885,7 +1885,7 @@
       body.innerHTML =
         renderConsultantsSection()
         + renderCatSection('onePiece','One-piece pouches')
-        + renderCatSection('baseplates','Two-piece baseplates')
+        + renderCatSection('baseplates','Two-piece flanges')
         + renderCatSection('bags','Two-piece bags')
         + '<button class="mini-btn" onclick="resetCatalogue()">Reset appliances to default catalogue</button>';
     } else if(editsView === 'wording'){
