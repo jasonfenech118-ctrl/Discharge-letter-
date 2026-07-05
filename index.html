@@ -1328,7 +1328,7 @@
       "function": (WZ.stomaFunctionWell === 'no' && WZ.stomaFunction) ? ("functioning " + WZ.stomaFunction) : (WZ.stomaFunction || "[function]"),
       skin: WZ.peristomalSkin || "[peristomal skin]",
       rod: (rodApplies() && WZ.rodInSitu === 'yes')
-        ? (" A rod is in situ" + (WZ.rodRemovalDate ? " and is expected to be removed on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
+        ? (" Rod in situ" + (WZ.rodRemovalDate ? ", due removal on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
         : "",
       teaching: WZ.teaching === 'yes' ? (" A teaching session has been carried out with " + (WZ.teachingWith || "the patient") + ".") : "",
       stents: ""
