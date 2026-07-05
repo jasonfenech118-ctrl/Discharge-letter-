@@ -785,7 +785,7 @@
       teaching:"", teachingWith:"",
       urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"no",
       system:"", onePieceIdx:"", onePieceSize:"", onePieceOutlet:"",
-      baseplateIdx:"", bagIdx:"", bagOutlet:"", bags:[], bagsShowAll:false,
+      baseplateIdx:"", bagIdx:"", bagOutlet:"", bagsShowAll:false,
       accessories:[], fillerFrom:"", fillerTo:""
     };
   }
@@ -897,11 +897,10 @@
         if(flangeSize && item.sizes && item.sizes.length && item.sizes.indexOf(flangeSize) < 0) return;
       } else if(!lockHollister && !showAll && rec && item.outlet && item.outlet !== rec) return;
 
-      var picked = WZ.bags.indexOf(i) >= 0;
       var sub = [];
       if(item.outlet) sub.push(item.outlet);
       if(item.sizes && item.sizes.length) sub.push('sizes: '+item.sizes.join(', '));
-      out += '<button class=”wz-choice'+(picked?' sel':'')+'” onclick=”wzToggleBag('+i+')”>'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+(picked?' · selected':'')+'</small></button>';
+      out += '<button class=”wz-choice'+(String(WZ.bagIdx)===String(i)?' sel':'')+'” onclick=”wzPick(\'bagIdx\',\''+i+'\')”>'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+'</small></button>';
     });
     if(!out) out = '<p class=”wz-cap”>No matching bags. Use “Show all bag types” below, or add one in the Catalogue.</p>';
     return out;
@@ -1032,7 +1031,7 @@
 
   function wzPick(field, val){
     if(field === 'type'){
-      if(WZ.type !== val){ WZ.subtype = ""; WZ.rodInSitu = "no"; WZ.rodRemovalDate = ""; WZ.bags = []; WZ.bagsShowAll = false; }
+      if(WZ.type !== val){ WZ.subtype = ""; WZ.rodInSitu = "no"; WZ.rodRemovalDate = ""; WZ.bagIdx = ""; WZ.bagsShowAll = false; }
       WZ.type = val;
     }
     else if(field === 'subtype'){
@@ -1040,7 +1039,7 @@
       WZ.subtype = val;
     }
     else if(field === 'system'){
-      if(WZ.system !== val){ WZ.onePieceIdx = ""; WZ.baseplateIdx = ""; WZ.bagIdx = ""; WZ.onePieceOutlet = ""; WZ.bagOutlet = ""; WZ.bags = []; WZ.bagsShowAll = false; }
+      if(WZ.system !== val){ WZ.onePieceIdx = ""; WZ.baseplateIdx = ""; WZ.bagIdx = ""; WZ.onePieceOutlet = ""; WZ.bagOutlet = ""; WZ.bagIdx = ""; WZ.bagsShowAll = false; }
       WZ.system = val;
     }
     else if(field === 'onePieceIdx'){
@@ -1052,7 +1051,7 @@
       // Changing baseplate brand can change which bags are valid; clear picks if brand class changes
       var prev = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
       var next = CAT.baseplates[parseInt(val,10)] || null;
-      if(isHollister(prev) !== isHollister(next)){ WZ.bags = []; WZ.bagsShowAll = false; }
+      if(isHollister(prev) !== isHollister(next)){ WZ.bagIdx = ""; WZ.bagsShowAll = false; }
       WZ.baseplateIdx = val;
     }
     else if(field === 'bagIdx'){
@@ -1060,12 +1059,6 @@
       var b = CAT.bags[parseInt(val,10)];
       WZ.bagOutlet = b ? (b.outlet || "") : "";
     }
-    renderWizard();
-  }
-  function wzToggleBag(idx){
-    var at = WZ.bags.indexOf(idx);
-    if(at >= 0) WZ.bags.splice(at, 1);
-    else WZ.bags.push(idx);
     renderWizard();
   }
   function wzToggleAcc(i, on){
@@ -1112,11 +1105,11 @@
   }
 
   function selectedBagItems(){
-    return WZ.bags.map(function(i){ return CAT.bags[i]; }).filter(Boolean);
+    var item = CAT.bags[parseInt(WZ.bagIdx,10)];
+    return item ? [item] : [];
   }
   function primaryBag(){
-    var bags = selectedBagItems();
-    return bags.length ? bags[0] : null;
+    return CAT.bags[parseInt(WZ.bagIdx,10)] || null;
   }
 
   /* ----------------------------------------------------------------
