@@ -851,7 +851,6 @@
       var sub = [];
       if(item.outlet) sub.push(item.outlet);
       if(item.sizes && item.sizes.length) sub.push('sizes: '+item.sizes.join(', '));
-      if(!item.outlet && listName === 'onePiece') sub.push('outlet to confirm');
       out += '<button class="wz-choice'+(String(WZ[selectedField])===String(i)?' sel':'')+'" onclick="wzPick(\''+selectedField+'\',\''+i+'\')">'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+'</small></button>';
     });
     if(!out) out = '<p class="wz-cap">No matching items. Open Catalogue to add one or change outlet/stoma type.</p>';
