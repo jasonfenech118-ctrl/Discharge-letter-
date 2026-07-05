@@ -591,13 +591,13 @@
   }
 
   var DEFAULT_ACCESSORIES = [
-    "Stoma belt", "Stoma powder", "Barrier / skin-protective wipe",
+    "Stoma belt", "Stoma seal", "Stoma powder", "Barrier / skin-protective wipe",
     "Adhesive removal spray", "Filler paste"
   ];
   var ACCESSORIES = loadAccessories();
   function loadAccessories(){
     try{
-      var raw = localStorage.getItem('stomaLetterAccessoriesV1');
+      var raw = localStorage.getItem('stomaLetterAccessoriesV2');
       if(raw){
         var a = JSON.parse(raw);
         if(Array.isArray(a) && a.length){
@@ -608,7 +608,7 @@
     return DEFAULT_ACCESSORIES.slice();
   }
   function saveAccessories(){
-    try{ localStorage.setItem('stomaLetterAccessoriesV1', JSON.stringify(ACCESSORIES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterAccessoriesV2', JSON.stringify(ACCESSORIES)); }catch(e){}
   }
 
   // ================= PRINTING / LETTERHEAD SETTINGS =================
@@ -1391,6 +1391,7 @@
     "acc.redness":        "Monitor the peristomal skin redness; apply barrier cream/wipe as needed and reassess at the next review.",
     "acc.mucoSep":        "Apply {treatment} over the mucocutaneous separation{location} and dust off the excess; stop once the separation heals.",
     "acc.belt":           "Stoma belt should be kept on at all times, especially during bed time.",
+    "acc.seal":           "Apply a stoma seal around the base of the stoma before fitting the appliance to improve the seal and prevent leakage.",
     "common.hair":        "Peristomal hair shaving is to be done as necessary to prevent hair folliculitis.",
     "acc.filler":         "Apply a generous amount of filler paste from {from} to {to} o'clock location around the stoma.",
     "acc.mucusFistula":   "Mucus fistula{location}: wash the stoma and peristomal skin well and pat dry. Apply Bactigras/Paraffin dressing and a dry dressing to cover. Dressing to be changed on alternate days."
@@ -1517,6 +1518,9 @@
     }
     if(WZ.accessories.indexOf("Stoma belt") >= 0){
       b.push(planPhrase("acc.belt"));
+    }
+    if(WZ.accessories.indexOf("Stoma seal") >= 0){
+      b.push(planPhrase("acc.seal"));
     }
     b.push(planPhrase("common.hair"));
 
@@ -1711,7 +1715,7 @@
   var PLAN_PHRASE_GROUPS = [
     ['Two-piece systems', ['two.flangeChange','two.uroStentsA','two.uroStentsB','two.uroNoStents','two.rodA','two.rodB','two.closed','two.drainable','two.default','two.drainableExtra','two.removeStomahesive','two.removeOther']],
     ['One-piece systems', ['one.uroStentsA','one.uroStentsB','one.uroNoStents','one.rodA','one.rodB','one.closed','one.drainable','one.default','one.removeSpray']],
-    ['Common & accessories', ['common.wash','common.aperture','acc.barrierWipe','acc.powder','acc.redness','acc.mucoSep','acc.belt','common.hair','acc.filler','acc.mucusFistula']]
+    ['Common & accessories', ['common.wash','common.aperture','acc.barrierWipe','acc.powder','acc.redness','acc.mucoSep','acc.belt','acc.seal','common.hair','acc.filler','acc.mucusFistula']]
   ];
   function renderPlanPhrasesSection(){
     var html = '<div class="cat-section"><h3>Care-plan bullet wording</h3>'
