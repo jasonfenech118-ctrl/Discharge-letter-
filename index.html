@@ -900,9 +900,9 @@
       var sub = [];
       if(item.outlet) sub.push(item.outlet);
       if(item.sizes && item.sizes.length) sub.push('sizes: '+item.sizes.join(', '));
-      out += '<button class=”wz-choice'+(String(WZ.bagIdx)===String(i)?' sel':'')+'” onclick=”wzPick(\'bagIdx\',\''+i+'\')”>'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+'</small></button>';
+      out += '<button class="wz-choice'+(String(WZ.bagIdx)===String(i)?' sel':'')+'" onclick="wzPick(\'bagIdx\',\''+i+'\')">'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+'</small></button>';
     });
-    if(!out) out = '<p class=”wz-cap”>No matching bags. Use “Show all bag types” below, or add one in the Catalogue.</p>';
+    if(!out) out = '<p class="wz-cap">No matching bags. Use &ldquo;Show all bag types&rdquo; below, or add one in the Catalogue.</p>';
     return out;
   }
 
