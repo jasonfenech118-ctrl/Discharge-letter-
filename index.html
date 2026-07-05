@@ -779,7 +779,7 @@
   function resetWZ(){
     WZ = {
       type:"", subtype:"", title:"", fname:"", sname:"", id:"",
-      procedure:"", opdate:"", nextChange:"", consultant:"",
+      procedure:"", opdate:"", consultant:"",
       stomaColour:"pink/red", stomaFunction:"functioning", peristomalSkin:"healthy/intact",
       skinHealthy:"yes", skinExcoriation:"no", mucocutaneousSeparation:"no",
       teaching:"yes", teachingWith:"patient",
@@ -919,8 +919,7 @@
     }
     if(step === "surgery"){
       var html = '<div class="wz-field"><label>Procedure / operation</label><input value="'+_esc(WZ.procedure)+'" oninput="WZ.procedure=this.value" placeholder="e.g. anterior resection with formation of colostomy"></div>'
-        + '<div class="wz-row"><div class="wz-field"><label>Date of surgery</label><input type="date" value="'+_esc(WZ.opdate)+'" oninput="WZ.opdate=this.value"></div>'
-        + '<div class="wz-field"><label>Next flange/baseplate change due</label><input type="date" value="'+_esc(WZ.nextChange)+'" oninput="WZ.nextChange=this.value"></div></div>'
+        + '<div class="wz-field"><label>Date of surgery</label><input type="date" value="'+_esc(WZ.opdate)+'" oninput="WZ.opdate=this.value"></div>'
         + '<div class="inline-row"><div class="wz-field"><label>Consultant</label><input list="wzCons" value="'+_esc(WZ.consultant)+'" oninput="WZ.consultant=this.value" placeholder="e.g. Mr M Zammit Vincenti"></div><button type="button" class="mini-btn" onclick="saveConsultantFromWizard()">+ Save</button></div>' + _dl("wzCons", consultants())
         + '<div class="wz-row"><div class="wz-field"><label>Stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="pink/red"></div>'
         + '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning, high output"></div></div>'
@@ -1314,7 +1313,7 @@
     var rodWhenClause = rodWhen ? (" (expected removal on " + rodWhen + ")") : "";
 
     if(system === "two"){
-      b.push(planPhrase("two.flangeChange", { date: WZ.nextChange ? _fmtDate(WZ.nextChange) : "[date]" }));
+      b.push(planPhrase("two.flangeChange", { date: "[date]" }));
 
       if(type === "urostomy" || outlet === "urostomy"){
         if(WZ.urostomyStents === 'yes'){
