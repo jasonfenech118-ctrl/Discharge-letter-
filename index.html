@@ -778,7 +778,7 @@
       skinRedness:"no",
       mucocutaneousSeparation:"no", mucoSepFrom:"", mucoSepTill:"", mucoSepTreatment:"", mucoSepTreatmentOther:"",
       teaching:"", teachingWith:"",
-      urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"no", mucusFistulaLocation:"",
+      urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"", mucusFistulaLocations:[],
       system:"", onePieceIdx:"", onePieceSize:"", onePieceOutlet:"",
       baseplateIdx:"", baseplateSize:"", nextChange:"", nextChangeLater:"", bagIdx:"", bagOutlet:"", bagsShowAll:false,
       accessories:[], fillerFrom:"", fillerTo:""
@@ -968,21 +968,20 @@
       return html;
     }
     if(step === "mucusFistula"){
-      var html = '';
-      if(WZ.mucusFistula !== 'yes'){
-        html += '<p class="wz-cap">Does the patient have a mucus fistula?</p>'
-          + '<button class="wz-choice" onclick="WZ.mucusFistula=\'yes\'; renderWizard();">+ Add Mucus Fistula</button>';
-      } else {
-        var mfLoc = WZ.mucusFistulaLocation;
-        html += '<p class="wz-cap">Mucus fistula details</p>'
-          + '<div class="wz-field"><label>Location</label><select onchange="WZ.mucusFistulaLocation=this.value">'
-          + '<option value=""'+(mfLoc===''?' selected':'')+'></option>'
-          + '<option value="Right Upper Quadrant (RUQ)"'+(mfLoc==='Right Upper Quadrant (RUQ)'?' selected':'')+'>Right Upper Quadrant (RUQ)</option>'
-          + '<option value="Right Lower Quadrant (RLQ)"'+(mfLoc==='Right Lower Quadrant (RLQ)'?' selected':'')+'>Right Lower Quadrant (RLQ)</option>'
-          + '<option value="Left Upper Quadrant (LUQ)"'+(mfLoc==='Left Upper Quadrant (LUQ)'?' selected':'')+'>Left Upper Quadrant (LUQ)</option>'
-          + '<option value="Left Lower Quadrant (LLQ)"'+(mfLoc==='Left Lower Quadrant (LLQ)'?' selected':'')+'>Left Lower Quadrant (LLQ)</option>'
-          + '</select></div>'
-          + '<button class="wz-choice" style="background:#fff;color:#b02525;border-color:#b02525" onclick="WZ.mucusFistula=\'no\'; WZ.mucusFistulaLocation=\'\'; renderWizard();">Remove mucus fistula</button>';
+      var html = '<p class="wz-cap">Mucus Fistula present?</p>'
+        + '<button class="wz-choice'+(WZ.mucusFistula==='yes'?' sel':'')+'" onclick="wzMfSetPresent(\'yes\')">Yes</button>'
+        + '<button class="wz-choice'+(WZ.mucusFistula==='no'?' sel':'')+'" onclick="wzMfSetPresent(\'no\')">No</button>';
+      if(WZ.mucusFistula === 'yes'){
+        WZ.mucusFistulaLocations.forEach(function(loc, i){
+          html += '<div class="inline-row"><div class="wz-field"><label>Location'+(WZ.mucusFistulaLocations.length>1?' '+(i+1):'')+'</label>'
+            + _mfLocationSelect(i, loc) + '</div>'
+            + (WZ.mucusFistulaLocations.length>1 ? '<button type="button" class="mini-btn" onclick="wzMfRemove('+i+')">Remove</button>' : '')
+            + '</div>';
+        });
+        var last = WZ.mucusFistulaLocations[WZ.mucusFistulaLocations.length-1];
+        if(last){
+          html += '<button class="wz-choice" onclick="wzMfAdd()">+ Add Mucus Fistula</button>';
+        }
       }
       return html;
     }
@@ -1161,6 +1160,32 @@
     var idx = WZ.accessories.indexOf(a);
     if(on && idx < 0) WZ.accessories.push(a);
     if(!on && idx >= 0) WZ.accessories.splice(idx, 1);
+  }
+
+  // ---- Mucus fistula (one or more, each with a location) ----
+  var MF_LOCATIONS = ["Right Upper Quadrant (RUQ)","Right Lower Quadrant (RLQ)","Left Upper Quadrant (LUQ)","Left Lower Quadrant (LLQ)"];
+  function _mfLocationSelect(i, val){
+    var opts = '<option value=""'+(val===''?' selected':'')+'></option>';
+    MF_LOCATIONS.forEach(function(loc){
+      opts += '<option value="'+_esc(loc)+'"'+(val===loc?' selected':'')+'>'+_esc(loc)+'</option>';
+    });
+    return '<select onchange="wzMfSetLoc('+i+', this.value)">'+opts+'</select>';
+  }
+  function wzMfSetPresent(v){
+    WZ.mucusFistula = v;
+    if(v === 'yes'){
+      if(!WZ.mucusFistulaLocations.length) WZ.mucusFistulaLocations = [""];
+    } else {
+      WZ.mucusFistulaLocations = [];
+    }
+    renderWizard();
+  }
+  function wzMfSetLoc(i, val){ WZ.mucusFistulaLocations[i] = val; renderWizard(); }
+  function wzMfAdd(){ WZ.mucusFistulaLocations.push(""); renderWizard(); }
+  function wzMfRemove(i){
+    WZ.mucusFistulaLocations.splice(i, 1);
+    if(!WZ.mucusFistulaLocations.length){ WZ.mucusFistula = 'no'; }
+    renderWizard();
   }
 
   function wzValidate(){
@@ -1499,7 +1524,14 @@
       b.push(planPhrase("acc.filler", { from: WZ.fillerFrom || "___", to: WZ.fillerTo || "___" }));
     }
     if(WZ.mucusFistula === 'yes'){
-      b.push(planPhrase("acc.mucusFistula", { location: WZ.mucusFistulaLocation ? (" (" + WZ.mucusFistulaLocation + ")") : "" }));
+      var mfLocs = (WZ.mucusFistulaLocations || []).filter(Boolean);
+      if(mfLocs.length){
+        mfLocs.forEach(function(loc){
+          b.push(planPhrase("acc.mucusFistula", { location: " (" + loc + ")" }));
+        });
+      } else {
+        b.push(planPhrase("acc.mucusFistula", { location: "" }));
+      }
     }
     return b;
   }
