@@ -593,14 +593,19 @@
   }
 
   var DEFAULT_ACCESSORIES = [
-    "Stoma belt", "Protective stoma powder", "Barrier / skin-protective wipe",
+    "Stoma belt", "Stoma powder", "Barrier / skin-protective wipe",
     "Adhesive removal spray", "Filler paste"
   ];
   var ACCESSORIES = loadAccessories();
   function loadAccessories(){
     try{
       var raw = localStorage.getItem('stomaLetterAccessoriesV1');
-      if(raw){ var a = JSON.parse(raw); if(Array.isArray(a) && a.length) return a; }
+      if(raw){
+        var a = JSON.parse(raw);
+        if(Array.isArray(a) && a.length){
+          return a.map(function(x){ return x === "Protective stoma powder" ? "Stoma powder" : x; });
+        }
+      }
     }catch(e){}
     return DEFAULT_ACCESSORIES.slice();
   }
@@ -1045,6 +1050,7 @@
     if(step === "accessories"){
       var rows = '<p class="wz-cap">'+_esc(wtext('cap_accessories'))+'</p>'
         + ACCESSORIES.map(function(a, i){
+            if(a === "Stoma powder" && WZ.skinHealthy !== 'no') return '';
             var on = WZ.accessories.indexOf(a) >= 0;
             return '<label class="wz-check'+(on?' sel':'')+'"><input type="checkbox"'+(on?' checked':'')+' onchange="wzToggleAcc('+i+', this.checked); this.closest(\'.wz-check\').classList.toggle(\'sel\', this.checked); renderWizard();"> '+_esc(a)+'</label>';
           }).join('');
@@ -1419,7 +1425,7 @@
     if(WZ.accessories.indexOf("Barrier / skin-protective wipe") >= 0){
       b.push(planPhrase("acc.barrierWipe"));
     }
-    if(WZ.skinExcoriation === 'yes' || WZ.accessories.indexOf("Protective stoma powder") >= 0){
+    if(WZ.skinExcoriation === 'yes' || WZ.accessories.indexOf("Stoma powder") >= 0){
       var excTreatment = WZ.skinExcoriationTreatment === 'Other'
         ? (WZ.skinExcoriationTreatmentOther || "an appropriate treatment")
         : "protective powder";
