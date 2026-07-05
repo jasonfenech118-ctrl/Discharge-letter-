@@ -995,9 +995,19 @@
     if(step === "appliance"){
       var selected = CAT.onePiece[parseInt(WZ.onePieceIdx,10)] || null;
       var outlet = WZ.onePieceOutlet || (selected ? selected.outlet : '');
+      var sizeField;
+      if(selected && selected.sizes && selected.sizes.length){
+        sizeField = '<div class="wz-field"><label>Size / cut to (mm) — choose one</label><select onchange="WZ.onePieceSize=this.value">'
+          + '<option value=""'+(WZ.onePieceSize===''?' selected':'')+'></option>'
+          + selected.sizes.map(function(s){ return '<option value="'+_esc(s)+'"'+(WZ.onePieceSize===s?' selected':'')+'>'+_esc(s)+'mm</option>'; }).join('')
+          + '</select></div>';
+      } else {
+        sizeField = '<div class="wz-field"><label>Size / cut to (mm) — optional</label><input value="'+_esc(WZ.onePieceSize)+'" oninput="WZ.onePieceSize=this.value" placeholder="e.g. 70"></div>';
+      }
       return '<p class="wz-cap">Choose the one-piece pouch. Items matching the selected stoma type are shown first; items with unknown outlet remain available for confirmation.</p>'
         + _catalogueButtons('onePiece','onePieceIdx')
-        + '<div class="wz-row" style="margin-top:12px"><div class="wz-field"><label>Size / cut to (mm) — optional</label><input value="'+_esc(WZ.onePieceSize)+'" oninput="WZ.onePieceSize=this.value" placeholder="e.g. 70"></div>'
+        + (selected && selected.sizes && selected.sizes.length ? '<p class="wz-note">Available sizes for '+_esc(selected.label)+': '+selected.sizes.map(function(s){return s+'mm';}).join(', ')+'.</p>' : '')
+        + '<div class="wz-row" style="margin-top:12px">' + sizeField
         + '<div class="wz-field"><label>Outlet type</label><select onchange="WZ.onePieceOutlet=this.value"><option value=""></option><option value="closed"'+(outlet==='closed'?' selected':'')+'>closed</option><option value="drainable"'+(outlet==='drainable'?' selected':'')+'>drainable</option><option value="urostomy"'+(outlet==='urostomy'?' selected':'')+'>urostomy</option></select></div></div>';
     }
     if(step === "baseplate"){
@@ -1073,6 +1083,7 @@
       WZ.onePieceIdx = val;
       var item = CAT.onePiece[parseInt(val,10)];
       WZ.onePieceOutlet = item ? (item.outlet || "") : "";
+      WZ.onePieceSize = "";
     }
     else if(field === 'baseplateIdx'){
       // Changing baseplate brand can change which bags are valid; clear picks if brand class changes
