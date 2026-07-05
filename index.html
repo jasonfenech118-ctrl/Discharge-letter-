@@ -109,7 +109,7 @@
   /* ---------- 6. Regards + signature ---------- */
   .l-sign{margin-top:18px}
   .l-sign .regards{margin-bottom:2px}
-  .l-sign .sig-gap{height:78px}   /* room to sign with a pen */
+  .l-sign .sig-gap{height:58px}
   .l-sign .clinic{}
 
   /* ---------- 7. Footer ---------- */
@@ -1939,7 +1939,7 @@
       + '<div class="body-txt">' + bodyHTML + '</div>'
       + '<p class="plan-h">Stoma Care Plan:</p>'
       + '<ul>' + planHTML + '</ul>'
-      + '<p>' + mdBold(LETTER.closing) + '</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>'
+      + '<p>' + mdBold(LETTER.closing) + '</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>'
       + '<p>' + (name ? name + '<br>' : '') + mdBold(LETTER.signRole1) + '<br>' + mdBold(LETTER.signRole2) + '</p>'
       + '<div class="footer">' + mdBold(LETTER.footerAddress) + '<br>'
         + mdBold(LETTER.footerContact) + '<br>'
