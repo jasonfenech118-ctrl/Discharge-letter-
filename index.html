@@ -781,7 +781,6 @@
       type:"", subtype:"", title:"", fname:"", sname:"", id:"",
       procedure:"", opdate:"", consultant:"",
       stomaColour:"", stomaFunction:"", peristomalSkin:"healthy/intact",
-      skinHealthy:"yes", skinExcoriation:"no", mucocutaneousSeparation:"no",
       teaching:"yes", teachingWith:"patient",
       urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"no",
       system:"", onePieceIdx:"", onePieceSize:"", onePieceOutlet:"",
@@ -924,10 +923,6 @@
         + '<div class="wz-row"><div class="wz-field"><label>Stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="e.g. healthy, pink/red"></div>'
         + '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning well, high output"></div></div>'
         + '<div class="wz-field"><label>Peristomal skin</label><input value="'+_esc(WZ.peristomalSkin)+'" oninput="WZ.peristomalSkin=this.value" placeholder="healthy/intact"></div>'
-        + '<p class="wz-cap">Additional checks</p>'
-        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.skinHealthy)+' onchange="WZ.skinHealthy=this.checked?\'yes\':\'no\'"> Peristomal skin healthy</label>'
-        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.skinExcoriation)+' onchange="WZ.skinExcoriation=this.checked?\'yes\':\'no\'"> Skin excoriation present</label>'
-        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.mucocutaneousSeparation)+' onchange="WZ.mucocutaneousSeparation=this.checked?\'yes\':\'no\'"> Mucocutaneous separation present</label>'
         + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.teaching)+' onchange="WZ.teaching=this.checked?\'yes\':\'no\'"> Teaching session done</label>'
         + '<div class="wz-field"><label>Teaching session with</label><input value="'+_esc(WZ.teachingWith)+'" oninput="WZ.teachingWith=this.value" placeholder="patient, wife, husband, relatives"></div>';
       if(rodApplies()){
