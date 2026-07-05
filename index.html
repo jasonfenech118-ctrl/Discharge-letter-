@@ -594,7 +594,7 @@
 
   var DEFAULT_ACCESSORIES = [
     "Stoma belt", "Protective stoma powder", "Barrier / skin-protective wipe",
-    "Adhesive removal spray", "Filler paste", "Mucus fistula dressing"
+    "Adhesive removal spray", "Filler paste"
   ];
   var ACCESSORIES = loadAccessories();
   function loadAccessories(){
@@ -1429,7 +1429,7 @@
     if(WZ.accessories.indexOf("Filler paste") >= 0){
       b.push(planPhrase("acc.filler", { from: WZ.fillerFrom || "___", to: WZ.fillerTo || "___" }));
     }
-    if(WZ.mucusFistula === 'yes' || WZ.accessories.indexOf("Mucus fistula dressing") >= 0){
+    if(WZ.mucusFistula === 'yes'){
       b.push(planPhrase("acc.mucusFistula", { location: WZ.mucusFistulaLocation ? (" (" + WZ.mucusFistulaLocation + ")") : "" }));
     }
     return b;
