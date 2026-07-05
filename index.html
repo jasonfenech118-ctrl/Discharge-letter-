@@ -1411,7 +1411,7 @@
   var PLAN_PHRASES = loadPlanPhrases();
   function loadPlanPhrases(){
     try{
-      var raw = localStorage.getItem('stomaLetterPlanPhrasesV1');
+      var raw = localStorage.getItem('stomaLetterPlanPhrasesV2');
       if(raw){
         var saved = JSON.parse(raw), out = clone(DEFAULT_PLAN_PHRASES);
         Object.keys(out).forEach(function(k){ if(typeof saved[k] === 'string') out[k] = saved[k]; });
@@ -1421,7 +1421,7 @@
     return clone(DEFAULT_PLAN_PHRASES);
   }
   function savePlanPhrases(){
-    try{ localStorage.setItem('stomaLetterPlanPhrasesV1', JSON.stringify(PLAN_PHRASES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterPlanPhrasesV2', JSON.stringify(PLAN_PHRASES)); }catch(e){}
   }
   // Look up a plan phrase, fill {placeholders}, and bold it if it is a bold-key.
   function planPhrase(key, vars){
