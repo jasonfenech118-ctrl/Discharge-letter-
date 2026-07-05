@@ -702,8 +702,8 @@
     title_type: "Stoma type",
     title_subtype: "Stoma sub-type",
     title_patient: "Patient details",
-    title_surgery: "Surgery details",
-    title_stoma: "Stoma colour & function",
+    title_surgery: "Surgery information",
+    title_stoma: "Stoma assessment",
     title_skin: "Peristomal skin assessment",
     title_teaching: "Teaching session",
     title_system: "Appliance system",
@@ -935,9 +935,18 @@
         + '<div class="wz-field"><label>ID number</label><input value="'+_esc(WZ.id)+'" oninput="WZ.id=this.value"></div>';
     }
     if(step === "surgery"){
-      var html = '<div class="wz-field"><label>Procedure / operation</label><input value="'+_esc(WZ.procedure)+'" oninput="WZ.procedure=this.value" placeholder="e.g. anterior resection with formation of colostomy"></div>'
+      return '<div class="wz-field"><label>Procedure / operation</label><input value="'+_esc(WZ.procedure)+'" oninput="WZ.procedure=this.value" placeholder="e.g. anterior resection with formation of colostomy"></div>'
         + '<div class="wz-field"><label>Date of surgery</label><input type="date" value="'+_esc(WZ.opdate)+'" oninput="WZ.opdate=this.value"></div>'
         + '<div class="inline-row"><div class="wz-field"><label>Consultant</label><input list="wzCons" value="'+_esc(WZ.consultant)+'" oninput="WZ.consultant=this.value" placeholder="e.g. Mr M Zammit Vincenti"></div><button type="button" class="mini-btn" onclick="saveConsultantFromWizard()">+ Save</button></div>' + _dl("wzCons", consultants());
+    }
+    if(step === "stoma"){
+      var html = '<p class="wz-cap">Is the stoma colour healthy?</p>'
+        + '<button class="wz-choice'+(WZ.stomaColourHealthy==='yes'?' sel':'')+'" onclick="WZ.stomaColourHealthy=\'yes\'; WZ.stomaColour=\'healthy\'; renderWizard();">Yes</button>'
+        + '<button class="wz-choice'+(WZ.stomaColourHealthy==='no'?' sel':'')+'" onclick="WZ.stomaColourHealthy=\'no\'; WZ.stomaColour=\'\'; renderWizard();">No</button>';
+      if(WZ.stomaColourHealthy === 'no'){
+        html += '<div class="wz-field"><label>Elaborate on stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="e.g. dusky, pale, dark red"></div>';
+      }
+      html += '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning well, high output"></div>';
       if(rodApplies()){
         html += '<label class="wz-check'+(WZ.rodInSitu==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.rodInSitu)+' onchange="WZ.rodInSitu=this.checked?\'yes\':\'no\'; renderWizard();"> Rod in situ ('+_esc(subtypeLabel())+')</label>';
         if(WZ.rodInSitu === 'yes'){
@@ -958,16 +967,6 @@
           + '<option value="Left Lower Quadrant (LLQ)"'+(mfLoc==='Left Lower Quadrant (LLQ)'?' selected':'')+'>Left Lower Quadrant (LLQ)</option>'
           + '</select></div>';
       }
-      return html;
-    }
-    if(step === "stoma"){
-      var html = '<p class="wz-cap">Is the stoma colour healthy?</p>'
-        + '<button class="wz-choice'+(WZ.stomaColourHealthy==='yes'?' sel':'')+'" onclick="WZ.stomaColourHealthy=\'yes\'; WZ.stomaColour=\'healthy\'; renderWizard();">Yes</button>'
-        + '<button class="wz-choice'+(WZ.stomaColourHealthy==='no'?' sel':'')+'" onclick="WZ.stomaColourHealthy=\'no\'; WZ.stomaColour=\'\'; renderWizard();">No</button>';
-      if(WZ.stomaColourHealthy === 'no'){
-        html += '<div class="wz-field"><label>Elaborate on stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="e.g. dusky, pale, dark red"></div>';
-      }
-      html += '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning well, high output"></div>';
       return html;
     }
     if(step === "skin"){
@@ -1801,8 +1800,8 @@
     ['title_type','Step title — Stoma type'],
     ['title_subtype','Step title — Sub-type'],
     ['title_patient','Step title — Patient'],
-    ['title_surgery','Step title — Surgery details'],
-    ['title_stoma','Step title — Stoma colour & function'],
+    ['title_surgery','Step title — Surgery information'],
+    ['title_stoma','Step title — Stoma assessment'],
     ['title_skin','Step title — Peristomal skin'],
     ['title_teaching','Step title — Teaching session'],
     ['title_system','Step title — Appliance system'],
