@@ -1325,7 +1325,7 @@
       date: _fmtDate(WZ.opdate) || "[date of operation]",
       consultant: WZ.consultant || "[consultant]",
       colour: WZ.stomaColour || "[stoma colour]",
-      "function": WZ.stomaFunction || "[function]",
+      "function": (WZ.stomaFunctionWell === 'no' && WZ.stomaFunction) ? ("functioning with " + WZ.stomaFunction) : (WZ.stomaFunction || "[function]"),
       skin: WZ.peristomalSkin || "[peristomal skin]",
       rod: (rodApplies() && WZ.rodInSitu === 'yes')
         ? (" A rod is in situ" + (WZ.rodRemovalDate ? " and is expected to be removed on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
