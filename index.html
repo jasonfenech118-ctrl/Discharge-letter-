@@ -720,6 +720,7 @@
     title_subtype: "Stoma sub-type",
     title_patient: "Patient details",
     title_surgery: "Surgery & stoma assessment",
+    title_teaching: "Teaching session",
     title_system: "Appliance system",
     title_appliance: "One-piece pouch",
     title_baseplate: "Baseplate / flange",
@@ -825,7 +826,7 @@
   function stepsForWizard(){
     var head = ["type"];
     if(typeHasSubtype(WZ.type)) head.push("subtype");
-    head = head.concat(["patient","surgery","system"]);
+    head = head.concat(["patient","surgery","teaching","system"]);
     if(WZ.system === 'two') return head.concat(["baseplate","bag","accessories"]);
     return head.concat(["appliance","accessories"]);
   }
@@ -922,9 +923,7 @@
         + '<div class="inline-row"><div class="wz-field"><label>Consultant</label><input list="wzCons" value="'+_esc(WZ.consultant)+'" oninput="WZ.consultant=this.value" placeholder="e.g. Mr M Zammit Vincenti"></div><button type="button" class="mini-btn" onclick="saveConsultantFromWizard()">+ Save</button></div>' + _dl("wzCons", consultants())
         + '<div class="wz-row"><div class="wz-field"><label>Stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="e.g. healthy, pink/red"></div>'
         + '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning well, high output"></div></div>'
-        + '<div class="wz-field"><label>Peristomal skin</label><input value="'+_esc(WZ.peristomalSkin)+'" oninput="WZ.peristomalSkin=this.value" placeholder="healthy/intact"></div>'
-        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.teaching)+' onchange="WZ.teaching=this.checked?\'yes\':\'no\'"> Teaching session done</label>'
-        + '<div class="wz-field"><label>Teaching session with</label><input value="'+_esc(WZ.teachingWith)+'" oninput="WZ.teachingWith=this.value" placeholder="patient, wife, husband, relatives"></div>';
+        + '<div class="wz-field"><label>Peristomal skin</label><input value="'+_esc(WZ.peristomalSkin)+'" oninput="WZ.peristomalSkin=this.value" placeholder="healthy/intact"></div>';
       if(rodApplies()){
         html += '<label class="wz-check'+(WZ.rodInSitu==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.rodInSitu)+' onchange="WZ.rodInSitu=this.checked?\'yes\':\'no\'; renderWizard();"> Rod in situ ('+_esc(subtypeLabel())+')</label>';
         if(WZ.rodInSitu === 'yes'){
@@ -936,6 +935,10 @@
       }
       html += '<label class="wz-check'+(WZ.mucusFistula==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.mucusFistula)+' onchange="WZ.mucusFistula=this.checked?\'yes\':\'no\'"> Mucus fistula / ulcer / fistula present</label>';
       return html;
+    }
+    if(step === "teaching"){
+      return '<label class="wz-check"><input type="checkbox"'+_checked(WZ.teaching)+' onchange="WZ.teaching=this.checked?\'yes\':\'no\'"> Teaching session done</label>'
+        + '<div class="wz-field"><label>Teaching session with</label><input value="'+_esc(WZ.teachingWith)+'" oninput="WZ.teachingWith=this.value" placeholder="patient, wife, husband, relatives"></div>';
     }
     if(step === "system"){
       return '<p class="wz-cap">'+_esc(wtext('cap_system'))+'</p>'
@@ -1698,6 +1701,7 @@
     ['title_subtype','Step title — Sub-type'],
     ['title_patient','Step title — Patient'],
     ['title_surgery','Step title — Surgery / assessment'],
+    ['title_teaching','Step title — Teaching session'],
     ['title_system','Step title — Appliance system'],
     ['title_appliance','Step title — One-piece pouch'],
     ['title_baseplate','Step title — Baseplate'],
