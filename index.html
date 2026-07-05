@@ -415,7 +415,7 @@
           <option>Dear Colleagues,</option>
         </select>
       </div>
-      <div class="body" contenteditable="true" spellcheck="true"><p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p><p>On discharge, the stoma colour was [pink/red], the stoma was [functioning/non-functioning], and the peristomal skin was [healthy/intact]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p><p>Patient discharged using <span id="applianceSlot">[appliance]</span>.</p></div>
+      <div class="body" contenteditable="true" spellcheck="true"><p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p><p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p><p>Patient discharged using <span id="applianceSlot">[appliance]</span>.</p></div>
     </div>
 
     <!-- 5. STOMA CARE PLAN -->
@@ -1171,22 +1171,22 @@
   ----------------------------------------------------------------- */
   var DEFAULT_BODY_TEMPLATES = {
     colostomy: {
-      opening:   "{who} was operated and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma was {colour} and {function}, and the peristomal skin was {skin}.{rod} During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}.{rod} During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     ileostomy: {
-      opening:   "{who} was operated and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma was {colour} and {function}, and the peristomal skin was {skin}.{rod} During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}.{rod} During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     urostomy: {
-      opening:   "{who} was operated and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma was {colour} and {function}, and the peristomal skin was {skin}.{rod} During hospitalisation the patient was informed about appliance management{stents}.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}.{rod} During hospitalisation the patient was informed about appliance management{stents}.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     }
   };
   var BODY_TEMPLATES = loadBodyTemplates();
   function loadBodyTemplates(){
     try{
-      var raw = localStorage.getItem('stomaLetterBodyTemplatesV1');
+      var raw = localStorage.getItem('stomaLetterBodyTemplatesV2');
       if(raw){
         var saved = JSON.parse(raw), out = clone(DEFAULT_BODY_TEMPLATES);
         ['colostomy','ileostomy','urostomy'].forEach(function(t){
@@ -1201,7 +1201,7 @@
     return clone(DEFAULT_BODY_TEMPLATES);
   }
   function saveBodyTemplates(){
-    try{ localStorage.setItem('stomaLetterBodyTemplatesV1', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterBodyTemplatesV2', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
   }
   function bodyTemplateFor(type){
     return BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES.colostomy;
@@ -1249,7 +1249,7 @@
       rod: (rodApplies() && WZ.rodInSitu === 'yes')
         ? (" A rod is in situ" + (WZ.rodRemovalDate ? " and is expected to be removed on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
         : "",
-      teaching: WZ.teaching === 'yes' ? (" A teaching session was done with " + (WZ.teachingWith || "the patient") + ".") : "",
+      teaching: WZ.teaching === 'yes' ? (" A teaching session has been carried out with " + (WZ.teachingWith || "the patient") + ".") : "",
       stents: (WZ.type === 'urostomy' && WZ.urostomyStents === 'yes') ? ", including care of the ureteric stents in situ" : ""
     };
     var tpl = bodyTemplateFor(WZ.type || curType);
@@ -1517,7 +1517,7 @@
     document.querySelectorAll('select.fld').forEach(function(s){ s.selectedIndex = 0; });
     document.querySelector('.body').innerHTML =
       '<p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p>' +
-      '<p>On discharge, the stoma colour was [pink/red], the stoma was [functioning/non-functioning], and the peristomal skin was [healthy/intact]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p>' +
+      '<p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p>' +
       '<p>Patient discharged using <span id="applianceSlot">' + DEFAULT_SLOT_TEXT + '</span>.</p>';
     curType = ""; curSystem = ""; curOutlet = ""; curBaseplateKind = ""; lastAutoPlan = "";
     document.getElementById('planList').innerHTML = '<li><br></li>';
