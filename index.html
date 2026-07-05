@@ -418,7 +418,7 @@
           <option>Dear Colleagues,</option>
         </select>
       </div>
-      <div class="body" contenteditable="true" spellcheck="true"><p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p><p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p><p>Patient discharged using <span id="applianceSlot">[appliance]</span>.</p></div>
+      <div class="body" contenteditable="true" spellcheck="true"><p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p><p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p><p>Patient discharged with <strong><span id="applianceSlot">[appliance]</span></strong>.</p></div>
     </div>
 
     <!-- 5. STOMA CARE PLAN -->
@@ -1571,7 +1571,7 @@
     var body = document.querySelector('.body');
     if(body){
       var p = document.createElement('p');
-      p.innerHTML = 'Patient discharged using <span id="applianceSlot"></span>.';
+      p.innerHTML = 'Patient discharged with <strong><span id="applianceSlot"></span></strong>.';
       body.appendChild(p);
       document.getElementById('applianceSlot').textContent = text;
     }
@@ -1610,7 +1610,7 @@
     document.querySelector('.body').innerHTML =
       '<p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p>' +
       '<p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p>' +
-      '<p>Patient discharged using <span id="applianceSlot">' + DEFAULT_SLOT_TEXT + '</span>.</p>';
+      '<p>Patient discharged with <strong><span id="applianceSlot">' + DEFAULT_SLOT_TEXT + '</span></strong>.</p>';
     curType = ""; curSystem = ""; curOutlet = ""; curBaseplateKind = ""; lastAutoPlan = "";
     document.getElementById('planList').innerHTML = '<li><br></li>';
     document.getElementById('ribbonTitle').textContent = 'Stoma Discharge Letter';
