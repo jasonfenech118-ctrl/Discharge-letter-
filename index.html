@@ -988,21 +988,10 @@
           ? 'Showing both drainable and closed bags' + (flangeSize ? ' for flange size ' + flangeSize + 'mm' : '') + '.'
           : 'For a ' + (WZ.type || 'this') + ' the recommended bags are ' + recWord + '. You can add another type below for clinical exceptions (e.g. a high-output colostomy needing a drainable bag).';
 
-      // Chips for already-selected bags
-      var chips = '';
-      if(WZ.bags.length){
-        chips = '<div class="wz-added">' + WZ.bags.map(function(idx){
-          var it = CAT.bags[idx]; if(!it) return '';
-          return '<div class="wz-added-item"><span>'+_esc(it.label)+(it.outlet?' <span class="wz-tag">'+_esc(it.outlet)+'</span>':'')+'</span><button title="Remove" onclick="wzToggleBag('+idx+')">&times;</button></div>';
-        }).join('') + '</div>';
-      }
-
       var toggle = lockHollister ? '' :
         '<label class="wz-check'+(WZ.bagsShowAll?' sel':'')+'" style="margin-top:6px"><input type="checkbox"'+(WZ.bagsShowAll?' checked':'')+' onchange="WZ.bagsShowAll=this.checked; renderWizard();"> Show all bag types (clinical override)</label>';
 
-      return '<p class="wz-note">'+_esc(note)+'</p>'
-        + (WZ.bags.length ? '<p class="wz-cap">Selected bag(s):</p>' + chips : '')
-        + '<p class="wz-cap">Tap to select one or more bags:</p>'
+      return '<p class="wz-cap">'+_esc(note)+'</p>'
         + _bagButtons()
         + toggle;
     }
