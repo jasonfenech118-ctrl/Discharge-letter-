@@ -720,6 +720,7 @@
     title_subtype: "Stoma sub-type",
     title_patient: "Patient details",
     title_surgery: "Surgery & stoma assessment",
+    title_skin: "Peristomal skin assessment",
     title_teaching: "Teaching session",
     title_system: "Appliance system",
     title_appliance: "One-piece pouch",
@@ -781,7 +782,7 @@
     WZ = {
       type:"", subtype:"", title:"", fname:"", sname:"", id:"",
       procedure:"", opdate:"", consultant:"",
-      stomaColour:"", stomaFunction:"", peristomalSkin:"healthy/intact",
+      stomaColour:"", stomaFunction:"", peristomalSkin:"healthy", skinExcoriation:"no", skinRedness:"no", mucocutaneousSeparation:"no",
       teaching:"", teachingWith:"",
       urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"no", mucusFistulaLocation:"",
       system:"", onePieceIdx:"", onePieceSize:"", onePieceOutlet:"",
@@ -826,7 +827,7 @@
   function stepsForWizard(){
     var head = ["type"];
     if(typeHasSubtype(WZ.type)) head.push("subtype");
-    head = head.concat(["patient","surgery","teaching","system"]);
+    head = head.concat(["patient","surgery","skin","teaching","system"]);
     if(WZ.system === 'two') return head.concat(["baseplate","bag","accessories"]);
     return head.concat(["appliance","accessories"]);
   }
@@ -936,8 +937,7 @@
         + '<div class="wz-field"><label>Date of surgery</label><input type="date" value="'+_esc(WZ.opdate)+'" oninput="WZ.opdate=this.value"></div>'
         + '<div class="inline-row"><div class="wz-field"><label>Consultant</label><input list="wzCons" value="'+_esc(WZ.consultant)+'" oninput="WZ.consultant=this.value" placeholder="e.g. Mr M Zammit Vincenti"></div><button type="button" class="mini-btn" onclick="saveConsultantFromWizard()">+ Save</button></div>' + _dl("wzCons", consultants())
         + '<div class="wz-row"><div class="wz-field"><label>Stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="e.g. healthy, pink/red"></div>'
-        + '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning well, high output"></div></div>'
-        + '<div class="wz-field"><label>Peristomal skin</label><input value="'+_esc(WZ.peristomalSkin)+'" oninput="WZ.peristomalSkin=this.value" placeholder="healthy/intact"></div>';
+        + '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning well, high output"></div></div>';
       if(rodApplies()){
         html += '<label class="wz-check'+(WZ.rodInSitu==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.rodInSitu)+' onchange="WZ.rodInSitu=this.checked?\'yes\':\'no\'; renderWizard();"> Rod in situ ('+_esc(subtypeLabel())+')</label>';
         if(WZ.rodInSitu === 'yes'){
@@ -958,6 +958,13 @@
           + '<option value="Left Lower Quadrant (LLQ)"'+(mfLoc==='Left Lower Quadrant (LLQ)'?' selected':'')+'>Left Lower Quadrant (LLQ)</option>'
           + '</select></div>';
       }
+      return html;
+    }
+    if(step === "skin"){
+      var html = '<div class="wz-field"><label>Peristomal skin</label><input value="'+_esc(WZ.peristomalSkin)+'" oninput="WZ.peristomalSkin=this.value" placeholder="healthy"></div>'
+        + '<label class="wz-check'+(WZ.skinExcoriation==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.skinExcoriation)+' onchange="WZ.skinExcoriation=this.checked?\'yes\':\'no\'"> Excoriation present</label>'
+        + '<label class="wz-check'+(WZ.skinRedness==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.skinRedness)+' onchange="WZ.skinRedness=this.checked?\'yes\':\'no\'"> Redness present</label>'
+        + '<label class="wz-check'+(WZ.mucocutaneousSeparation==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.mucocutaneousSeparation)+' onchange="WZ.mucocutaneousSeparation=this.checked?\'yes\':\'no\'"> Mucocutaneous separation present</label>';
       return html;
     }
     if(step === "teaching"){
@@ -1278,6 +1285,7 @@
     "common.aperture":    "Aperture of the {word} to be cut to the shape and size of the stoma; adjust the cutting template accordingly.",
     "acc.barrierWipe":    "Use a protective wipe once daily after cleansing and drying the stoma and peristomal skin.",
     "acc.powder":         "Apply protective powder over the skin excoriation and dust off the excess; stop once the skin heals.",
+    "acc.redness":        "Monitor the peristomal skin redness; apply barrier cream/wipe as needed and reassess at the next review.",
     "acc.mucoSep":        "Apply protective powder over the mucocutaneous separation and dust off the excess; stop once the separation heals.",
     "acc.belt":           "Stoma belt should be kept on at all times, especially during bed time.",
     "common.hair":        "Peristomal hair shaving is to be done as necessary to prevent hair folliculitis.",
@@ -1387,6 +1395,9 @@
     }
     if(WZ.skinExcoriation === 'yes' || WZ.accessories.indexOf("Protective stoma powder") >= 0){
       b.push(planPhrase("acc.powder"));
+    }
+    if(WZ.skinRedness === 'yes'){
+      b.push(planPhrase("acc.redness"));
     }
     if(WZ.mucocutaneousSeparation === 'yes'){
       b.push(planPhrase("acc.mucoSep"));
@@ -1580,7 +1591,7 @@
   var PLAN_PHRASE_GROUPS = [
     ['Two-piece systems', ['two.flangeChange','two.uroStentsA','two.uroStentsB','two.uroNoStents','two.rodA','two.rodB','two.closed','two.drainable','two.default','two.drainableExtra','two.removeStomahesive','two.removeOther']],
     ['One-piece systems', ['one.uroStentsA','one.uroStentsB','one.uroNoStents','one.rodA','one.rodB','one.closed','one.drainable','one.default','one.removeSpray']],
-    ['Common & accessories', ['common.wash','common.aperture','acc.barrierWipe','acc.powder','acc.mucoSep','acc.belt','common.hair','acc.filler','acc.mucusFistula']]
+    ['Common & accessories', ['common.wash','common.aperture','acc.barrierWipe','acc.powder','acc.redness','acc.mucoSep','acc.belt','common.hair','acc.filler','acc.mucusFistula']]
   ];
   function renderPlanPhrasesSection(){
     var html = '<div class="cat-section"><h3>Care-plan bullet wording</h3>'
@@ -1719,6 +1730,7 @@
     ['title_subtype','Step title — Sub-type'],
     ['title_patient','Step title — Patient'],
     ['title_surgery','Step title — Surgery / assessment'],
+    ['title_skin','Step title — Peristomal skin'],
     ['title_teaching','Step title — Teaching session'],
     ['title_system','Step title — Appliance system'],
     ['title_appliance','Step title — One-piece pouch'],
