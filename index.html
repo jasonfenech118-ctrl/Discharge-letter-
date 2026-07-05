@@ -1094,9 +1094,12 @@
         + toggle;
     }
     if(step === "accessories"){
+      var accBase = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+      var accIsStomahesive = accBase && /stomahesive/i.test(accBase.label + " " + (accBase.kind||""));
       var rows = '<p class="wz-cap">'+_esc(wtext('cap_accessories'))+'</p>'
         + ACCESSORIES.map(function(a, i){
             if(a === "Stoma powder" && WZ.skinHealthy !== 'no') return '';
+            if(a === "Adhesive removal spray" && accIsStomahesive) return '';
             var on = WZ.accessories.indexOf(a) >= 0;
             return '<label class="wz-check'+(on?' sel':'')+'"><input type="checkbox"'+(on?' checked':'')+' onchange="wzToggleAcc('+i+', this.checked); this.closest(\'.wz-check\').classList.toggle(\'sel\', this.checked); renderWizard();"> '+_esc(a)+'</label>';
           }).join('');
@@ -1149,6 +1152,11 @@
       if(isHollister(prev) !== isHollister(next)){ WZ.bagIdx = ""; WZ.bagsShowAll = false; }
       WZ.baseplateIdx = val;
       WZ.baseplateSize = "";
+      // Stomahesive is removed with soap and water, not adhesive remover
+      if(next && /stomahesive/i.test(next.label + " " + (next.kind||""))){
+        var arIdx = WZ.accessories.indexOf("Adhesive removal spray");
+        if(arIdx >= 0) WZ.accessories.splice(arIdx, 1);
+      }
     }
     else if(field === 'bagIdx'){
       WZ.bagIdx = val;
@@ -1373,7 +1381,7 @@
     "two.drainable":      "Bag to be changed daily and emptied when one-third full.",
     "two.default":        "Bag to be changed according to outlet type and emptied/changed when one-third full.",
     "two.drainableExtra": "If the output becomes liquid, the drainable bag may be used and emptied when one-third full.",
-    "two.removeStomahesive": "Soap and water is to be used to remove the Stomahesive flange gently.",
+    "two.removeStomahesive": "The Stomahesive flange should never be removed dry; soap and water is to be used to remove it gently.",
     "two.removeOther":    "A minimal amount of adhesive remover spray must be used to remove the flange gently.",
     // --- one-piece systems ---
     "one.uroStentsA":     "While the stents are in situ, change the pouch on alternate days.",
