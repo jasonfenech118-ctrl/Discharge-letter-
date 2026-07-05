@@ -782,7 +782,7 @@
       type:"", subtype:"", title:"", fname:"", sname:"", id:"",
       procedure:"", opdate:"", consultant:"",
       stomaColour:"", stomaFunction:"", peristomalSkin:"healthy/intact",
-      teaching:"yes", teachingWith:"patient",
+      teaching:"", teachingWith:"",
       urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"no",
       system:"", onePieceIdx:"", onePieceSize:"", onePieceOutlet:"",
       baseplateIdx:"", bagIdx:"", bagOutlet:"", bags:[], bagsShowAll:false,
@@ -937,8 +937,13 @@
       return html;
     }
     if(step === "teaching"){
-      return '<label class="wz-check"><input type="checkbox"'+_checked(WZ.teaching)+' onchange="WZ.teaching=this.checked?\'yes\':\'no\'"> Teaching session done</label>'
-        + '<div class="wz-field"><label>Teaching session with</label><input value="'+_esc(WZ.teachingWith)+'" oninput="WZ.teachingWith=this.value" placeholder="patient, wife, husband, relatives"></div>';
+      var html = '<p class="wz-cap">Was a teaching session carried out?</p>'
+        + '<button class="wz-choice'+(WZ.teaching==='yes'?' sel':'')+'" onclick="WZ.teaching=\'yes\'; renderWizard();">Yes</button>'
+        + '<button class="wz-choice'+(WZ.teaching==='no'?' sel':'')+'" onclick="WZ.teaching=\'no\'; renderWizard();">No</button>';
+      if(WZ.teaching === 'yes'){
+        html += '<div class="wz-field"><label>Teaching session with</label><input value="'+_esc(WZ.teachingWith)+'" oninput="WZ.teachingWith=this.value" placeholder="patient, wife, husband, relatives"></div>';
+      }
+      return html;
     }
     if(step === "system"){
       return '<p class="wz-cap">'+_esc(wtext('cap_system'))+'</p>'
