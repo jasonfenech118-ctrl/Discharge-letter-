@@ -707,6 +707,7 @@
     title_teaching: "Teaching session",
     title_system: "Appliance system",
     title_appliance: "One-piece pouch",
+    title_onePieceSize: "Pouch size",
     title_baseplate: "Baseplate / flange",
     title_bag: "Bag(s)",
     title_accessories: "Accessories & extras",
@@ -815,7 +816,12 @@
     if(typeHasSubtype(WZ.type)) head.push("subtype");
     head = head.concat(["patient","surgery","skin","teaching","system"]);
     if(WZ.system === 'two') return head.concat(["baseplate","bag","accessories"]);
-    return head.concat(["appliance","accessories"]);
+    var tail = ["appliance"];
+    var selectedOne = CAT.onePiece[parseInt(WZ.onePieceIdx,10)] || null;
+    if(selectedOne && selectedOne.sizes && selectedOne.sizes.length && !WZ.onePieceSize){
+      tail.push("onePieceSize");
+    }
+    return head.concat(tail).concat(["accessories"]);
   }
   function titleForStep(step){
     return wtext('title_' + step) || step;
@@ -998,15 +1004,16 @@
         + '<p class="wz-hint" id="wzHint" style="display:none">Please choose one-piece or two-piece to continue.</p>';
     }
     if(step === "appliance"){
-      var selected = CAT.onePiece[parseInt(WZ.onePieceIdx,10)] || null;
-      var html = '<p class="wz-cap">Choose the one-piece pouch. Items matching the selected stoma type are shown first; items with unknown outlet remain available for confirmation.</p>'
+      return '<p class="wz-cap">Choose the one-piece pouch. Items matching the selected stoma type are shown first; items with unknown outlet remain available for confirmation.</p>'
         + _catalogueButtons('onePiece','onePieceIdx');
-      if(selected && selected.sizes && selected.sizes.length){
-        html += '<div class="wz-field" style="margin-top:12px"><label>Size for '+_esc(selected.label)+'</label><select onchange="WZ.onePieceSize=this.value">'
-          + '<option value=""'+(WZ.onePieceSize===''?' selected':'')+'></option>'
-          + selected.sizes.map(function(s){ return '<option value="'+_esc(s)+'"'+(WZ.onePieceSize===s?' selected':'')+'>'+_esc(s)+'mm</option>'; }).join('')
-          + '</select></div>';
-      }
+    }
+    if(step === "onePieceSize"){
+      var selectedOne = CAT.onePiece[parseInt(WZ.onePieceIdx,10)] || null;
+      var sizes = selectedOne ? (selectedOne.sizes || []) : [];
+      var html = '<p class="wz-cap">Choose the size for '+_esc(selectedOne ? selectedOne.label : '')+':</p>';
+      sizes.forEach(function(s){
+        html += '<button class="wz-choice'+(WZ.onePieceSize===s?' sel':'')+'" onclick="WZ.onePieceSize=\''+s+'\'; renderWizard();">'+_esc(s)+'mm</button>';
+      });
       return html;
     }
     if(step === "baseplate"){
@@ -1764,6 +1771,7 @@
     ['title_teaching','Step title — Teaching session'],
     ['title_system','Step title — Appliance system'],
     ['title_appliance','Step title — One-piece pouch'],
+    ['title_onePieceSize','Step title — Pouch size'],
     ['title_baseplate','Step title — Baseplate'],
     ['title_bag','Step title — Bag(s)'],
     ['title_accessories','Step title — Accessories']
