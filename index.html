@@ -1261,7 +1261,7 @@
     },
     urostomy: {
       opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}.{rod} During hospitalisation the patient was informed about appliance management{stents}.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}.{rod} During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     }
   };
   var BODY_TEMPLATES = loadBodyTemplates();
@@ -1331,7 +1331,7 @@
         ? (" A rod is in situ" + (WZ.rodRemovalDate ? " and is expected to be removed on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
         : "",
       teaching: WZ.teaching === 'yes' ? (" A teaching session has been carried out with " + (WZ.teachingWith || "the patient") + ".") : "",
-      stents: (WZ.type === 'urostomy' && WZ.urostomyStents === 'yes') ? ", including care of the ureteric stents in situ" : ""
+      stents: ""
     };
     var tpl = bodyTemplateFor(WZ.type || curType);
     var body = document.querySelector('.body');
