@@ -939,7 +939,7 @@
       if(WZ.type === 'urostomy'){
         html += '<label class="wz-check'+(WZ.urostomyStents==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.urostomyStents)+' onchange="WZ.urostomyStents=this.checked?\'yes\':\'no\'"> Urostomy stents in situ</label>';
       }
-      html += '<label class="wz-check'+(WZ.mucusFistula==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.mucusFistula)+' onchange="WZ.mucusFistula=this.checked?\'yes\':\'no\'; if(!this.checked) WZ.mucusFistulaLocation=\'\'; renderWizard();"> Mucus fistula / ulcer / fistula present</label>';
+      html += '<label class="wz-check'+(WZ.mucusFistula==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.mucusFistula)+' onchange="WZ.mucusFistula=this.checked?\'yes\':\'no\'; if(!this.checked) WZ.mucusFistulaLocation=\'\'; renderWizard();"> Mucus Fistula present</label>';
       if(WZ.mucusFistula === 'yes'){
         var mfLoc = WZ.mucusFistulaLocation;
         html += '<div class="wz-field"><label>Location</label><select onchange="WZ.mucusFistulaLocation=this.value">'
