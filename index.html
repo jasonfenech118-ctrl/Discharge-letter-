@@ -780,7 +780,7 @@
     WZ = {
       type:"", subtype:"", title:"", fname:"", sname:"", id:"",
       procedure:"", opdate:"", consultant:"",
-      stomaColour:"pink/red", stomaFunction:"functioning", peristomalSkin:"healthy/intact",
+      stomaColour:"healthy", stomaFunction:"functioning well", peristomalSkin:"healthy/intact",
       skinHealthy:"yes", skinExcoriation:"no", mucocutaneousSeparation:"no",
       teaching:"yes", teachingWith:"patient",
       urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"no",
@@ -921,8 +921,8 @@
       var html = '<div class="wz-field"><label>Procedure / operation</label><input value="'+_esc(WZ.procedure)+'" oninput="WZ.procedure=this.value" placeholder="e.g. anterior resection with formation of colostomy"></div>'
         + '<div class="wz-field"><label>Date of surgery</label><input type="date" value="'+_esc(WZ.opdate)+'" oninput="WZ.opdate=this.value"></div>'
         + '<div class="inline-row"><div class="wz-field"><label>Consultant</label><input list="wzCons" value="'+_esc(WZ.consultant)+'" oninput="WZ.consultant=this.value" placeholder="e.g. Mr M Zammit Vincenti"></div><button type="button" class="mini-btn" onclick="saveConsultantFromWizard()">+ Save</button></div>' + _dl("wzCons", consultants())
-        + '<div class="wz-row"><div class="wz-field"><label>Stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="pink/red"></div>'
-        + '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning, high output"></div></div>'
+        + '<div class="wz-row"><div class="wz-field"><label>Stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="e.g. healthy"></div>'
+        + '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning well"></div></div>'
         + '<div class="wz-field"><label>Peristomal skin</label><input value="'+_esc(WZ.peristomalSkin)+'" oninput="WZ.peristomalSkin=this.value" placeholder="healthy/intact"></div>'
         + '<p class="wz-cap">Additional checks</p>'
         + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.skinHealthy)+' onchange="WZ.skinHealthy=this.checked?\'yes\':\'no\'"> Peristomal skin healthy</label>'
