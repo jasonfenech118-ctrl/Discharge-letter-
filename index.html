@@ -321,6 +321,7 @@
     <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print.</span>
     <span class="actions">
       <button class="btn" onclick="saveToSharePoint()">Save to SharePoint</button>
+      <button class="btn" onclick="sendToEmail()">Send to Email</button>
       <button class="btn" onclick="window.print()">Print</button>
       <button class="btn ghost" onclick="openWizard()">Wizard</button>
       <button class="btn ghost" onclick="addBullet()">+ Care-plan line</button>
@@ -2113,6 +2114,44 @@
   function saveToSharePoint(){
     exportWord();
     if (SHAREPOINT_LIBRARY_URL) window.open(SHAREPOINT_LIBRARY_URL, '_blank');
+  }
+
+  // Plain-text version of the letter for the email body.
+  function buildLetterText(){
+    var strip = function(s){ return (s || '').replace(/\*\*/g, ''); };
+    var lines = [];
+    var date = _v('#letterDate') || _v('.fld-date');
+    if(date) lines.push(date, '');
+    lines.push('Re: ' + [_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ')
+      + (_v('.fld-id') ? '   ID No: ' + _v('.fld-id') : ''), '');
+    if(_v('.fld-salutation')) lines.push(_v('.fld-salutation'), '');
+    var body = document.querySelector('.body');
+    if(body){
+      Array.prototype.forEach.call(body.children, function(p){
+        var t = p.textContent.replace(/\s+/g, ' ').trim();
+        if(t) lines.push(t, '');
+      });
+    }
+    lines.push('Stoma Care Plan:');
+    var ul = document.getElementById('planList');
+    if(ul){
+      Array.prototype.forEach.call(ul.children, function(li){
+        var t = li.textContent.replace(/\s+/g, ' ').trim();
+        if(t) lines.push('- ' + t);
+      });
+    }
+    lines.push('', strip(LETTER.closing) || 'Regards,', '');
+    if(_v('.fld-name')) lines.push(_v('.fld-name'));
+    lines.push(strip(LETTER.signRole1), strip(LETTER.signRole2));
+    return lines.join('\n');
+  }
+  function sendToEmail(){
+    exportWord(); // download the Word copy so it can be attached to the email
+    var subject = 'Stoma Discharge Letter - '
+      + ([_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ') || 'Patient')
+      + (_v('.fld-id') ? ' (' + _v('.fld-id') + ')' : '');
+    window.location.href = 'mailto:?subject=' + encodeURIComponent(subject)
+      + '&body=' + encodeURIComponent(buildLetterText());
   }
 
   lastAutoPlan = planText();
