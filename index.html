@@ -469,6 +469,7 @@
   var DEFAULT_SLOT_TEXT = "[appliance]";
 
   function _esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function _lcFirst(s){ s = s || ''; return s.charAt(0).toLowerCase() + s.slice(1); }
   function _v(sel){ var el = document.querySelector(sel); return el ? (el.value || '') : ''; }
   function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
@@ -1324,9 +1325,9 @@
       formation: mentionsStoma ? "" : (" with formation of a " + typeWord),
       date: _fmtDate(WZ.opdate) || "[date of operation]",
       consultant: WZ.consultant || "[consultant]",
-      colour: WZ.stomaColour || "[stoma colour]",
-      "function": (WZ.stomaFunctionWell === 'no' && WZ.stomaFunction) ? ("functioning " + WZ.stomaFunction) : (WZ.stomaFunction || "[function]"),
-      skin: WZ.peristomalSkin || "[peristomal skin]",
+      colour: _lcFirst(WZ.stomaColour) || "[stoma colour]",
+      "function": (WZ.stomaFunctionWell === 'no' && WZ.stomaFunction) ? ("functioning " + _lcFirst(WZ.stomaFunction)) : (_lcFirst(WZ.stomaFunction) || "[function]"),
+      skin: _lcFirst(WZ.peristomalSkin) || "[peristomal skin]",
       rod: (rodApplies() && WZ.rodInSitu === 'yes')
         ? (" Rod in situ" + (WZ.rodRemovalDate ? ", due removal on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
         : "",
@@ -1372,7 +1373,7 @@
   var DEFAULT_PLAN_PHRASES = {
     // --- two-piece systems ---
     "two.flangeChange":   "Flange to be changed on alternate days. Next change due: {date}.",
-    "two.uroStentsA":     "Bag is to be changed on alternate days with the flange until the stents are in situ.",
+    "two.uroStentsA":     "Bag is to be changed on alternate days with the flange while the stents are in situ.",
     "two.uroStentsB":     "Once the stents come out on their own, the bag should be changed daily and emptied when one-third full.",
     "two.uroNoStents":    "Urostomy bag should be changed daily and emptied when one-third full.",
     "two.rodA":           "Bag is to be changed on alternate days with the flange while the rod is in situ{rodWhen}.",
@@ -1395,12 +1396,12 @@
     "one.removeSpray":    "A <strong>minimal</strong> amount of adhesive remover spray must be used to remove the pouch gently.",
     // --- common / accessory bullets ---
     "common.wash":        "Wash stoma and peristomal skin well with tap water and pat dry.",
-    "common.aperture":    "Aperture to be cut to the shape and size of the stoma. A new cutting template was provided, however, it needs to be adjusted accordingly.",
+    "common.aperture":    "Aperture to be cut to the shape and size of the stoma. A new cutting template has been provided; however, it needs to be adjusted accordingly.",
     "acc.barrierWipe":    "Use a protective wipe once daily after cleansing and drying the stoma and peristomal skin.",
     "acc.powder":         "Apply {treatment} over the skin excoriation and dust off the excess; stop once the skin heals.",
     "acc.redness":        "Monitor the peristomal skin redness; apply barrier cream/wipe as needed and reassess at the next review.",
     "acc.mucoSep":        "Apply {treatment} over the mucocutaneous separation{location} and dust off the excess; stop once the separation heals.",
-    "acc.belt":           "Stoma belt should be kept on at all times, especially during bed time.",
+    "acc.belt":           "Stoma belt should be kept on at all times, especially during bedtime.",
     "acc.seal":           "Apply a stoma seal around the base of the stoma before fitting the appliance to improve the seal and prevent leakage.",
     "common.hair":        "Peristomal hair shaving is to be done as necessary to prevent hair folliculitis.",
     "acc.filler":         "Apply a generous amount of filler paste from {from} to {to} o'clock location around the stoma.",
