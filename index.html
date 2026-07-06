@@ -459,6 +459,8 @@
 
   </div>
 
+<!-- Client-side PDF generation for the Send to Email button -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
   // ============================================================
   //  Stoma Discharge Letter — wizard-led appliance workflow
@@ -2145,13 +2147,38 @@
     lines.push(strip(LETTER.signRole1), strip(LETTER.signRole2));
     return lines.join('\n');
   }
+  // Render the formatted letter into a hidden frame and save it as a PDF.
+  // Falls back to the Word export if the PDF library is unavailable (offline).
+  function downloadPDF(done){
+    done = done || function(){};
+    if(typeof html2pdf === 'undefined'){ exportWord(); done(); return; }
+    var iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:645px;height:1000px;border:0;';
+    document.body.appendChild(iframe);
+    var doc = iframe.contentDocument;
+    doc.open(); doc.write(buildLetterHTML()); doc.close();
+    var finish = function(){ document.body.removeChild(iframe); done(); };
+    setTimeout(function(){ // give the logo a moment to load inside the frame
+      try{
+        html2pdf().set({
+          margin: [16, 20, 16, 20],
+          filename: buildFilename() + '.pdf',
+          image: { type: 'jpeg', quality: 0.95 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['avoid-all', 'css'] }
+        }).from(doc.body).save().then(finish, function(){ exportWord(); finish(); });
+      }catch(e){ exportWord(); finish(); }
+    }, 400);
+  }
   function sendToEmail(){
-    exportWord(); // download the Word copy so it can be attached to the email
     var subject = 'Stoma Discharge Letter - '
       + ([_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ') || 'Patient')
       + (_v('.fld-id') ? ' (' + _v('.fld-id') + ')' : '');
-    window.location.href = 'mailto:?subject=' + encodeURIComponent(subject)
-      + '&body=' + encodeURIComponent(buildLetterText());
+    downloadPDF(function(){
+      window.location.href = 'mailto:?subject=' + encodeURIComponent(subject)
+        + '&body=' + encodeURIComponent(buildLetterText());
+    });
   }
 
   lastAutoPlan = planText();
