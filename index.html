@@ -993,7 +993,7 @@
     }
     if(step === "skin"){
       var html = '<p class="wz-cap">Is the peristomal skin healthy?</p>'
-        + '<button class="wz-choice'+(WZ.skinHealthy==='yes'?' sel':'')+'" onclick="WZ.skinHealthy=\'yes\'; WZ.peristomalSkin=\'healthy\'; WZ.skinExcoriation=\'no\'; WZ.skinRedness=\'no\'; WZ.mucocutaneousSeparation=\'no\'; renderWizard();">Yes</button>'
+        + '<button class="wz-choice'+(WZ.skinHealthy==='yes'?' sel':'')+'" onclick="WZ.skinHealthy=\'yes\'; WZ.peristomalSkin=\'intact\'; WZ.skinExcoriation=\'no\'; WZ.skinRedness=\'no\'; WZ.mucocutaneousSeparation=\'no\'; renderWizard();">Yes</button>'
         + '<button class="wz-choice'+(WZ.skinHealthy==='no'?' sel':'')+'" onclick="WZ.skinHealthy=\'no\'; WZ.peristomalSkin=\'\'; renderWizard();">No</button>';
       if(WZ.skinHealthy === 'no'){
         html += '<div class="wz-field"><label>Peristomal skin</label><input value="'+_esc(WZ.peristomalSkin)+'" oninput="WZ.peristomalSkin=this.value" placeholder="e.g. excoriated, red, macerated"></div>'
@@ -1257,15 +1257,15 @@
   var DEFAULT_BODY_TEMPLATES = {
     colostomy: {
       opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}.{rod} During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     ileostomy: {
       opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}.{rod} During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     urostomy: {
       opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}.{rod} During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     }
   };
   var BODY_TEMPLATES = loadBodyTemplates();
@@ -1331,9 +1331,7 @@
       colour: _lcFirst(WZ.stomaColour) || "[stoma colour]",
       "function": (WZ.stomaFunctionWell === 'no' && WZ.stomaFunction) ? ("functioning " + _lcFirst(WZ.stomaFunction)) : (_lcFirst(WZ.stomaFunction) || "[function]"),
       skin: _lcFirst(WZ.peristomalSkin) || "[peristomal skin]",
-      rod: (rodApplies() && WZ.rodInSitu === 'yes')
-        ? (" Rod in situ" + (WZ.rodRemovalDate ? ", due removal on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
-        : "",
+      rod: "",
       teaching: WZ.teaching === 'yes' ? (" A teaching session has been carried out with " + (WZ.teachingWith || "the patient") + ".") : "",
       stents: ""
     };
@@ -1381,11 +1379,10 @@
     "two.uroNoStents":    "Urostomy bag should be changed daily and emptied when one-third full.",
     "two.rodA":           "Bag is to be changed on alternate days with the flange while the rod is in situ{rodWhen}.",
     "two.rodB":           "Empty the bag when one-third full. Once the rod is removed, the bag may be changed as required.",
-    "two.closed":         "Pouch to be changed when one-third full, from once to twice daily.",
-    "two.drainable":      "Bag to be changed daily and emptied when one-third full.",
+    "two.closed":         "Bag is to be changed when it is 1/3 full.",
+    "two.drainable":      "Bag is to be changed daily and emptied when 1/3 full.",
     "two.default":        "Bag to be changed according to outlet type and emptied/changed when one-third full.",
     "two.drainableExtra": "If the output becomes liquid, the drainable bag may be used and emptied when one-third full.",
-    "two.removeStomahesive": "The Stomahesive flange should never be removed dry; soap and water is to be used to remove it gently.",
     "two.removeOther":    "A <strong>minimal</strong> amount of adhesive remover spray must be used to remove the flange gently.",
     // --- one-piece systems ---
     "one.uroStentsA":     "While the stents are in situ, change the pouch on alternate days.",
@@ -1408,7 +1405,8 @@
     "acc.seal":           "Apply a stoma seal around the base of the stoma before fitting the appliance to improve the seal and prevent leakage.",
     "common.hair":        "Peristomal hair shaving is to be done as necessary to prevent hair folliculitis.",
     "acc.filler":         "Apply a generous amount of filler paste from {from} to {to} o'clock location around the stoma.",
-    "acc.mucusFistula":   "<strong>Mucus fistula{location}:</strong> wash the stoma and peristomal skin well and pat dry. Apply Bactigras/Paraffin dressing and a dry dressing to cover. Dressing to be changed on alternate days."
+    "acc.mucusFistula":   "<strong>Mucus fistula{location}:</strong> wash the stoma and peristomal skin well and pat dry. Apply Bactigras/Paraffin dressing and a dry dressing to cover. Dressing to be changed on alternate days.",
+    "plan.rod":           "Rod in situ, due removal <strong>{rodDate}</strong>."
   };
   // Bullets that are shown in bold in the letter (house style).
   var PLAN_BOLD_KEYS = { "two.uroStentsA":1, "two.rodA":1, "one.uroStentsA":1, "one.rodA":1, "acc.belt":1, "acc.filler":1 };
@@ -1479,9 +1477,7 @@
         b.push(planPhrase("two.drainableExtra"));
       }
 
-      if(isStomahesive){
-        b.push(planPhrase("two.removeStomahesive"));
-      } else {
+      if(!isStomahesive){
         b.push(planPhrase("two.removeOther"));
       }
     } else {
@@ -1503,6 +1499,11 @@
         b.push(planPhrase("one.default"));
       }
       b.push(planPhrase("one.removeSpray"));
+    }
+
+    if(rod){
+      var rodDateStr = WZ.rodRemovalDate ? _fmtDate(WZ.rodRemovalDate) : "_______________";
+      b.push(planPhrase("plan.rod", { rodDate: rodDateStr }));
     }
 
     b.push(planPhrase("common.wash"));
@@ -1727,9 +1728,9 @@
     renderCatalogueManager();
   }
   var PLAN_PHRASE_GROUPS = [
-    ['Two-piece systems', ['two.flangeChange','two.uroStentsA','two.uroStentsB','two.uroNoStents','two.rodA','two.rodB','two.closed','two.drainable','two.default','two.drainableExtra','two.removeStomahesive','two.removeOther']],
+    ['Two-piece systems', ['two.flangeChange','two.uroStentsA','two.uroStentsB','two.uroNoStents','two.rodA','two.rodB','two.closed','two.drainable','two.default','two.drainableExtra','two.removeOther']],
     ['One-piece systems', ['one.uroStentsA','one.uroStentsB','one.uroNoStents','one.rodA','one.rodB','one.closed','one.drainable','one.default','one.removeSpray']],
-    ['Common & accessories', ['common.wash','common.aperture','acc.barrierWipe','acc.powder','acc.redness','acc.mucoSep','acc.belt','acc.seal','common.hair','acc.filler','acc.mucusFistula']]
+    ['Common & accessories', ['common.wash','common.aperture','acc.barrierWipe','acc.powder','acc.redness','acc.mucoSep','acc.belt','acc.seal','common.hair','acc.filler','acc.mucusFistula','plan.rod']]
   ];
   function renderPlanPhrasesSection(){
     var html = '<div class="cat-section"><h3>Care-plan bullet wording</h3>'
