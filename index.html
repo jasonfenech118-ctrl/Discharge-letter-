@@ -61,6 +61,8 @@
   .btn.green:hover{background:#176e3c;color:#fff;border-color:#176e3c}
   .btn.yellow{background:#f2c200;color:#3a2f00;border-color:#f2c200}
   .btn.yellow:hover{background:#d9ae00;color:#3a2f00;border-color:#d9ae00}
+  .btn.amber{background:#d4a600;color:#fff;border-color:#d4a600}
+  .btn.amber:hover{background:#b38a00;color:#fff;border-color:#b38a00}
   .tb-select{
     font-family:var(--sans);font-size:13px;font-weight:700;
     border:1px solid rgba(255,255,255,.5);
@@ -335,8 +337,7 @@
       <button class="btn" onclick="sendToEmail()">Send to Email</button>
       <button class="btn" onclick="window.print()">Print</button>
       <button class="btn yellow" onclick="openWizard()" title="Step-by-step questions that fill in the letter">Fill in / Edit Letter</button>
-      <button class="btn ghost" onclick="addBullet()">+ Care-plan line</button>
-      <button class="btn ghost" onclick="clearForm()">Clear</button>
+      <button class="btn amber" onclick="clearForm()">Clear</button>
       <span class="format-tools" aria-label="Text formatting tools">
         <button class="btn grey fmt" title="Bold" onclick="formatDoc('bold')"><b>B</b></button>
         <button class="btn grey fmt" title="Italic" onclick="formatDoc('italic')"><i>I</i></button>
@@ -808,7 +809,7 @@
     WZ = {
       type:"", subtype:"", title:"", fname:"", sname:"", id:"",
       procedure:"", opdate:"", consultant:"",
-      stomaColourHealthy:"", stomaColour:"", stomaFunctionWell:"", stomaFunction:"", skinHealthy:"", peristomalSkin:"",
+      stomaColourHealthy:"", stomaColour:"", stomaFunctionWell:"", stomaFunction:"", stomaRetraction:"", skinHealthy:"", peristomalSkin:"",
       skinExcoriation:"no", skinExcoriationTreatment:"", skinExcoriationTreatmentOther:"",
       skinRedness:"no",
       mucocutaneousSeparation:"no", mucoSepFrom:"", mucoSepTill:"", mucoSepTreatment:"", mucoSepTreatmentOther:"",
@@ -993,6 +994,9 @@
       if(WZ.stomaFunctionWell === 'no'){
         html += '<div class="wz-field"><label>Elaborate on stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. high output, minimal output, non-functioning"></div>';
       }
+      html += '<p class="wz-cap">Is the stoma retracted?</p>'
+        + '<button class="wz-choice'+(WZ.stomaRetraction==='yes'?' sel':'')+'" onclick="WZ.stomaRetraction=\'yes\'; renderWizard();">Yes</button>'
+        + '<button class="wz-choice'+(WZ.stomaRetraction==='no'?' sel':'')+'" onclick="WZ.stomaRetraction=\'no\'; renderWizard();">No</button>';
       if(rodApplies()){
         html += '<label class="wz-check'+(WZ.rodInSitu==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.rodInSitu)+' onchange="WZ.rodInSitu=this.checked?\'yes\':\'no\'; renderWizard();"> Rod in situ ('+_esc(subtypeLabel())+')</label>';
         if(WZ.rodInSitu === 'yes'){
@@ -1288,21 +1292,21 @@
   var DEFAULT_BODY_TEMPLATES = {
     colostomy: {
       opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     ileostomy: {
       opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     urostomy: {
       opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     }
   };
   var BODY_TEMPLATES = loadBodyTemplates();
   function loadBodyTemplates(){
     try{
-      var raw = localStorage.getItem('stomaLetterBodyTemplatesV2');
+      var raw = localStorage.getItem('stomaLetterBodyTemplatesV3');
       if(raw){
         var saved = JSON.parse(raw), out = clone(DEFAULT_BODY_TEMPLATES);
         ['colostomy','ileostomy','urostomy'].forEach(function(t){
@@ -1317,7 +1321,7 @@
     return clone(DEFAULT_BODY_TEMPLATES);
   }
   function saveBodyTemplates(){
-    try{ localStorage.setItem('stomaLetterBodyTemplatesV2', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterBodyTemplatesV3', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
   }
   function bodyTemplateFor(type){
     return BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES.colostomy;
@@ -1646,7 +1650,7 @@
     document.querySelectorAll('select.fld').forEach(function(s){ s.selectedIndex = 0; });
     document.querySelector('.body').innerHTML =
       '<p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p>' +
-      '<p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p>' +
+      '<p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation [Patient] was informed about appliance management. However, [Patient] still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p>' +
       '<p>Patient discharged with <strong><span id="applianceSlot">' + DEFAULT_SLOT_TEXT + '</span></strong>.</p>';
     curType = ""; curSystem = ""; curOutlet = ""; curBaseplateKind = ""; lastAutoPlan = "";
     document.getElementById('planList').innerHTML = '<li><br></li>';
