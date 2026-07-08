@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Stoma Discharge Letter</title>
 <style>
   :root{
@@ -98,7 +101,7 @@
   .l-date{margin-bottom:16px}
 
   /* ---------- 3. Patient ---------- */
-  .l-patient{font-weight:700;margin-bottom:14px;white-space:nowrap}
+  .l-patient{font-weight:700;margin-bottom:14px;white-space:nowrap;text-align:center}
   .l-patient .lbl{font-weight:700}
 
   /* ---------- 4. Main text ---------- */
@@ -117,7 +120,7 @@
   /* ---------- 6. Regards + signature ---------- */
   .l-sign{margin-top:18px}
   .l-sign .regards{margin-bottom:2px}
-  .l-sign .sig-gap{height:78px}   /* room to sign with a pen */
+  .l-sign .sig-gap{height:58px}
   .l-sign .clinic{}
 
   /* ---------- 7. Footer ---------- */
@@ -143,6 +146,8 @@
   input.fld-fname{width:132px}
   input.fld-sname{width:150px}
   input.fld-id{width:118px}
+  .l-patient .fld{text-align:center}
+  .patient-print{display:none}
 
   select.fld{
     -webkit-appearance:none;appearance:none;cursor:pointer;
@@ -235,8 +240,8 @@
   .wz-check.sel{border-color:var(--blue);background:var(--fill)}
   .wz-hint{font-size:12.5px;color:#c0392b;margin:6px 0 0}
   .wz-added{display:flex;flex-direction:column;gap:6px;margin:2px 0 10px}
-  .wz-added-item{display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:var(--sans);font-size:13.5px;background:var(--fill);border:1px solid var(--fill-border);border-radius:8px;padding:8px 10px;color:#1c2a44}
-  .wz-added-item button{border:none;background:none;color:#b02525;font-weight:700;font-size:15px;cursor:pointer;line-height:1;padding:0 4px}
+  .wz-added-item{display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:var(--sans);font-size:13.5px;background:var(--navy);border:1.5px solid var(--navy);border-radius:10px;padding:10px 13px;color:#fff;font-weight:700}
+  .wz-added-item button{border:none;background:none;color:rgba(255,255,255,.7);font-weight:700;font-size:15px;cursor:pointer;line-height:1;padding:0 4px}
   .wz-tag{display:inline-block;font-family:var(--sans);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#2f6fb0;background:#e3edf8;border-radius:4px;padding:1px 7px;margin-left:6px;vertical-align:middle}
   .wz-note{font-size:12px;color:#5b6b85;font-style:italic;margin:2px 0 10px}
   .format-tools{display:inline-flex;align-items:center;gap:6px;border-left:1px solid rgba(255,255,255,.35);padding-left:8px;margin-left:4px}
@@ -300,7 +305,10 @@
     }
     input.fld, select.fld{padding:0 !important;margin:0 !important}
     select.fld{background-image:none !important;padding-right:0 !important}
-    input.fld{width:auto !important}
+    input.fld{width:auto}
+    /* patient line prints as one composed centred line: Title Name Surname  ID No: x */
+    .l-patient > :not(.patient-print){display:none !important}
+    .patient-print{display:inline}
     input.fld::placeholder{color:transparent}
     #applianceSlot{padding:0 !important}
     .appl-picker{display:none !important}          /* hide the inline pickers on paper */
@@ -322,7 +330,7 @@
 <body>
 
   <div class="toolbar">
-    <span class="title" id="ribbonTitle" onclick="openWizard()" title="Click to reopen the setup wizard">Stoma Discharge Letter</span>
+    <span class="title" id="ribbonTitle" onclick="openWizard()" title="Click to reopen the fill-in / edit questions">Stoma Discharge Letter</span>
     <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print.</span>
     <span class="actions">
       <button class="btn green" onclick="saveToSharePoint()">Save</button>
@@ -331,29 +339,23 @@
       <button class="btn yellow" onclick="openWizard()" title="Step-by-step questions that fill in the letter">Fill in / Edit Letter</button>
       <button class="btn amber" onclick="clearForm()">Clear</button>
       <span class="format-tools" aria-label="Text formatting tools">
-        <button class="btn ghost fmt" title="Bold" onclick="formatDoc('bold')"><b>B</b></button>
-        <button class="btn ghost fmt" title="Italic" onclick="formatDoc('italic')"><i>I</i></button>
-        <button class="btn ghost fmt" title="Underline" onclick="formatDoc('underline')"><u>U</u></button>
+        <button class="btn grey fmt" title="Bold" onclick="formatDoc('bold')"><b>B</b></button>
+        <button class="btn grey fmt" title="Italic" onclick="formatDoc('italic')"><i>I</i></button>
+        <button class="btn grey fmt" title="Underline" onclick="formatDoc('underline')"><u>U</u></button>
         <select class="tb-select" title="Font" onchange="formatDoc('fontName', this.value)">
           <option value="Times New Roman">Times New Roman</option>
           <option value="Arial">Arial</option>
           <option value="Calibri">Calibri</option>
           <option value="Georgia">Georgia</option>
         </select>
-        <select class="tb-select" title="Size" onchange="formatDoc('fontSize', this.value)">
-          <option value="3">Normal</option>
-          <option value="2">Small</option>
-          <option value="4">Large</option>
-          <option value="5">Extra large</option>
-        </select>
       </span>
     </span>
   </div>
 
   <!-- Guided setup wizard (shown on load) -->
-  <div id="wizard" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="wzTitle" onclick="if(event.target===this) closeWizard()">
+  <div id="wizard" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="wzTitle">
     <div class="modal-card wz-card">
-      <button class="modal-x" onclick="closeWizard()" aria-label="Close">&times;</button>
+      <button class="modal-x" onclick="closeWizard()" aria-label="Close" title="Close without saving">&times;</button>
       <div class="wz-head">
         <div class="wz-step">Step <span id="wzNum">1</span> of <span id="wzTotal">6</span></div>
         <h2 id="wzTitle">Stoma type</h2>
@@ -405,7 +407,6 @@
 
     <!-- 3. PATIENT NAME / SURNAME / ID -->
     <div class="sec l-patient">
-      <span class="lbl">Re:&nbsp;</span>
       <select class="fld fld-title" aria-label="Title">
         <option value=""></option>
         <option>Mr</option>
@@ -418,6 +419,7 @@
       <input type="text" class="fld fld-sname" placeholder="Surname">
       <span class="lbl">&nbsp;&nbsp;ID No:&nbsp;</span>
       <input type="text" class="fld fld-id" placeholder="ID number">
+      <span class="patient-print" id="patientPrint"></span>
     </div>
 
     <!-- 4. MAIN TEXT -->
@@ -429,7 +431,7 @@
           <option>Dear Colleagues,</option>
         </select>
       </div>
-      <div class="body" contenteditable="true" spellcheck="true"><p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p><p>On discharge, the stoma colour was [pink/red], the stoma was [functioning/non-functioning], and the peristomal skin was [healthy/intact]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p><p>Patient discharged using <span id="applianceSlot">[appliance]</span>.</p></div>
+      <div class="body" contenteditable="true" spellcheck="true"><p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p><p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p><p>Patient discharged with <strong><span id="applianceSlot">[appliance]</span></strong>.</p></div>
     </div>
 
     <!-- 5. STOMA CARE PLAN -->
@@ -469,6 +471,8 @@
 
   </div>
 
+<!-- Client-side PDF generation for the Send to Email button -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
   // ============================================================
   //  Stoma Discharge Letter — wizard-led appliance workflow
@@ -480,6 +484,27 @@
   var DEFAULT_SLOT_TEXT = "[appliance]";
 
   function _esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function _lcFirst(s){ s = s || ''; return s.charAt(0).toLowerCase() + s.slice(1); }
+  // Shrink the patient-line fields to fit their text so the line reads as one
+  // centred unit (Name Surname  ID No: x) instead of spread-out boxes.
+  function autosizeFld(el){
+    if(!el) return;
+    var len = (el.value || el.placeholder || '').length;
+    el.style.width = Math.max(3, len + 1) + 'ch';
+  }
+  function autosizePatientFlds(){
+    ['.fld-fname','.fld-sname','.fld-id'].forEach(function(sel){ autosizeFld(document.querySelector(sel)); });
+    updatePatientPrint();
+  }
+  // Composed patient line used on paper: single spaces between title/name/surname,
+  // two spaces before the ID.
+  function updatePatientPrint(){
+    var el = document.getElementById('patientPrint');
+    if(!el) return;
+    var name = [_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ');
+    var id = _v('.fld-id');
+    el.textContent = name + (id ? '  ID No: ' + id : '');
+  }
   function _v(sel){ var el = document.querySelector(sel); return el ? (el.value || '') : ''; }
   function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
@@ -499,8 +524,8 @@
   var DEFAULT_CATALOGUE = {
     onePiece: [
       { label:"Lentell closed pouch", outlet:"closed", stomas:["colostomy"], sizes:["70","80","90","100"], phrase:"Lentell one-piece closed pouch cutting up to [size]mm" },
-      { label:"Salts XNL1352 soft convex closed pouch", outlet:"closed", stomas:["colostomy"], sizes:[], phrase:"Salts XNL1352 soft convexity one-piece closed pouch" },
-      { label:"Salts XND1352 soft convex drainable pouch", outlet:"drainable", stomas:["ileostomy"], sizes:[], phrase:"Salts XND1352 soft convexity one-piece drainable pouch" },
+      { label:"Salts XNL1352 soft convex closed pouch", outlet:"", stomas:["colostomy"], sizes:[], phrase:"Salts XNL1352 soft convexity one-piece closed pouch" },
+      { label:"Salts XND1352 soft convex drainable pouch", outlet:"", stomas:["ileostomy"], sizes:[], phrase:"Salts XND1352 soft convexity one-piece drainable pouch" },
       { label:"Salts XND1338 one-piece pouch", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Salts XND1338 one-piece pouch" },
       { label:"Salts NAL13", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Salts NAL13 one-piece pouch" },
       { label:"Salts NA13", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Salts NA13 one-piece pouch" },
@@ -512,26 +537,21 @@
       { label:"Welland XNHNDL913", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland XNHNDL913 one-piece pouch" },
       { label:"Welland XMDS513", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland XMDS513 one-piece pouch" },
       { label:"Welland 202248", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Welland 202248 one-piece pouch" },
-      { label:"Little Ones", outlet:"closed", stomas:["colostomy"], sizes:[], phrase:"Little Ones one-piece pouch" },
-      { label:"Hollister 29500", outlet:"", stomas:["colostomy","ileostomy","urostomy"], sizes:[], phrase:"Hollister 29500 one-piece pouch" }
+      { label:"Little Ones", outlet:"", stomas:["colostomy"], sizes:[], phrase:"Little Ones one-piece pouch" },
+      { label:"Hollister 29500", outlet:"urostomy", stomas:["urostomy"], sizes:[], phrase:"Hollister 29500 one-piece pouch" }
     ],
     baseplates: [
-      { label:"Deep convexity 22/45mm", kind:"deep", sizes:["22/45"], phrase:"deep convexity baseplate 22/45mm" },
-      { label:"Deep convexity 35/45mm", kind:"deep", sizes:["35/45"], phrase:"deep convexity baseplate 35/45mm" },
-      { label:"Deep convexity 32/45mm", kind:"deep", sizes:["32/45"], phrase:"deep convexity baseplate 32/45mm" },
-      { label:"Deep convexity 25/45mm", kind:"deep", sizes:["25/45"], phrase:"deep convexity baseplate 25/45mm" },
-      { label:"Deep convexity 28/45mm", kind:"deep", sizes:["28/45"], phrase:"deep convexity baseplate 28/45mm" },
-      { label:"Deep convexity 38/57mm", kind:"deep", sizes:["38/57"], phrase:"deep convexity baseplate 38/57mm" },
-      { label:"Deep convexity 41/57mm", kind:"deep", sizes:["41/57"], phrase:"deep convexity baseplate 41/57mm" },
-      { label:"Microporous collar 45mm", kind:"microporous", sizes:["45"], phrase:"microporous collar flange size 45mm" },
-      { label:"Microporous collar 57mm", kind:"microporous", sizes:["57"], phrase:"microporous collar flange size 57mm" },
-      { label:"Microporous collar 70mm", kind:"microporous", sizes:["70"], phrase:"microporous collar flange size 70mm" },
-      { label:"Stomahesive 45mm", kind:"stomahesive", sizes:["45"], phrase:"Stomahesive flange size 45mm" },
-      { label:"Stomahesive 57mm", kind:"stomahesive", sizes:["57"], phrase:"Stomahesive flange size 57mm" },
-      { label:"Stomahesive 70mm", kind:"stomahesive", sizes:["70"], phrase:"Stomahesive flange size 70mm" },
-      { label:"Stomahesive 100mm", kind:"stomahesive", sizes:["100"], phrase:"Stomahesive flange size 100mm" },
-      { label:"Hollister 34200", kind:"hollister", sizes:[], phrase:"Hollister 34200 baseplate" },
-      { label:"Hollister 27300", kind:"hollister", sizes:[], phrase:"Hollister 27300 baseplate" }
+      { label:"Deep convexity 22/45mm", kind:"deep", sizes:["22/45"], phrase:"deep convexity flange 22/45mm" },
+      { label:"Deep convexity 35/45mm", kind:"deep", sizes:["35/45"], phrase:"deep convexity flange 35/45mm" },
+      { label:"Deep convexity 32/45mm", kind:"deep", sizes:["32/45"], phrase:"deep convexity flange 32/45mm" },
+      { label:"Deep convexity 25/45mm", kind:"deep", sizes:["25/45"], phrase:"deep convexity flange 25/45mm" },
+      { label:"Deep convexity 28/45mm", kind:"deep", sizes:["28/45"], phrase:"deep convexity flange 28/45mm" },
+      { label:"Deep convexity 38/57mm", kind:"deep", sizes:["38/57"], phrase:"deep convexity flange 38/57mm" },
+      { label:"Deep convexity 41/57mm", kind:"deep", sizes:["41/57"], phrase:"deep convexity flange 41/57mm" },
+      { label:"Microporous collar", kind:"microporous", sizes:["45","57","70"], phrase:"microporous collar flange size [size]mm" },
+      { label:"Stomahesive", kind:"stomahesive", sizes:["45","57","70","100"], phrase:"Stomahesive flange size [size]mm" },
+      { label:"Hollister 34200", kind:"hollister", sizes:[], phrase:"Hollister 34200 flange" },
+      { label:"Hollister 27300", kind:"hollister", sizes:[], phrase:"Hollister 27300 flange" }
     ],
     bags: [
       { label:"Closed bag 45mm", outlet:"closed", stomas:["colostomy"], sizes:["45"], phrase:"closed bag 45mm" },
@@ -554,13 +574,13 @@
   var CAT = loadCatalogue();
   function loadCatalogue(){
     try{
-      var raw = localStorage.getItem('stomaLetterCatalogueV2');
+      var raw = localStorage.getItem('stomaLetterCatalogueV3');
       if(raw){ return JSON.parse(raw); }
     }catch(e){}
     return clone(DEFAULT_CATALOGUE);
   }
   function saveCatalogue(){
-    try{ localStorage.setItem('stomaLetterCatalogueV2', JSON.stringify(CAT)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterCatalogueV3', JSON.stringify(CAT)); }catch(e){}
   }
 
   // ======================= CONSULTANTS =======================
@@ -607,19 +627,24 @@
   }
 
   var DEFAULT_ACCESSORIES = [
-    "Stoma belt", "Protective stoma powder", "Barrier / skin-protective wipe",
-    "Adhesive removal spray", "Filler paste", "Mucus fistula dressing"
+    "Stoma belt", "Stoma seal", "Stoma powder", "Barrier / skin-protective wipe",
+    "Adhesive removal spray", "Filler paste"
   ];
   var ACCESSORIES = loadAccessories();
   function loadAccessories(){
     try{
-      var raw = localStorage.getItem('stomaLetterAccessoriesV1');
-      if(raw){ var a = JSON.parse(raw); if(Array.isArray(a) && a.length) return a; }
+      var raw = localStorage.getItem('stomaLetterAccessoriesV2');
+      if(raw){
+        var a = JSON.parse(raw);
+        if(Array.isArray(a) && a.length){
+          return a.map(function(x){ return x === "Protective stoma powder" ? "Stoma powder" : x; });
+        }
+      }
     }catch(e){}
     return DEFAULT_ACCESSORIES.slice();
   }
   function saveAccessories(){
-    try{ localStorage.setItem('stomaLetterAccessoriesV1', JSON.stringify(ACCESSORIES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterAccessoriesV2', JSON.stringify(ACCESSORIES)); }catch(e){}
   }
 
   // ================= PRINTING / LETTERHEAD SETTINGS =================
@@ -716,10 +741,17 @@
     title_type: "Stoma type",
     title_subtype: "Stoma sub-type",
     title_patient: "Patient details",
-    title_surgery: "Surgery & stoma assessment",
+    title_surgery: "Surgery information",
+    title_stoma: "Stoma assessment",
+    title_mucusFistula: "Mucus fistula",
+    title_skin: "Peristomal skin assessment",
+    title_teaching: "Teaching session",
     title_system: "Appliance system",
     title_appliance: "One-piece pouch",
-    title_baseplate: "Baseplate / flange",
+    title_onePieceSize: "Pouch size",
+    title_baseplate: "Flange",
+    title_flangeSize: "Flange size",
+    title_flangeDue: "Flange change due",
     title_bag: "Bag(s)",
     title_accessories: "Accessories & extras",
     cap_subtypeColostomy: "Which type of colostomy?",
@@ -776,13 +808,15 @@
   function resetWZ(){
     WZ = {
       type:"", subtype:"", title:"", fname:"", sname:"", id:"",
-      procedure:"", opdate:"", nextChange:"", consultant:"",
-      stomaColour:"pink/red", stomaFunction:"functioning", peristomalSkin:"healthy/intact",
-      skinHealthy:"yes", skinExcoriation:"no", mucocutaneousSeparation:"no",
-      teaching:"yes", teachingWith:"patient",
-      urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"no",
+      procedure:"", opdate:"", consultant:"",
+      stomaColourHealthy:"", stomaColour:"", stomaFunctionWell:"", stomaFunction:"", skinHealthy:"", peristomalSkin:"",
+      skinExcoriation:"no", skinExcoriationTreatment:"", skinExcoriationTreatmentOther:"",
+      skinRedness:"no",
+      mucocutaneousSeparation:"no", mucoSepFrom:"", mucoSepTill:"", mucoSepTreatment:"", mucoSepTreatmentOther:"",
+      teaching:"", teachingWith:"",
+      urostomyStents:"no", rodInSitu:"no", rodRemovalDate:"", mucusFistula:"", mucusFistulaLocations:[],
       system:"", onePieceIdx:"", onePieceSize:"", onePieceOutlet:"",
-      baseplateIdx:"", bagIdx:"", bagOutlet:"", bags:[], bagsShowAll:false,
+      baseplateIdx:"", baseplateSize:"", nextChange:"", nextChangeLater:"", bagIdx:"", bagOutlet:"", bagsShowAll:false,
       accessories:[], fillerFrom:"", fillerTo:""
     };
   }
@@ -823,9 +857,23 @@
   function stepsForWizard(){
     var head = ["type"];
     if(typeHasSubtype(WZ.type)) head.push("subtype");
-    head = head.concat(["patient","surgery","system"]);
-    if(WZ.system === 'two') return head.concat(["baseplate","bag","accessories"]);
-    return head.concat(["appliance","accessories"]);
+    head = head.concat(["patient","surgery","stoma"]);
+    if(WZ.type !== 'urostomy') head.push("mucusFistula");
+    head = head.concat(["skin","teaching","system"]);
+    if(WZ.system === 'two'){
+      var twoTail = ["baseplate"];
+      var selectedBase = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+      if(selectedBase && selectedBase.sizes && selectedBase.sizes.length > 1 && !WZ.baseplateSize){
+        twoTail.push("flangeSize");
+      }
+      return head.concat(twoTail).concat(["bag","flangeDue","accessories"]);
+    }
+    var tail = ["appliance"];
+    var selectedOne = CAT.onePiece[parseInt(WZ.onePieceIdx,10)] || null;
+    if(selectedOne && selectedOne.sizes && selectedOne.sizes.length && !WZ.onePieceSize){
+      tail.push("onePieceSize");
+    }
+    return head.concat(tail).concat(["accessories"]);
   }
   function titleForStep(step){
     return wtext('title_' + step) || step;
@@ -855,37 +903,51 @@
       var sub = [];
       if(item.outlet) sub.push(item.outlet);
       if(item.sizes && item.sizes.length) sub.push('sizes: '+item.sizes.join(', '));
-      if(!item.outlet && listName === 'onePiece') sub.push('outlet to confirm');
       out += '<button class="wz-choice'+(String(WZ[selectedField])===String(i)?' sel':'')+'" onclick="wzPick(\''+selectedField+'\',\''+i+'\')">'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+'</small></button>';
     });
     if(!out) out = '<p class="wz-cap">No matching items. Open Catalogue to add one or change outlet/stoma type.</p>';
     return out;
   }
 
-  // Dedicated bag renderer: brand-lock to Hollister baseplates, otherwise filter by stoma type,
-  // with a "+ add another bag type" override for real-world clinical exceptions.
+  function _baseplateFlange(bp){
+    if(!bp || !bp.sizes || !bp.sizes.length) return '';
+    var s = bp.sizes.length > 1 ? (WZ.baseplateSize || '') : bp.sizes[0];
+    var slash = s.indexOf('/');
+    return slash >= 0 ? s.substring(slash + 1) : s;
+  }
+  function _isStandardBaseplate(bp){
+    if(!bp) return false;
+    var k = (bp.kind || '').toLowerCase();
+    return k === 'stomahesive' || k === 'microporous' || k === 'deep';
+  }
   function _bagButtons(){
     var base = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
     var lockHollister = isHollister(base);
-    var rec = recommendedOutletForType(WZ.type);           // closed / drainable / urostomy
+    var standard = _isStandardBaseplate(base);
+    var flangeSize = standard ? _baseplateFlange(base) : '';
+    var rec = recommendedOutletForType(WZ.type);
     var showAll = WZ.bagsShowAll === true;
 
     var out = '';
     _sortedWithIndex('bags').forEach(function(entry){
       var item = entry.item, i = entry.idx, hol = isHollister(item);
-      // Brand rule: Hollister baseplate → only Hollister bags. Non-Hollister baseplate → hide Hollister bags.
       if(lockHollister && !hol) return;
       if(!lockHollister && hol) return;
-      // Stoma-type rule (only for the non-Hollister branch, unless the nurse opens "show all")
-      if(!lockHollister && !showAll && rec && item.outlet && item.outlet !== rec) return;
+      if(standard && !showAll){
+        if(rec === 'urostomy'){
+          if(item.outlet && item.outlet !== 'urostomy') return;
+        } else {
+          if(item.outlet && item.outlet !== 'closed' && item.outlet !== 'drainable') return;
+        }
+        if(flangeSize && item.sizes && item.sizes.length && item.sizes.indexOf(flangeSize) < 0) return;
+      } else if(!lockHollister && !showAll && rec && item.outlet && item.outlet !== rec) return;
 
-      var picked = WZ.bags.indexOf(i) >= 0;
       var sub = [];
       if(item.outlet) sub.push(item.outlet);
       if(item.sizes && item.sizes.length) sub.push('sizes: '+item.sizes.join(', '));
-      out += '<button class="wz-choice'+(picked?' sel':'')+'" onclick="wzToggleBag('+i+')">'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+(picked?' · selected':'')+'</small></button>';
+      out += '<button class="wz-choice'+(String(WZ.bagIdx)===String(i)?' sel':'')+'" onclick="wzPick(\'bagIdx\',\''+i+'\')">'+_esc(item.label)+'<small>'+_esc(sub.join(' · '))+'</small></button>';
     });
-    if(!out) out = '<p class="wz-cap">No matching bags. Use “Show all bag types” below, or add one in the Catalogue.</p>';
+    if(!out) out = '<p class="wz-cap">No matching bags. Use &ldquo;Show all bag types&rdquo; below, or add one in the Catalogue.</p>';
     return out;
   }
 
@@ -915,19 +977,23 @@
         + '<div class="wz-field"><label>ID number</label><input value="'+_esc(WZ.id)+'" oninput="WZ.id=this.value"></div>';
     }
     if(step === "surgery"){
-      var html = '<div class="wz-field"><label>Procedure / operation</label><input value="'+_esc(WZ.procedure)+'" oninput="WZ.procedure=this.value" placeholder="e.g. anterior resection with formation of colostomy"></div>'
-        + '<div class="wz-row"><div class="wz-field"><label>Date of surgery</label><input type="date" value="'+_esc(WZ.opdate)+'" oninput="WZ.opdate=this.value"></div>'
-        + '<div class="wz-field"><label>Next flange/baseplate change due</label><input type="date" value="'+_esc(WZ.nextChange)+'" oninput="WZ.nextChange=this.value"></div></div>'
-        + '<div class="inline-row"><div class="wz-field"><label>Consultant</label><input list="wzCons" value="'+_esc(WZ.consultant)+'" oninput="WZ.consultant=this.value" placeholder="e.g. Mr M Zammit Vincenti"></div><button type="button" class="mini-btn" onclick="saveConsultantFromWizard()">+ Save</button></div>' + _dl("wzCons", consultants())
-        + '<div class="wz-row"><div class="wz-field"><label>Stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="pink/red"></div>'
-        + '<div class="wz-field"><label>Stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. functioning, high output"></div></div>'
-        + '<div class="wz-field"><label>Peristomal skin</label><input value="'+_esc(WZ.peristomalSkin)+'" oninput="WZ.peristomalSkin=this.value" placeholder="healthy/intact"></div>'
-        + '<p class="wz-cap">Additional checks</p>'
-        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.skinHealthy)+' onchange="WZ.skinHealthy=this.checked?\'yes\':\'no\'"> Peristomal skin healthy</label>'
-        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.skinExcoriation)+' onchange="WZ.skinExcoriation=this.checked?\'yes\':\'no\'"> Skin excoriation present</label>'
-        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.mucocutaneousSeparation)+' onchange="WZ.mucocutaneousSeparation=this.checked?\'yes\':\'no\'"> Mucocutaneous separation present</label>'
-        + '<label class="wz-check"><input type="checkbox"'+_checked(WZ.teaching)+' onchange="WZ.teaching=this.checked?\'yes\':\'no\'"> Teaching session done</label>'
-        + '<div class="wz-field"><label>Teaching session with</label><input value="'+_esc(WZ.teachingWith)+'" oninput="WZ.teachingWith=this.value" placeholder="patient, wife, husband, relatives"></div>';
+      return '<div class="wz-field"><label>Procedure / operation</label><input value="'+_esc(WZ.procedure)+'" oninput="WZ.procedure=this.value" placeholder="e.g. anterior resection with formation of colostomy"></div>'
+        + '<div class="wz-field"><label>Date of surgery</label><input type="date" value="'+_esc(WZ.opdate)+'" oninput="WZ.opdate=this.value"></div>'
+        + '<div class="inline-row"><div class="wz-field"><label>Consultant</label><input list="wzCons" value="'+_esc(WZ.consultant)+'" oninput="WZ.consultant=this.value" placeholder="e.g. Mr M Zammit Vincenti"></div><button type="button" class="mini-btn" onclick="saveConsultantFromWizard()">+ Save</button></div>' + _dl("wzCons", consultants());
+    }
+    if(step === "stoma"){
+      var html = '<p class="wz-cap">Is the stoma colour healthy?</p>'
+        + '<button class="wz-choice'+(WZ.stomaColourHealthy==='yes'?' sel':'')+'" onclick="WZ.stomaColourHealthy=\'yes\'; WZ.stomaColour=\'healthy\'; renderWizard();">Yes</button>'
+        + '<button class="wz-choice'+(WZ.stomaColourHealthy==='no'?' sel':'')+'" onclick="WZ.stomaColourHealthy=\'no\'; WZ.stomaColour=\'\'; renderWizard();">No</button>';
+      if(WZ.stomaColourHealthy === 'no'){
+        html += '<div class="wz-field"><label>Elaborate on stoma colour</label><input value="'+_esc(WZ.stomaColour)+'" oninput="WZ.stomaColour=this.value" placeholder="e.g. dusky, pale, dark red"></div>';
+      }
+      html += '<p class="wz-cap">Is the stoma functioning well?</p>'
+        + '<button class="wz-choice'+(WZ.stomaFunctionWell==='yes'?' sel':'')+'" onclick="WZ.stomaFunctionWell=\'yes\'; WZ.stomaFunction=\'functioning well\'; renderWizard();">Yes</button>'
+        + '<button class="wz-choice'+(WZ.stomaFunctionWell==='no'?' sel':'')+'" onclick="WZ.stomaFunctionWell=\'no\'; WZ.stomaFunction=\'\'; renderWizard();">No</button>';
+      if(WZ.stomaFunctionWell === 'no'){
+        html += '<div class="wz-field"><label>Elaborate on stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. high output, minimal output, non-functioning"></div>';
+      }
       if(rodApplies()){
         html += '<label class="wz-check'+(WZ.rodInSitu==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.rodInSitu)+' onchange="WZ.rodInSitu=this.checked?\'yes\':\'no\'; renderWizard();"> Rod in situ ('+_esc(subtypeLabel())+')</label>';
         if(WZ.rodInSitu === 'yes'){
@@ -937,26 +1003,108 @@
       if(WZ.type === 'urostomy'){
         html += '<label class="wz-check'+(WZ.urostomyStents==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.urostomyStents)+' onchange="WZ.urostomyStents=this.checked?\'yes\':\'no\'"> Urostomy stents in situ</label>';
       }
-      html += '<label class="wz-check'+(WZ.mucusFistula==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.mucusFistula)+' onchange="WZ.mucusFistula=this.checked?\'yes\':\'no\'"> Mucus fistula / ulcer / fistula present</label>';
+      return html;
+    }
+    if(step === "mucusFistula"){
+      var html = '<p class="wz-cap">Mucus Fistula present?</p>'
+        + '<button class="wz-choice'+(WZ.mucusFistula==='yes'?' sel':'')+'" onclick="wzMfSetPresent(\'yes\')">Yes</button>'
+        + '<button class="wz-choice'+(WZ.mucusFistula==='no'?' sel':'')+'" onclick="wzMfSetPresent(\'no\')">No</button>';
+      if(WZ.mucusFistula === 'yes'){
+        WZ.mucusFistulaLocations.forEach(function(loc, i){
+          html += '<div class="inline-row"><div class="wz-field"><label>Location'+(WZ.mucusFistulaLocations.length>1?' '+(i+1):'')+'</label>'
+            + _mfLocationSelect(i, loc) + '</div>'
+            + (WZ.mucusFistulaLocations.length>1 ? '<button type="button" class="mini-btn" onclick="wzMfRemove('+i+')">Remove</button>' : '')
+            + '</div>';
+        });
+        var last = WZ.mucusFistulaLocations[WZ.mucusFistulaLocations.length-1];
+        if(last){
+          html += '<button class="wz-choice" onclick="wzMfAdd()">+ Add Mucus Fistula</button>';
+        }
+      }
+      return html;
+    }
+    if(step === "skin"){
+      var html = '<p class="wz-cap">Is the peristomal skin healthy?</p>'
+        + '<button class="wz-choice'+(WZ.skinHealthy==='yes'?' sel':'')+'" onclick="WZ.skinHealthy=\'yes\'; WZ.peristomalSkin=\'intact\'; WZ.skinExcoriation=\'no\'; WZ.skinRedness=\'no\'; WZ.mucocutaneousSeparation=\'no\'; renderWizard();">Yes</button>'
+        + '<button class="wz-choice'+(WZ.skinHealthy==='no'?' sel':'')+'" onclick="WZ.skinHealthy=\'no\'; WZ.peristomalSkin=\'\'; renderWizard();">No</button>';
+      if(WZ.skinHealthy === 'no'){
+        html += '<div class="wz-field"><label>Peristomal skin</label><input value="'+_esc(WZ.peristomalSkin)+'" oninput="WZ.peristomalSkin=this.value" placeholder="e.g. excoriated, red, macerated"></div>'
+          + '<label class="wz-check'+(WZ.skinExcoriation==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.skinExcoriation)+' onchange="WZ.skinExcoriation=this.checked?\'yes\':\'no\'; renderWizard();"> Excoriation present</label>';
+        if(WZ.skinExcoriation === 'yes'){
+          html += '<div class="wz-field"><label>Treated with</label><select onchange="WZ.skinExcoriationTreatment=this.value; renderWizard();">'
+            + '<option value=""'+(WZ.skinExcoriationTreatment===''?' selected':'')+'></option>'
+            + '<option value="Stoma powder"'+(WZ.skinExcoriationTreatment==='Stoma powder'?' selected':'')+'>Stoma powder</option>'
+            + '<option value="Other"'+(WZ.skinExcoriationTreatment==='Other'?' selected':'')+'>Other</option>'
+            + '</select></div>';
+          if(WZ.skinExcoriationTreatment === 'Other'){
+            html += '<div class="wz-field"><label>Specify treatment</label><input value="'+_esc(WZ.skinExcoriationTreatmentOther)+'" oninput="WZ.skinExcoriationTreatmentOther=this.value" placeholder="e.g. hydrocolloid dressing"></div>';
+          }
+        }
+        html += '<label class="wz-check'+(WZ.skinRedness==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.skinRedness)+' onchange="WZ.skinRedness=this.checked?\'yes\':\'no\'"> Redness present</label>'
+          + '<label class="wz-check'+(WZ.mucocutaneousSeparation==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.mucocutaneousSeparation)+' onchange="WZ.mucocutaneousSeparation=this.checked?\'yes\':\'no\'; renderWizard();"> Mucocutaneous separation present</label>';
+        if(WZ.mucocutaneousSeparation === 'yes'){
+          html += '<div class="wz-row"><div class="wz-field"><label>From (o\'clock)</label><input value="'+_esc(WZ.mucoSepFrom)+'" oninput="WZ.mucoSepFrom=this.value" placeholder="e.g. 2"></div>'
+            + '<div class="wz-field"><label>Till (o\'clock)</label><input value="'+_esc(WZ.mucoSepTill)+'" oninput="WZ.mucoSepTill=this.value" placeholder="e.g. 4"></div></div>'
+            + '<div class="wz-field"><label>Treated with</label><select onchange="WZ.mucoSepTreatment=this.value; renderWizard();">'
+            + '<option value=""'+(WZ.mucoSepTreatment===''?' selected':'')+'></option>'
+            + '<option value="Orabase"'+(WZ.mucoSepTreatment==='Orabase'?' selected':'')+'>Orabase</option>'
+            + '<option value="Stoma powder"'+(WZ.mucoSepTreatment==='Stoma powder'?' selected':'')+'>Stoma powder</option>'
+            + '<option value="Calcium alginate"'+(WZ.mucoSepTreatment==='Calcium alginate'?' selected':'')+'>Calcium alginate</option>'
+            + '<option value="Other"'+(WZ.mucoSepTreatment==='Other'?' selected':'')+'>Other</option>'
+            + '</select></div>';
+          if(WZ.mucoSepTreatment === 'Other'){
+            html += '<div class="wz-field"><label>Specify treatment</label><input value="'+_esc(WZ.mucoSepTreatmentOther)+'" oninput="WZ.mucoSepTreatmentOther=this.value" placeholder="e.g. silver dressing"></div>';
+          }
+        }
+      }
+      return html;
+    }
+    if(step === "teaching"){
+      var html = '<p class="wz-cap">Was a teaching session carried out?</p>'
+        + '<button class="wz-choice'+(WZ.teaching==='yes'?' sel':'')+'" onclick="WZ.teaching=\'yes\'; renderWizard();">Yes</button>'
+        + '<button class="wz-choice'+(WZ.teaching==='no'?' sel':'')+'" onclick="WZ.teaching=\'no\'; renderWizard();">No</button>';
+      if(WZ.teaching === 'yes'){
+        html += '<div class="wz-field"><label>Teaching session with</label><input value="'+_esc(WZ.teachingWith)+'" oninput="WZ.teachingWith=this.value" placeholder="patient, wife, husband, relatives"></div>';
+      }
       return html;
     }
     if(step === "system"){
       return '<p class="wz-cap">'+_esc(wtext('cap_system'))+'</p>'
         + '<button class="wz-choice'+(WZ.system==='one'?' sel':'')+'" onclick="wzPick(\'system\',\'one\')">One-piece<small>flange and pouch are a single unit</small></button>'
-        + '<button class="wz-choice'+(WZ.system==='two'?' sel':'')+'" onclick="wzPick(\'system\',\'two\')">Two-piece<small>separate baseplate/flange and bag</small></button>'
+        + '<button class="wz-choice'+(WZ.system==='two'?' sel':'')+'" onclick="wzPick(\'system\',\'two\')">Two-piece<small>separate flange and bag</small></button>'
         + '<p class="wz-hint" id="wzHint" style="display:none">Please choose one-piece or two-piece to continue.</p>';
     }
     if(step === "appliance"){
-      var selected = CAT.onePiece[parseInt(WZ.onePieceIdx,10)] || null;
-      var outlet = WZ.onePieceOutlet || (selected ? selected.outlet : '');
       return '<p class="wz-cap">Choose the one-piece pouch. Items matching the selected stoma type are shown first; items with unknown outlet remain available for confirmation.</p>'
-        + _catalogueButtons('onePiece','onePieceIdx')
-        + '<div class="wz-row" style="margin-top:12px"><div class="wz-field"><label>Size / cut to (mm) — optional</label><input value="'+_esc(WZ.onePieceSize)+'" oninput="WZ.onePieceSize=this.value" placeholder="e.g. 70"></div>'
-        + '<div class="wz-field"><label>Outlet type</label><select onchange="WZ.onePieceOutlet=this.value"><option value=""></option><option value="closed"'+(outlet==='closed'?' selected':'')+'>closed</option><option value="drainable"'+(outlet==='drainable'?' selected':'')+'>drainable</option><option value="urostomy"'+(outlet==='urostomy'?' selected':'')+'>urostomy</option></select></div></div>';
+        + _catalogueButtons('onePiece','onePieceIdx');
+    }
+    if(step === "onePieceSize"){
+      var selectedOne = CAT.onePiece[parseInt(WZ.onePieceIdx,10)] || null;
+      var sizes = selectedOne ? (selectedOne.sizes || []) : [];
+      var html = '<p class="wz-cap">Choose the size for '+_esc(selectedOne ? selectedOne.label : '')+':</p>';
+      sizes.forEach(function(s){
+        html += '<button class="wz-choice'+(WZ.onePieceSize===s?' sel':'')+'" onclick="WZ.onePieceSize=\''+s+'\'; renderWizard();">'+_esc(s)+'mm</button>';
+      });
+      return html;
     }
     if(step === "baseplate"){
-      return '<p class="wz-cap">Choose the two-piece baseplate/flange:</p>'
+      return '<p class="wz-cap">Choose the two-piece flange:</p>'
         + _catalogueButtons('baseplates','baseplateIdx');
+    }
+    if(step === "flangeSize"){
+      var selBase = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+      var bSizes = selBase ? (selBase.sizes || []) : [];
+      var html = '<p class="wz-cap">Choose the size for '+_esc(selBase ? selBase.label : '')+':</p>';
+      bSizes.forEach(function(s){
+        html += '<button class="wz-choice'+(WZ.baseplateSize===s?' sel':'')+'" onclick="WZ.baseplateSize=\''+s+'\'; renderWizard();">'+_esc(s)+'mm</button>';
+      });
+      return html;
+    }
+    if(step === "flangeDue"){
+      var html = '<p class="wz-cap">When is the next flange change due?</p>'
+        + '<div class="wz-field"><label>Date of next change</label><input type="date" value="'+_esc(WZ.nextChange)+'" oninput="WZ.nextChange=this.value; WZ.nextChangeLater=\'\';"></div>'
+        + '<button class="wz-choice'+(WZ.nextChangeLater==='yes'?' sel':'')+'" onclick="WZ.nextChangeLater=\'yes\'; WZ.nextChange=\'\'; renderWizard();">Later date<small>leave blank — the letter shows a line to write the date by hand</small></button>';
+      return html;
     }
     if(step === "bag"){
       var base = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
@@ -964,31 +1112,30 @@
       var rec = recommendedOutletForType(WZ.type);
       var recWord = rec ? (rec === 'closed' ? 'closed bags' : (rec === 'drainable' ? 'drainable bags' : 'urostomy bags')) : 'bags';
 
+      var standard = _isStandardBaseplate(base);
+      var flangeSize = standard ? _baseplateFlange(base) : '';
       var note = lockHollister
-        ? 'This is a Hollister baseplate, so only Hollister bags are shown (brands are not interchangeable).'
-        : 'For a ' + (WZ.type || 'this') + ' the recommended bags are ' + recWord + '. You can add another type below for clinical exceptions (e.g. a high-output colostomy needing a drainable bag).';
-
-      // Chips for already-selected bags
-      var chips = '';
-      if(WZ.bags.length){
-        chips = '<div class="wz-added">' + WZ.bags.map(function(idx){
-          var it = CAT.bags[idx]; if(!it) return '';
-          return '<div class="wz-added-item"><span>'+_esc(it.label)+(it.outlet?' <span class="wz-tag">'+_esc(it.outlet)+'</span>':'')+'</span><button title="Remove" onclick="wzToggleBag('+idx+')">&times;</button></div>';
-        }).join('') + '</div>';
-      }
+        ? 'This is a Hollister flange, so only Hollister bags are shown (brands are not interchangeable).'
+        : standard
+          ? (rec === 'urostomy'
+            ? 'Showing urostomy bags' + (flangeSize ? ' for flange size ' + flangeSize + 'mm' : '') + '.'
+            : 'Showing both drainable and closed bags' + (flangeSize ? ' for flange size ' + flangeSize + 'mm' : '') + '.')
+          : 'For a ' + (WZ.type || 'this') + ' the recommended bags are ' + recWord + '. You can add another type below for clinical exceptions (e.g. a high-output colostomy needing a drainable bag).';
 
       var toggle = lockHollister ? '' :
         '<label class="wz-check'+(WZ.bagsShowAll?' sel':'')+'" style="margin-top:6px"><input type="checkbox"'+(WZ.bagsShowAll?' checked':'')+' onchange="WZ.bagsShowAll=this.checked; renderWizard();"> Show all bag types (clinical override)</label>';
 
-      return '<p class="wz-note">'+_esc(note)+'</p>'
-        + (WZ.bags.length ? '<p class="wz-cap">Selected bag(s):</p>' + chips : '')
-        + '<p class="wz-cap">Tap to select one or more bags:</p>'
+      return '<p class="wz-cap">'+_esc(note)+'</p>'
         + _bagButtons()
         + toggle;
     }
     if(step === "accessories"){
+      var accBase = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
+      var accIsStomahesive = accBase && /stomahesive/i.test(accBase.label + " " + (accBase.kind||""));
       var rows = '<p class="wz-cap">'+_esc(wtext('cap_accessories'))+'</p>'
         + ACCESSORIES.map(function(a, i){
+            if(a === "Stoma powder" && WZ.skinHealthy !== 'no') return '';
+            if(a === "Adhesive removal spray" && accIsStomahesive) return '';
             var on = WZ.accessories.indexOf(a) >= 0;
             return '<label class="wz-check'+(on?' sel':'')+'"><input type="checkbox"'+(on?' checked':'')+' onchange="wzToggleAcc('+i+', this.checked); this.closest(\'.wz-check\').classList.toggle(\'sel\', this.checked); renderWizard();"> '+_esc(a)+'</label>';
           }).join('');
@@ -1017,7 +1164,7 @@
 
   function wzPick(field, val){
     if(field === 'type'){
-      if(WZ.type !== val){ WZ.subtype = ""; WZ.rodInSitu = "no"; WZ.rodRemovalDate = ""; WZ.bags = []; WZ.bagsShowAll = false; }
+      if(WZ.type !== val){ WZ.subtype = ""; WZ.rodInSitu = "no"; WZ.rodRemovalDate = ""; WZ.bagIdx = ""; WZ.bagsShowAll = false; }
       WZ.type = val;
     }
     else if(field === 'subtype'){
@@ -1025,20 +1172,27 @@
       WZ.subtype = val;
     }
     else if(field === 'system'){
-      if(WZ.system !== val){ WZ.onePieceIdx = ""; WZ.baseplateIdx = ""; WZ.bagIdx = ""; WZ.onePieceOutlet = ""; WZ.bagOutlet = ""; WZ.bags = []; WZ.bagsShowAll = false; }
+      if(WZ.system !== val){ WZ.onePieceIdx = ""; WZ.baseplateIdx = ""; WZ.baseplateSize = ""; WZ.nextChange = ""; WZ.nextChangeLater = ""; WZ.bagIdx = ""; WZ.onePieceOutlet = ""; WZ.bagOutlet = ""; WZ.bagsShowAll = false; }
       WZ.system = val;
     }
     else if(field === 'onePieceIdx'){
       WZ.onePieceIdx = val;
       var item = CAT.onePiece[parseInt(val,10)];
       WZ.onePieceOutlet = item ? (item.outlet || "") : "";
+      WZ.onePieceSize = "";
     }
     else if(field === 'baseplateIdx'){
       // Changing baseplate brand can change which bags are valid; clear picks if brand class changes
       var prev = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
       var next = CAT.baseplates[parseInt(val,10)] || null;
-      if(isHollister(prev) !== isHollister(next)){ WZ.bags = []; WZ.bagsShowAll = false; }
+      if(isHollister(prev) !== isHollister(next)){ WZ.bagIdx = ""; WZ.bagsShowAll = false; }
       WZ.baseplateIdx = val;
+      WZ.baseplateSize = "";
+      // Stomahesive is removed with soap and water, not adhesive remover
+      if(next && /stomahesive/i.test(next.label + " " + (next.kind||""))){
+        var arIdx = WZ.accessories.indexOf("Adhesive removal spray");
+        if(arIdx >= 0) WZ.accessories.splice(arIdx, 1);
+      }
     }
     else if(field === 'bagIdx'){
       WZ.bagIdx = val;
@@ -1047,17 +1201,37 @@
     }
     renderWizard();
   }
-  function wzToggleBag(idx){
-    var at = WZ.bags.indexOf(idx);
-    if(at >= 0) WZ.bags.splice(at, 1);
-    else WZ.bags.push(idx);
-    renderWizard();
-  }
   function wzToggleAcc(i, on){
     var a = ACCESSORIES[i];
     var idx = WZ.accessories.indexOf(a);
     if(on && idx < 0) WZ.accessories.push(a);
     if(!on && idx >= 0) WZ.accessories.splice(idx, 1);
+  }
+
+  // ---- Mucus fistula (one or more, each with a location) ----
+  var MF_LOCATIONS = ["Right Upper Quadrant (RUQ)","Right Lower Quadrant (RLQ)","Left Upper Quadrant (LUQ)","Left Lower Quadrant (LLQ)"];
+  function _mfLocationSelect(i, val){
+    var opts = '<option value=""'+(val===''?' selected':'')+'></option>';
+    MF_LOCATIONS.forEach(function(loc){
+      opts += '<option value="'+_esc(loc)+'"'+(val===loc?' selected':'')+'>'+_esc(loc)+'</option>';
+    });
+    return '<select onchange="wzMfSetLoc('+i+', this.value)">'+opts+'</select>';
+  }
+  function wzMfSetPresent(v){
+    WZ.mucusFistula = v;
+    if(v === 'yes'){
+      if(!WZ.mucusFistulaLocations.length) WZ.mucusFistulaLocations = [""];
+    } else {
+      WZ.mucusFistulaLocations = [];
+    }
+    renderWizard();
+  }
+  function wzMfSetLoc(i, val){ WZ.mucusFistulaLocations[i] = val; renderWizard(); }
+  function wzMfAdd(){ WZ.mucusFistulaLocations.push(""); renderWizard(); }
+  function wzMfRemove(i){
+    WZ.mucusFistulaLocations.splice(i, 1);
+    if(!WZ.mucusFistulaLocations.length){ WZ.mucusFistula = 'no'; }
+    renderWizard();
   }
 
   function wzValidate(){
@@ -1097,11 +1271,11 @@
   }
 
   function selectedBagItems(){
-    return WZ.bags.map(function(i){ return CAT.bags[i]; }).filter(Boolean);
+    var item = CAT.bags[parseInt(WZ.bagIdx,10)];
+    return item ? [item] : [];
   }
   function primaryBag(){
-    var bags = selectedBagItems();
-    return bags.length ? bags[0] : null;
+    return CAT.bags[parseInt(WZ.bagIdx,10)] || null;
   }
 
   /* ----------------------------------------------------------------
@@ -1114,22 +1288,22 @@
   ----------------------------------------------------------------- */
   var DEFAULT_BODY_TEMPLATES = {
     colostomy: {
-      opening:   "{who} was operated and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma was {colour} and {function}, and the peristomal skin was {skin}.{rod} During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     ileostomy: {
-      opening:   "{who} was operated and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma was {colour} and {function}, and the peristomal skin was {skin}.{rod} During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     urostomy: {
-      opening:   "{who} was operated and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma was {colour} and {function}, and the peristomal skin was {skin}.{rod} During hospitalisation the patient was informed about appliance management{stents}.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
+      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation the patient was informed about appliance management.{teaching} However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     }
   };
   var BODY_TEMPLATES = loadBodyTemplates();
   function loadBodyTemplates(){
     try{
-      var raw = localStorage.getItem('stomaLetterBodyTemplatesV1');
+      var raw = localStorage.getItem('stomaLetterBodyTemplatesV2');
       if(raw){
         var saved = JSON.parse(raw), out = clone(DEFAULT_BODY_TEMPLATES);
         ['colostomy','ileostomy','urostomy'].forEach(function(t){
@@ -1144,7 +1318,7 @@
     return clone(DEFAULT_BODY_TEMPLATES);
   }
   function saveBodyTemplates(){
-    try{ localStorage.setItem('stomaLetterBodyTemplatesV1', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterBodyTemplatesV2', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
   }
   function bodyTemplateFor(type){
     return BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES.colostomy;
@@ -1173,6 +1347,7 @@
     setFld('.fld-fname', WZ.fname);
     setFld('.fld-sname', WZ.sname);
     setFld('.fld-id', WZ.id);
+    autosizePatientFlds();
 
     // Values available to the body templates as {placeholders}
     var proc = WZ.procedure || "[procedure]";
@@ -1186,14 +1361,12 @@
       formation: mentionsStoma ? "" : (" with formation of a " + typeWord),
       date: _fmtDate(WZ.opdate) || "[date of operation]",
       consultant: WZ.consultant || "[consultant]",
-      colour: WZ.stomaColour || "[stoma colour]",
-      "function": WZ.stomaFunction || "[function]",
-      skin: WZ.peristomalSkin || "[peristomal skin]",
-      rod: (rodApplies() && WZ.rodInSitu === 'yes')
-        ? (" A rod is in situ" + (WZ.rodRemovalDate ? " and is expected to be removed on " + _fmtDate(WZ.rodRemovalDate) : "") + ".")
-        : "",
-      teaching: WZ.teaching === 'yes' ? (" A teaching session was done with " + (WZ.teachingWith || "the patient") + ".") : "",
-      stents: (WZ.type === 'urostomy' && WZ.urostomyStents === 'yes') ? ", including care of the ureteric stents in situ" : ""
+      colour: _lcFirst(WZ.stomaColour) || "[stoma colour]",
+      "function": (WZ.stomaFunctionWell === 'no' && WZ.stomaFunction) ? ("functioning " + _lcFirst(WZ.stomaFunction)) : (_lcFirst(WZ.stomaFunction) || "[function]"),
+      skin: _lcFirst(WZ.peristomalSkin) || "[peristomal skin]",
+      rod: "",
+      teaching: WZ.teaching === 'yes' ? (" A teaching session has been carried out with " + (WZ.teachingWith || "the patient") + ".") : "",
+      stents: ""
     };
     var tpl = bodyTemplateFor(WZ.type || curType);
     var body = document.querySelector('.body');
@@ -1211,7 +1384,7 @@
     } else if(curSystem === 'two'){
       var bagPhrases = selectedBagItems().map(function(b){ return formatItemPhrase(b); });
       var bagsText = bagPhrases.length ? _humanList(bagPhrases) : "[bag]";
-      applianceText = (formatItemPhrase(base) || "[baseplate]") + " with " + bagsText;
+      applianceText = (formatItemPhrase(base, WZ.baseplateSize) || "[flange]") + " with " + bagsText;
     }
     if(WZ.accessories.length){
       applianceText += ", with " + _humanList(WZ.accessories.map(function(a){ return a.toLowerCase(); }));
@@ -1233,18 +1406,17 @@
   ----------------------------------------------------------------- */
   var DEFAULT_PLAN_PHRASES = {
     // --- two-piece systems ---
-    "two.flangeChange":   "Flange/baseplate to be changed on alternate days. Next change due: {date}.",
-    "two.uroStentsA":     "Bag is to be changed on alternate days with the flange until the stents are in situ.",
+    "two.flangeChange":   "Flange to be changed on alternate days. Next change due: {date}.",
+    "two.uroStentsA":     "Bag is to be changed on alternate days with the flange while the stents are in situ.",
     "two.uroStentsB":     "Once the stents come out on their own, the bag should be changed daily and emptied when one-third full.",
     "two.uroNoStents":    "Urostomy bag should be changed daily and emptied when one-third full.",
     "two.rodA":           "Bag is to be changed on alternate days with the flange while the rod is in situ{rodWhen}.",
     "two.rodB":           "Empty the bag when one-third full. Once the rod is removed, the bag may be changed as required.",
-    "two.closed":         "Pouch to be changed when one-third full, from once to twice daily.",
-    "two.drainable":      "Bag to be changed daily and emptied when one-third full.",
+    "two.closed":         "Bag is to be changed when it is 1/3 full.",
+    "two.drainable":      "Bag is to be changed daily and emptied when 1/3 full.",
     "two.default":        "Bag to be changed according to outlet type and emptied/changed when one-third full.",
     "two.drainableExtra": "If the output becomes liquid, the drainable bag may be used and emptied when one-third full.",
-    "two.removeStomahesive": "Soap and water is to be used to remove the Stomahesive baseplate gently.",
-    "two.removeOther":    "A minimal amount of adhesive remover spray must be used to remove the baseplate gently.",
+    "two.removeOther":    "A <strong>minimal</strong> amount of adhesive remover spray must be used to remove the flange gently.",
     // --- one-piece systems ---
     "one.uroStentsA":     "While the stents are in situ, change the pouch on alternate days.",
     "one.uroStentsB":     "Once the stents come out on their own, change the pouch daily and empty it when one-third full.",
@@ -1252,26 +1424,29 @@
     "one.rodA":           "The pouch is to be changed on alternate days while the rod is in situ{rodWhen}.",
     "one.rodB":           "Empty the pouch when one-third full. Once the rod is removed, change the pouch as required.",
     "one.closed":         "Pouch to be changed when one-third full, from once to twice daily.",
-    "one.drainable":      "Change of pouch to be carried out daily. Pouch must be emptied when one-third full.",
+    "one.drainable":      "The pouch is to be <strong>changed daily</strong> and <strong>emptied when 1/3 full</strong>.",
     "one.default":        "Pouch to be changed according to outlet type and emptied/changed when one-third full.",
-    "one.removeSpray":    "A minimal amount of adhesive remover spray must be used to remove the pouch gently.",
+    "one.removeSpray":    "A <strong>minimal</strong> amount of adhesive remover spray must be used to remove the pouch gently.",
     // --- common / accessory bullets ---
     "common.wash":        "Wash stoma and peristomal skin well with tap water and pat dry.",
-    "common.aperture":    "Aperture of the {word} to be cut to the shape and size of the stoma; adjust the cutting template accordingly.",
+    "common.aperture":    "Aperture to be cut to the shape and size of the stoma. A new cutting template has been provided; however, it needs to be adjusted accordingly.",
     "acc.barrierWipe":    "Use a protective wipe once daily after cleansing and drying the stoma and peristomal skin.",
-    "acc.powder":         "Apply protective powder over the skin excoriation and dust off the excess; stop once the skin heals.",
-    "acc.mucoSep":        "Apply protective powder over the mucocutaneous separation and dust off the excess; stop once the separation heals.",
-    "acc.belt":           "Stoma belt should be kept on at all times, especially during bed time.",
+    "acc.powder":         "Apply {treatment} over the skin excoriation and dust off the excess; stop once the skin heals.",
+    "acc.redness":        "Peristomal skin redness present: <span style=\"color:#c0392b;font-weight:bold\">[click to elaborate]</span>",
+    "acc.mucoSep":        "Apply {treatment} over the mucocutaneous separation{location} and dust off the excess; stop once the separation heals.",
+    "acc.belt":           "Stoma belt should be kept on at all times, especially during bedtime.",
+    "acc.seal":           "Apply a stoma seal around the base of the stoma before fitting the appliance to improve the seal and prevent leakage.",
     "common.hair":        "Peristomal hair shaving is to be done as necessary to prevent hair folliculitis.",
     "acc.filler":         "Apply a generous amount of filler paste from {from} to {to} o'clock location around the stoma.",
-    "acc.mucusFistula":   "Mucus fistula: wash the stoma and peristomal skin well and pat dry. Apply Bactigras/Paraffin dressing and a dry dressing to cover. Dressing to be changed on alternate days."
+    "acc.mucusFistula":   "<strong>Mucus fistula{location}:</strong> wash the stoma and peristomal skin well and pat dry. Apply Bactigras/Paraffin dressing and a dry dressing to cover. Dressing to be changed on alternate days.",
+    "plan.rod":           "Rod in situ, due removal <strong>{rodDate}</strong>."
   };
   // Bullets that are shown in bold in the letter (house style).
   var PLAN_BOLD_KEYS = { "two.uroStentsA":1, "two.rodA":1, "one.uroStentsA":1, "one.rodA":1, "acc.belt":1, "acc.filler":1 };
   var PLAN_PHRASES = loadPlanPhrases();
   function loadPlanPhrases(){
     try{
-      var raw = localStorage.getItem('stomaLetterPlanPhrasesV1');
+      var raw = localStorage.getItem('stomaLetterPlanPhrasesV2');
       if(raw){
         var saved = JSON.parse(raw), out = clone(DEFAULT_PLAN_PHRASES);
         Object.keys(out).forEach(function(k){ if(typeof saved[k] === 'string') out[k] = saved[k]; });
@@ -1281,7 +1456,7 @@
     return clone(DEFAULT_PLAN_PHRASES);
   }
   function savePlanPhrases(){
-    try{ localStorage.setItem('stomaLetterPlanPhrasesV1', JSON.stringify(PLAN_PHRASES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterPlanPhrasesV2', JSON.stringify(PLAN_PHRASES)); }catch(e){}
   }
   // Look up a plan phrase, fill {placeholders}, and bold it if it is a bold-key.
   function planPhrase(key, vars){
@@ -1298,7 +1473,7 @@
     var outlet = curOutlet || recommendedOutletForType(type) || "";
     var base = CAT.baseplates[parseInt(WZ.baseplateIdx,10)] || null;
     var isStomahesive = base && /stomahesive/i.test(base.label + " " + (base.kind||""));
-    var word = system === "two" ? "baseplate/flange" : "pouch";
+    var word = system === "two" ? "flange" : "pouch";
 
     // Which outlets are actually represented among selected bags (two-piece), for override handling
     var bagItems = (system === "two") ? selectedBagItems() : [];
@@ -1311,7 +1486,7 @@
     var rodWhenClause = rodWhen ? (" (expected removal on " + rodWhen + ")") : "";
 
     if(system === "two"){
-      b.push(planPhrase("two.flangeChange", { date: WZ.nextChange ? _fmtDate(WZ.nextChange) : "[date]" }));
+      b.push(planPhrase("two.flangeChange", { date: WZ.nextChange ? _fmtDate(WZ.nextChange) : "_______________" }));
 
       if(type === "urostomy" || outlet === "urostomy"){
         if(WZ.urostomyStents === 'yes'){
@@ -1335,9 +1510,7 @@
         b.push(planPhrase("two.drainableExtra"));
       }
 
-      if(isStomahesive){
-        b.push(planPhrase("two.removeStomahesive"));
-      } else {
+      if(!isStomahesive){
         b.push(planPhrase("two.removeOther"));
       }
     } else {
@@ -1361,28 +1534,56 @@
       b.push(planPhrase("one.removeSpray"));
     }
 
+    if(rod){
+      var rodDateStr = WZ.rodRemovalDate ? _fmtDate(WZ.rodRemovalDate) : "_______________";
+      b.push(planPhrase("plan.rod", { rodDate: rodDateStr }));
+    }
+
     b.push(planPhrase("common.wash"));
     b.push(planPhrase("common.aperture", { word: word }));
 
     if(WZ.accessories.indexOf("Barrier / skin-protective wipe") >= 0){
       b.push(planPhrase("acc.barrierWipe"));
     }
-    if(WZ.skinExcoriation === 'yes' || WZ.accessories.indexOf("Protective stoma powder") >= 0){
-      b.push(planPhrase("acc.powder"));
+    if(WZ.skinExcoriation === 'yes' || WZ.accessories.indexOf("Stoma powder") >= 0){
+      var excTreatment = WZ.skinExcoriationTreatment === 'Other'
+        ? (WZ.skinExcoriationTreatmentOther || "an appropriate treatment")
+        : "protective powder";
+      b.push(planPhrase("acc.powder", { treatment: excTreatment }));
+    }
+    if(WZ.skinRedness === 'yes'){
+      b.push(planPhrase("acc.redness"));
     }
     if(WZ.mucocutaneousSeparation === 'yes'){
-      b.push(planPhrase("acc.mucoSep"));
+      var mucoTreatmentMap = { "Orabase": "Orabase paste", "Stoma powder": "protective powder", "Calcium alginate": "calcium alginate dressing" };
+      var mucoTreatment = WZ.mucoSepTreatment === 'Other'
+        ? (WZ.mucoSepTreatmentOther || "an appropriate treatment")
+        : (mucoTreatmentMap[WZ.mucoSepTreatment] || "protective powder");
+      var mucoLocation = (WZ.mucoSepFrom && WZ.mucoSepTill)
+        ? (" (from " + WZ.mucoSepFrom + " o'clock till " + WZ.mucoSepTill + " o'clock)")
+        : "";
+      b.push(planPhrase("acc.mucoSep", { treatment: mucoTreatment, location: mucoLocation }));
     }
     if(WZ.accessories.indexOf("Stoma belt") >= 0){
       b.push(planPhrase("acc.belt"));
+    }
+    if(WZ.accessories.indexOf("Stoma seal") >= 0){
+      b.push(planPhrase("acc.seal"));
     }
     b.push(planPhrase("common.hair"));
 
     if(WZ.accessories.indexOf("Filler paste") >= 0){
       b.push(planPhrase("acc.filler", { from: WZ.fillerFrom || "___", to: WZ.fillerTo || "___" }));
     }
-    if(WZ.mucusFistula === 'yes' || WZ.accessories.indexOf("Mucus fistula dressing") >= 0){
-      b.push(planPhrase("acc.mucusFistula"));
+    if(WZ.mucusFistula === 'yes'){
+      var mfLocs = (WZ.mucusFistulaLocations || []).filter(Boolean);
+      if(mfLocs.length){
+        mfLocs.forEach(function(loc){
+          b.push(planPhrase("acc.mucusFistula", { location: " (" + loc + ")" }));
+        });
+      } else {
+        b.push(planPhrase("acc.mucusFistula", { location: "" }));
+      }
     }
     return b;
   }
@@ -1408,7 +1609,7 @@
     var body = document.querySelector('.body');
     if(body){
       var p = document.createElement('p');
-      p.innerHTML = 'Patient discharged using <span id="applianceSlot"></span>.';
+      p.innerHTML = 'Patient discharged with <strong><span id="applianceSlot"></span></strong>.';
       body.appendChild(p);
       document.getElementById('applianceSlot').textContent = text;
     }
@@ -1446,8 +1647,8 @@
     document.querySelectorAll('select.fld').forEach(function(s){ s.selectedIndex = 0; });
     document.querySelector('.body').innerHTML =
       '<p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p>' +
-      '<p>On discharge, the stoma colour was [pink/red], the stoma was [functioning/non-functioning], and the peristomal skin was [healthy/intact]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p>' +
-      '<p>Patient discharged using <span id="applianceSlot">' + DEFAULT_SLOT_TEXT + '</span>.</p>';
+      '<p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p>' +
+      '<p>Patient discharged with <strong><span id="applianceSlot">' + DEFAULT_SLOT_TEXT + '</span></strong>.</p>';
     curType = ""; curSystem = ""; curOutlet = ""; curBaseplateKind = ""; lastAutoPlan = "";
     document.getElementById('planList').innerHTML = '<li><br></li>';
     document.getElementById('ribbonTitle').textContent = 'Stoma Discharge Letter';
@@ -1560,9 +1761,9 @@
     renderCatalogueManager();
   }
   var PLAN_PHRASE_GROUPS = [
-    ['Two-piece systems', ['two.flangeChange','two.uroStentsA','two.uroStentsB','two.uroNoStents','two.rodA','two.rodB','two.closed','two.drainable','two.default','two.drainableExtra','two.removeStomahesive','two.removeOther']],
+    ['Two-piece systems', ['two.flangeChange','two.uroStentsA','two.uroStentsB','two.uroNoStents','two.rodA','two.rodB','two.closed','two.drainable','two.default','two.drainableExtra','two.removeOther']],
     ['One-piece systems', ['one.uroStentsA','one.uroStentsB','one.uroNoStents','one.rodA','one.rodB','one.closed','one.drainable','one.default','one.removeSpray']],
-    ['Common & accessories', ['common.wash','common.aperture','acc.barrierWipe','acc.powder','acc.mucoSep','acc.belt','common.hair','acc.filler','acc.mucusFistula']]
+    ['Common & accessories', ['common.wash','common.aperture','acc.barrierWipe','acc.powder','acc.redness','acc.mucoSep','acc.belt','acc.seal','common.hair','acc.filler','acc.mucusFistula','plan.rod']]
   ];
   function renderPlanPhrasesSection(){
     var html = '<div class="cat-section"><h3>Care-plan bullet wording</h3>'
@@ -1700,10 +1901,17 @@
     ['title_type','Step title — Stoma type'],
     ['title_subtype','Step title — Sub-type'],
     ['title_patient','Step title — Patient'],
-    ['title_surgery','Step title — Surgery / assessment'],
+    ['title_surgery','Step title — Surgery information'],
+    ['title_stoma','Step title — Stoma assessment'],
+    ['title_mucusFistula','Step title — Mucus fistula'],
+    ['title_skin','Step title — Peristomal skin'],
+    ['title_teaching','Step title — Teaching session'],
     ['title_system','Step title — Appliance system'],
     ['title_appliance','Step title — One-piece pouch'],
-    ['title_baseplate','Step title — Baseplate'],
+    ['title_onePieceSize','Step title — Pouch size'],
+    ['title_baseplate','Step title — Flange'],
+    ['title_flangeSize','Step title — Flange size'],
+    ['title_flangeDue','Step title — Flange change due'],
     ['title_bag','Step title — Bag(s)'],
     ['title_accessories','Step title — Accessories']
   ];
@@ -1811,7 +2019,7 @@
       body.innerHTML =
         renderConsultantsSection()
         + renderCatSection('onePiece','One-piece pouches')
-        + renderCatSection('baseplates','Two-piece baseplates')
+        + renderCatSection('baseplates','Two-piece flanges')
         + renderCatSection('bags','Two-piece bags')
         + '<button class="mini-btn" onclick="resetCatalogue()">Reset appliances to default catalogue</button>';
     } else if(editsView === 'wording'){
@@ -1895,7 +2103,7 @@
       + '.lh-title{font-size:16pt;font-weight:bold;line-height:1.2;}'
       + '.lh-tel{font-size:14pt;font-weight:bold;line-height:1.2;}'
       + 'p{margin:0 0 10px;}'
-      + '.patient{font-weight:bold;}'
+      + '.patient{font-weight:bold;text-align:center;}'
       + '.body-txt{text-align:justify;}'
       + '.plan-h{font-weight:bold;text-decoration:underline;margin-bottom:6px;}'
       + 'ul{margin:0 0 10px;padding-left:24px;}li{margin:0 0 5px;}'
@@ -1912,13 +2120,13 @@
         + '</tr></table>'
       + '<div class="rule"></div>'
       + '<p>' + date + '</p>'
-      + '<p class="patient">Re: ' + [title, first, surname].filter(Boolean).join(' ')
-        + '&nbsp;&nbsp;&nbsp;ID No: ' + idno + '</p>'
+      + '<p class="patient">' + [title, first, surname].filter(Boolean).join(' ')
+        + '&nbsp;&nbsp;ID No: ' + idno + '</p>'
       + '<p>' + salutation + '</p>'
       + '<div class="body-txt">' + bodyHTML + '</div>'
       + '<p class="plan-h">Stoma Care Plan:</p>'
       + '<ul>' + planHTML + '</ul>'
-      + '<p>' + mdBold(LETTER.closing) + '</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>'
+      + '<p>' + mdBold(LETTER.closing) + '</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>'
       + '<p>' + (name ? name + '<br>' : '') + mdBold(LETTER.signRole1) + '<br>' + mdBold(LETTER.signRole2) + '</p>'
       + '<div class="footer">' + mdBold(LETTER.footerAddress) + '<br>'
         + mdBold(LETTER.footerContact) + '<br>'
@@ -1944,9 +2152,154 @@
     if (SHAREPOINT_LIBRARY_URL) window.open(SHAREPOINT_LIBRARY_URL, '_blank');
   }
 
+  // Plain-text version of the letter for the email body.
+  function buildLetterText(){
+    var strip = function(s){ return (s || '').replace(/\*\*/g, ''); };
+    var lines = [];
+    var date = _v('#letterDate') || _v('.fld-date');
+    if(date) lines.push(date, '');
+    lines.push([_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ')
+      + (_v('.fld-id') ? '   ID No: ' + _v('.fld-id') : ''), '');
+    if(_v('.fld-salutation')) lines.push(_v('.fld-salutation'), '');
+    var body = document.querySelector('.body');
+    if(body){
+      Array.prototype.forEach.call(body.children, function(p){
+        var t = p.textContent.replace(/\s+/g, ' ').trim();
+        if(t) lines.push(t, '');
+      });
+    }
+    lines.push('Stoma Care Plan:');
+    var ul = document.getElementById('planList');
+    if(ul){
+      Array.prototype.forEach.call(ul.children, function(li){
+        var t = li.textContent.replace(/\s+/g, ' ').trim();
+        if(t) lines.push('- ' + t);
+      });
+    }
+    lines.push('', strip(LETTER.closing) || 'Regards,', '');
+    if(_v('.fld-name')) lines.push(_v('.fld-name'));
+    lines.push(strip(LETTER.signRole1), strip(LETTER.signRole2));
+    return lines.join('\n');
+  }
+  // Render the formatted letter into a hidden frame and produce a PDF blob.
+  // Calls fail() if the PDF library is unavailable (offline) or rendering breaks.
+  function makeLetterPDF(cb, fail){
+    if(typeof html2pdf === 'undefined'){ fail(); return; }
+    var iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:645px;height:1000px;border:0;';
+    document.body.appendChild(iframe);
+    var doc = iframe.contentDocument;
+    doc.open(); doc.write(buildLetterHTML()); doc.close();
+    var cleanup = function(){ document.body.removeChild(iframe); };
+    setTimeout(function(){ // give the logo a moment to load inside the frame
+      try{
+        html2pdf().set({
+          margin: [16, 20, 16, 20],
+          image: { type: 'jpeg', quality: 0.95 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['avoid-all', 'css'] }
+        }).from(doc.body).outputPdf('blob')
+          .then(function(blob){ cleanup(); cb(blob); },
+                function(){ cleanup(); fail(); });
+      }catch(e){ cleanup(); fail(); }
+    }, 300);
+  }
+  function _saveBlob(blob, filename){
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+  }
+  // Base64-encode a Blob (returns just the data, no data: prefix).
+  function _blobToBase64(blob, cb){
+    var r = new FileReader();
+    r.onload = function(){ cb(String(r.result).split(',')[1] || ''); };
+    r.onerror = function(){ cb(''); };
+    r.readAsDataURL(blob);
+  }
+  // Build a ready-to-send .eml message with the PDF attached. The X-Unsent: 1
+  // header makes Outlook open it as an editable draft (compose window), with the
+  // subject, body and PDF attachment already in place.
+  function _buildEml(subject, bodyText, pdfB64, pdfName){
+    var b = 'BOUNDARY_stoma_' + Date.now();
+    var crlf = '\r\n';
+    var body = bodyText.replace(/\r?\n/g, crlf);
+    var wrapped = pdfB64.replace(/(.{76})/g, '$1' + crlf); // 76-char lines per MIME
+    return [
+      'X-Unsent: 1',
+      'Subject: ' + subject,
+      'MIME-Version: 1.0',
+      'Content-Type: multipart/mixed; boundary="' + b + '"',
+      '',
+      '--' + b,
+      'Content-Type: text/plain; charset="utf-8"',
+      'Content-Transfer-Encoding: 8bit',
+      '',
+      body,
+      '',
+      '--' + b,
+      'Content-Type: application/pdf; name="' + pdfName + '"',
+      'Content-Transfer-Encoding: base64',
+      'Content-Disposition: attachment; filename="' + pdfName + '"',
+      '',
+      wrapped,
+      '--' + b + '--',
+      ''
+    ].join(crlf);
+  }
+  function sendToEmail(){
+    var subject = 'Stoma Discharge Letter - '
+      + ([_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ') || 'Patient')
+      + (_v('.fld-id') ? ' (' + _v('.fld-id') + ')' : '');
+    var pdfName = buildFilename() + '.pdf';
+    var openDraft = function(){
+      window.location.href = 'mailto:?subject=' + encodeURIComponent(subject)
+        + '&body=' + encodeURIComponent(buildLetterText());
+    };
+    // Desktop path: download an .eml that opens in Outlook with the PDF attached.
+    var downloadEml = function(blob){
+      _blobToBase64(blob, function(b64){
+        if(!b64){ _saveBlob(blob, pdfName); openDraft(); return; }
+        var eml = _buildEml(subject, buildLetterText(), b64, pdfName);
+        _saveBlob(new Blob([eml], { type: 'message/rfc822' }), buildFilename() + '.eml');
+        alert('A ready-made email has been saved to your Downloads folder.\n\nDouble-click the ".eml" file to open it in Outlook — the letter PDF is already attached. Just add the recipient and press Send.');
+      });
+    };
+    makeLetterPDF(function(blob){
+      var file = new File([blob], pdfName, { type: 'application/pdf' });
+      // Tablets/phones: the share sheet attaches the PDF straight into the email app.
+      if(navigator.canShare && navigator.canShare({ files: [file] })){
+        navigator.share({ files: [file], title: subject, text: subject })
+          .catch(function(err){
+            if(err && err.name === 'AbortError') return; // user cancelled
+            downloadEml(blob);
+          });
+      } else {
+        // Desktop (Outlook): hand over an .eml with the PDF already attached.
+        downloadEml(blob);
+      }
+    }, function(){
+      // PDF library unavailable (offline / CDN blocked): fall back to a Word copy.
+      exportWord();
+      openDraft();
+      alert('A PDF could not be created (you may be offline). A Word copy has been saved to your Downloads folder to attach to the email instead.');
+    });
+  }
+
   lastAutoPlan = planText();
   applyLetterChrome();
   initBodyCaretTracking();
+  ['.fld-fname','.fld-sname','.fld-id'].forEach(function(sel){
+    var el = document.querySelector(sel);
+    if(el) el.addEventListener('input', function(){ autosizeFld(el); updatePatientPrint(); });
+  });
+  (function(){
+    var t = document.querySelector('.fld-title');
+    if(t) t.addEventListener('change', updatePatientPrint);
+  })();
+  autosizePatientFlds();
   openWizard();
 </script>
 </body>
