@@ -317,13 +317,13 @@
 <body>
 
   <div class="toolbar">
-    <span class="title" id="ribbonTitle" onclick="openWizard()" title="Click to reopen the setup wizard">Stoma Discharge Letter</span>
+    <span class="title" id="ribbonTitle" onclick="openWizard()" title="Click to reopen the fill-in / edit questions">Stoma Discharge Letter</span>
     <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print.</span>
     <span class="actions">
       <button class="btn" onclick="saveToSharePoint()">Save to SharePoint</button>
       <button class="btn" onclick="sendToEmail()">Send to Email</button>
       <button class="btn" onclick="window.print()">Print</button>
-      <button class="btn ghost" onclick="openWizard()">Wizard</button>
+      <button class="btn ghost" onclick="openWizard()" title="Step-by-step questions that fill in the letter">Fill in / Edit Letter</button>
       <button class="btn ghost" onclick="addBullet()">+ Care-plan line</button>
       <button class="btn ghost" onclick="clearForm()">Clear</button>
       <span class="format-tools" aria-label="Text formatting tools">
@@ -341,9 +341,9 @@
   </div>
 
   <!-- Guided setup wizard (shown on load) -->
-  <div id="wizard" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="wzTitle" onclick="if(event.target===this) closeWizard()">
+  <div id="wizard" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="wzTitle">
     <div class="modal-card wz-card">
-      <button class="modal-x" onclick="closeWizard()" aria-label="Close">&times;</button>
+      <button class="modal-x" onclick="closeWizard()" aria-label="Close" title="Close without saving">&times;</button>
       <div class="wz-head">
         <div class="wz-step">Step <span id="wzNum">1</span> of <span id="wzTotal">6</span></div>
         <h2 id="wzTitle">Stoma type</h2>
