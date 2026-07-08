@@ -95,7 +95,7 @@
   .l-date{margin-bottom:16px}
 
   /* ---------- 3. Patient ---------- */
-  .l-patient{font-weight:700;margin-bottom:14px;white-space:nowrap}
+  .l-patient{font-weight:700;margin-bottom:14px;white-space:nowrap;text-align:center}
   .l-patient .lbl{font-weight:700}
 
   /* ---------- 4. Main text ---------- */
@@ -397,7 +397,6 @@
 
     <!-- 3. PATIENT NAME / SURNAME / ID -->
     <div class="sec l-patient">
-      <span class="lbl">Re:&nbsp;</span>
       <select class="fld fld-title" aria-label="Title">
         <option value=""></option>
         <option>Mr</option>
@@ -2072,7 +2071,7 @@
       + '.lh-title{font-size:16pt;font-weight:bold;line-height:1.2;}'
       + '.lh-tel{font-size:14pt;font-weight:bold;line-height:1.2;}'
       + 'p{margin:0 0 10px;}'
-      + '.patient{font-weight:bold;}'
+      + '.patient{font-weight:bold;text-align:center;}'
       + '.body-txt{text-align:justify;}'
       + '.plan-h{font-weight:bold;text-decoration:underline;margin-bottom:6px;}'
       + 'ul{margin:0 0 10px;padding-left:24px;}li{margin:0 0 5px;}'
@@ -2089,7 +2088,7 @@
         + '</tr></table>'
       + '<div class="rule"></div>'
       + '<p>' + date + '</p>'
-      + '<p class="patient">Re: ' + [title, first, surname].filter(Boolean).join(' ')
+      + '<p class="patient">' + [title, first, surname].filter(Boolean).join(' ')
         + '&nbsp;&nbsp;&nbsp;ID No: ' + idno + '</p>'
       + '<p>' + salutation + '</p>'
       + '<div class="body-txt">' + bodyHTML + '</div>'
@@ -2127,7 +2126,7 @@
     var lines = [];
     var date = _v('#letterDate') || _v('.fld-date');
     if(date) lines.push(date, '');
-    lines.push('Re: ' + [_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ')
+    lines.push([_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ')
       + (_v('.fld-id') ? '   ID No: ' + _v('.fld-id') : ''), '');
     if(_v('.fld-salutation')) lines.push(_v('.fld-salutation'), '');
     var body = document.querySelector('.body');
