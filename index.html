@@ -2184,31 +2184,73 @@
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
   }
+  // Base64-encode a Blob (returns just the data, no data: prefix).
+  function _blobToBase64(blob, cb){
+    var r = new FileReader();
+    r.onload = function(){ cb(String(r.result).split(',')[1] || ''); };
+    r.onerror = function(){ cb(''); };
+    r.readAsDataURL(blob);
+  }
+  // Build a ready-to-send .eml message with the PDF attached. The X-Unsent: 1
+  // header makes Outlook open it as an editable draft (compose window), with the
+  // subject, body and PDF attachment already in place.
+  function _buildEml(subject, bodyText, pdfB64, pdfName){
+    var b = 'BOUNDARY_stoma_' + Date.now();
+    var crlf = '\r\n';
+    var body = bodyText.replace(/\r?\n/g, crlf);
+    var wrapped = pdfB64.replace(/(.{76})/g, '$1' + crlf); // 76-char lines per MIME
+    return [
+      'X-Unsent: 1',
+      'Subject: ' + subject,
+      'MIME-Version: 1.0',
+      'Content-Type: multipart/mixed; boundary="' + b + '"',
+      '',
+      '--' + b,
+      'Content-Type: text/plain; charset="utf-8"',
+      'Content-Transfer-Encoding: 8bit',
+      '',
+      body,
+      '',
+      '--' + b,
+      'Content-Type: application/pdf; name="' + pdfName + '"',
+      'Content-Transfer-Encoding: base64',
+      'Content-Disposition: attachment; filename="' + pdfName + '"',
+      '',
+      wrapped,
+      '--' + b + '--',
+      ''
+    ].join(crlf);
+  }
   function sendToEmail(){
     var subject = 'Stoma Discharge Letter - '
       + ([_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ') || 'Patient')
       + (_v('.fld-id') ? ' (' + _v('.fld-id') + ')' : '');
+    var pdfName = buildFilename() + '.pdf';
     var openDraft = function(){
       window.location.href = 'mailto:?subject=' + encodeURIComponent(subject)
         + '&body=' + encodeURIComponent(buildLetterText());
     };
+    // Desktop path: download an .eml that opens in Outlook with the PDF attached.
+    var downloadEml = function(blob){
+      _blobToBase64(blob, function(b64){
+        if(!b64){ _saveBlob(blob, pdfName); openDraft(); return; }
+        var eml = _buildEml(subject, buildLetterText(), b64, pdfName);
+        _saveBlob(new Blob([eml], { type: 'message/rfc822' }), buildFilename() + '.eml');
+        alert('A ready-made email has been saved to your Downloads folder.\n\nDouble-click the ".eml" file to open it in Outlook — the letter PDF is already attached. Just add the recipient and press Send.');
+      });
+    };
     makeLetterPDF(function(blob){
-      var file = new File([blob], buildFilename() + '.pdf', { type: 'application/pdf' });
-      // The ONLY way a web page can attach the PDF to an email is the Web Share
-      // sheet (works on tablets/phones and on Windows Edge/Chrome). mailto: links
-      // can never carry an attachment, so on unsupported browsers we download the
-      // PDF and tell the user to attach it manually.
+      var file = new File([blob], pdfName, { type: 'application/pdf' });
+      // Tablets/phones: the share sheet attaches the PDF straight into the email app.
       if(navigator.canShare && navigator.canShare({ files: [file] })){
         navigator.share({ files: [file], title: subject, text: subject })
           .catch(function(err){
-            if(err && err.name === 'AbortError') return; // user cancelled the share sheet
-            _saveBlob(blob, file.name); openDraft();
-            alert('Could not open the share sheet. The PDF has been saved to your Downloads folder — please attach it to the email that just opened.');
+            if(err && err.name === 'AbortError') return; // user cancelled
+            downloadEml(blob);
           });
       } else {
-        _saveBlob(blob, file.name);
-        openDraft();
-        alert('The letter has been saved as a PDF in your Downloads folder.\n\nPlease attach it to the email that just opened — email programs do not let a website attach files automatically.');
+        // Desktop (Outlook): hand over an .eml with the PDF already attached.
+        downloadEml(blob);
       }
     }, function(){
       // PDF library unavailable (offline / CDN blocked): fall back to a Word copy.
