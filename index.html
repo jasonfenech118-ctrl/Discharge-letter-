@@ -743,6 +743,7 @@
     title_patient: "Patient details",
     title_surgery: "Surgery information",
     title_stoma: "Stoma assessment",
+    title_retraction: "Stoma retraction",
     title_mucusFistula: "Mucus fistula",
     title_skin: "Peristomal skin assessment",
     title_teaching: "Teaching session",
@@ -809,7 +810,7 @@
     WZ = {
       type:"", subtype:"", title:"", fname:"", sname:"", id:"",
       procedure:"", opdate:"", consultant:"",
-      stomaColourHealthy:"", stomaColour:"", stomaFunctionWell:"", stomaFunction:"", skinHealthy:"", peristomalSkin:"",
+      stomaColourHealthy:"", stomaColour:"", stomaFunctionWell:"", stomaFunction:"", stomaRetraction:"", skinHealthy:"", peristomalSkin:"",
       skinExcoriation:"no", skinExcoriationTreatment:"", skinExcoriationTreatmentOther:"",
       skinRedness:"no",
       mucocutaneousSeparation:"no", mucoSepFrom:"", mucoSepTill:"", mucoSepTreatment:"", mucoSepTreatmentOther:"",
@@ -857,7 +858,7 @@
   function stepsForWizard(){
     var head = ["type"];
     if(typeHasSubtype(WZ.type)) head.push("subtype");
-    head = head.concat(["patient","surgery","stoma"]);
+    head = head.concat(["patient","surgery","stoma","retraction"]);
     if(WZ.type !== 'urostomy') head.push("mucusFistula");
     head = head.concat(["skin","teaching","system"]);
     if(WZ.system === 'two'){
@@ -1004,6 +1005,11 @@
         html += '<label class="wz-check'+(WZ.urostomyStents==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.urostomyStents)+' onchange="WZ.urostomyStents=this.checked?\'yes\':\'no\'"> Urostomy stents in situ</label>';
       }
       return html;
+    }
+    if(step === "retraction"){
+      return '<p class="wz-cap">Is the stoma retracted?</p>'
+        + '<button class="wz-choice'+(WZ.stomaRetraction==='yes'?' sel':'')+'" onclick="WZ.stomaRetraction=\'yes\'; renderWizard();">Yes</button>'
+        + '<button class="wz-choice'+(WZ.stomaRetraction==='no'?' sel':'')+'" onclick="WZ.stomaRetraction=\'no\'; renderWizard();">No</button>';
     }
     if(step === "mucusFistula"){
       var html = '<p class="wz-cap">Mucus Fistula present?</p>'
@@ -1903,6 +1909,7 @@
     ['title_patient','Step title — Patient'],
     ['title_surgery','Step title — Surgery information'],
     ['title_stoma','Step title — Stoma assessment'],
+    ['title_retraction','Step title — Stoma retraction'],
     ['title_mucusFistula','Step title — Mucus fistula'],
     ['title_skin','Step title — Peristomal skin'],
     ['title_teaching','Step title — Teaching session'],
