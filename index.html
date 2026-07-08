@@ -145,6 +145,7 @@
   input.fld-sname{width:150px}
   input.fld-id{width:118px}
   .l-patient .fld{text-align:center}
+  .patient-print{display:none}
 
   select.fld{
     -webkit-appearance:none;appearance:none;cursor:pointer;
@@ -303,9 +304,9 @@
     input.fld, select.fld{padding:0 !important;margin:0 !important}
     select.fld{background-image:none !important;padding-right:0 !important}
     input.fld{width:auto}
-    /* patient line prints as one compact centred line: Title Name Surname ID */
-    .l-patient .fld-title{width:auto}
-    .l-patient input.fld{text-align:center}
+    /* patient line prints as one composed centred line: Title Name Surname  ID No: x */
+    .l-patient > :not(.patient-print){display:none !important}
+    .patient-print{display:inline}
     input.fld::placeholder{color:transparent}
     #applianceSlot{padding:0 !important}
     .appl-picker{display:none !important}          /* hide the inline pickers on paper */
@@ -417,6 +418,7 @@
       <input type="text" class="fld fld-sname" placeholder="Surname">
       <span class="lbl">&nbsp;&nbsp;ID No:&nbsp;</span>
       <input type="text" class="fld fld-id" placeholder="ID number">
+      <span class="patient-print" id="patientPrint"></span>
     </div>
 
     <!-- 4. MAIN TEXT -->
@@ -491,6 +493,16 @@
   }
   function autosizePatientFlds(){
     ['.fld-fname','.fld-sname','.fld-id'].forEach(function(sel){ autosizeFld(document.querySelector(sel)); });
+    updatePatientPrint();
+  }
+  // Composed patient line used on paper: single spaces between title/name/surname,
+  // two spaces before the ID.
+  function updatePatientPrint(){
+    var el = document.getElementById('patientPrint');
+    if(!el) return;
+    var name = [_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ');
+    var id = _v('.fld-id');
+    el.textContent = name + (id ? '  ID No: ' + id : '');
   }
   function _v(sel){ var el = document.querySelector(sel); return el ? (el.value || '') : ''; }
   function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
@@ -2108,7 +2120,7 @@
       + '<div class="rule"></div>'
       + '<p>' + date + '</p>'
       + '<p class="patient">' + [title, first, surname].filter(Boolean).join(' ')
-        + '&nbsp;&nbsp;&nbsp;ID No: ' + idno + '</p>'
+        + '&nbsp;&nbsp;ID No: ' + idno + '</p>'
       + '<p>' + salutation + '</p>'
       + '<div class="body-txt">' + bodyHTML + '</div>'
       + '<p class="plan-h">Stoma Care Plan:</p>'
@@ -2280,8 +2292,12 @@
   initBodyCaretTracking();
   ['.fld-fname','.fld-sname','.fld-id'].forEach(function(sel){
     var el = document.querySelector(sel);
-    if(el) el.addEventListener('input', function(){ autosizeFld(el); });
+    if(el) el.addEventListener('input', function(){ autosizeFld(el); updatePatientPrint(); });
   });
+  (function(){
+    var t = document.querySelector('.fld-title');
+    if(t) t.addEventListener('change', updatePatientPrint);
+  })();
   autosizePatientFlds();
   openWizard();
 </script>
