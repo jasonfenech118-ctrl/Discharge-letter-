@@ -45,6 +45,7 @@
   .toolbar .title{font-weight:700;letter-spacing:.02em;font-size:26px;margin-right:14px}
   .toolbar .title .stoma-type{color:#ff4d4d}
   .toolbar .hint{font-size:14px;opacity:.82;flex:1 1 220px}
+  .build-stamp{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;opacity:.6;letter-spacing:.3px}
   .toolbar .actions{display:flex;gap:8px;flex-wrap:wrap}
   .btn{
     font-family:var(--sans);font-size:13px;font-weight:700;
@@ -331,7 +332,7 @@
 
   <div class="toolbar">
     <span class="title" id="ribbonTitle" onclick="openWizard()" title="Click to reopen the fill-in / edit questions">Stoma Discharge Letter</span>
-    <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print.</span>
+    <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print. <span class="build-stamp" title="Build version — if this differs from the latest, refresh the page">v2026-07-08c</span></span>
     <span class="actions">
       <button class="btn green" onclick="saveToSharePoint()">Save</button>
       <button class="btn" onclick="sendToEmail()">Send to Email</button>
