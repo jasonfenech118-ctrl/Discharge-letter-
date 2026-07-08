@@ -332,7 +332,7 @@
 
   <div class="toolbar">
     <span class="title" id="ribbonTitle" onclick="openWizard()" title="Click to reopen the fill-in / edit questions">Stoma Discharge Letter</span>
-    <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print. <span class="build-stamp" title="Build version — if this differs from the latest, refresh the page">v2026-07-08d</span></span>
+    <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print. <span class="build-stamp" title="Build version — if this differs from the latest, refresh the page">v2026-07-08e</span></span>
     <span class="actions">
       <button class="btn green" onclick="saveToSharePoint()">Save</button>
       <button class="btn" onclick="sendToEmail()">Send to Email</button>
@@ -432,7 +432,7 @@
           <option>Dear Colleagues,</option>
         </select>
       </div>
-      <div class="body" contenteditable="true" spellcheck="true"><p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p><p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation the patient was informed about appliance management. However, the patient still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p><p>Patient discharged with <strong><span id="applianceSlot">[appliance]</span></strong>.</p></div>
+      <div class="body" contenteditable="true" spellcheck="true"><p>[Patient] underwent [procedure] with formation of a [colostomy / ileostomy / urostomy] on [date of operation]. He/She is under the care of [consultant].</p><p>On discharge the stoma is [colour] and [function], and the peristomal skin is [peristomal skin]. During hospitalisation [Patient] was informed about appliance management. However, [Patient] still needs assistance with stoma care until fully able to integrate stoma care into the home environment.</p><p>Patient discharged with <strong><span id="applianceSlot">[appliance]</span></strong>.</p></div>
     </div>
 
     <!-- 5. STOMA CARE PLAN -->
@@ -983,7 +983,7 @@
         + '<div class="inline-row"><div class="wz-field"><label>Consultant</label><input list="wzCons" value="'+_esc(WZ.consultant)+'" oninput="WZ.consultant=this.value" placeholder="e.g. Mr M Zammit Vincenti"></div><button type="button" class="mini-btn" onclick="saveConsultantFromWizard()">+ Save</button></div>' + _dl("wzCons", consultants());
     }
     if(step === "stoma"){
-      var html = '<p class="wz-cap">Is the stoma colour healthy?</p>'
+      var html = '<p class="wz-cap">Is the stoma a healthy colour?</p>'
         + '<button class="wz-choice'+(WZ.stomaColourHealthy==='yes'?' sel':'')+'" onclick="WZ.stomaColourHealthy=\'yes\'; WZ.stomaColour=\'healthy\'; renderWizard();">Yes</button>'
         + '<button class="wz-choice'+(WZ.stomaColourHealthy==='no'?' sel':'')+'" onclick="WZ.stomaColourHealthy=\'no\'; WZ.stomaColour=\'\'; renderWizard();">No</button>';
       if(WZ.stomaColourHealthy === 'no'){
@@ -1010,7 +1010,7 @@
       return html;
     }
     if(step === "mucusFistula"){
-      var html = '<p class="wz-cap">Mucus Fistula present?</p>'
+      var html = '<p class="wz-cap">Mucus fistula present?</p>'
         + '<button class="wz-choice'+(WZ.mucusFistula==='yes'?' sel':'')+'" onclick="wzMfSetPresent(\'yes\')">Yes</button>'
         + '<button class="wz-choice'+(WZ.mucusFistula==='no'?' sel':'')+'" onclick="wzMfSetPresent(\'no\')">No</button>';
       if(WZ.mucusFistula === 'yes'){
@@ -1022,7 +1022,7 @@
         });
         var last = WZ.mucusFistulaLocations[WZ.mucusFistulaLocations.length-1];
         if(last){
-          html += '<button class="wz-choice" onclick="wzMfAdd()">+ Add Mucus Fistula</button>';
+          html += '<button class="wz-choice" onclick="wzMfAdd()">+ Add mucus fistula</button>';
         }
       }
       return html;
@@ -1124,7 +1124,7 @@
           ? (rec === 'urostomy'
             ? 'Showing urostomy bags' + (flangeSize ? ' for flange size ' + flangeSize + 'mm' : '') + '.'
             : 'Showing both drainable and closed bags' + (flangeSize ? ' for flange size ' + flangeSize + 'mm' : '') + '.')
-          : 'For a ' + (WZ.type || 'this') + ' the recommended bags are ' + recWord + '. You can add another type below for clinical exceptions (e.g. a high-output colostomy needing a drainable bag).';
+          : 'For ' + (WZ.type ? _an(WZ.type) + ' ' + WZ.type : 'this stoma type') + ' the recommended bags are ' + recWord + '. You can add another type below for clinical exceptions (e.g. a high-output colostomy needing a drainable bag).';
 
       var toggle = lockHollister ? '' :
         '<label class="wz-check'+(WZ.bagsShowAll?' sel':'')+'" style="margin-top:6px"><input type="checkbox"'+(WZ.bagsShowAll?' checked':'')+' onchange="WZ.bagsShowAll=this.checked; renderWizard();"> Show all bag types (clinical override)</label>';
@@ -1286,28 +1286,28 @@
      Body wording templates — one editable template per stoma type.
      Each type has an "opening" line and a "discharge" paragraph.
      Placeholders in {curly braces} are filled from the wizard/letter:
-       {who} {pron} {procedure} {type} {date} {consultant}
+       {who} {pron} {procedure} {a} {type} {date} {consultant}
        {retracted} {colour} {function} {skin} {rod} {teaching} {stents}
      These are saved in the browser and can be exported/imported.
   ----------------------------------------------------------------- */
   var DEFAULT_BODY_TEMPLATES = {
     colostomy: {
-      opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
+      opening:   "{who} underwent surgery and {a} {type} was formed on {date}. {pron} is under the care of {consultant}.",
       discharge: "On discharge the stoma is {retracted}{colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     ileostomy: {
-      opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
+      opening:   "{who} underwent surgery and {a} {type} was formed on {date}. {pron} is under the care of {consultant}.",
       discharge: "On discharge the stoma is {retracted}{colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     urostomy: {
-      opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
+      opening:   "{who} underwent surgery and {a} {type} was formed on {date}. {pron} is under the care of {consultant}.",
       discharge: "On discharge the stoma is {retracted}{colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     }
   };
   var BODY_TEMPLATES = loadBodyTemplates();
   function loadBodyTemplates(){
     try{
-      var raw = localStorage.getItem('stomaLetterBodyTemplatesV4');
+      var raw = localStorage.getItem('stomaLetterBodyTemplatesV5');
       if(raw){
         var saved = JSON.parse(raw), out = clone(DEFAULT_BODY_TEMPLATES);
         ['colostomy','ileostomy','urostomy'].forEach(function(t){
@@ -1322,7 +1322,7 @@
     return clone(DEFAULT_BODY_TEMPLATES);
   }
   function saveBodyTemplates(){
-    try{ localStorage.setItem('stomaLetterBodyTemplatesV4', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterBodyTemplatesV5', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
   }
   function bodyTemplateFor(type){
     return BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES.colostomy;
@@ -1333,6 +1333,27 @@
       if(key === 'procedure') return '<strong>' + _esc(vars.procedure || '') + '</strong>';
       return (key in vars) ? _esc(vars[key]) : m;
     });
+  }
+
+  // "a" or "an" depending on the first sound of the following word.
+  // "u" is treated as a consonant sound (a urostomy, a unit).
+  function _an(word){
+    return /^[aeio]/i.test((word || "").trim()) ? "an" : "a";
+  }
+
+  // Compose "teaching session with ..." so bare relation words read naturally:
+  // "wife" -> "his wife" / "her wife" (from the patient's title), "patient" -> "the patient".
+  // Entries that already start with an article/possessive, or are names, pass through as typed.
+  function _teachingWithPhrase(){
+    var w = (WZ.teachingWith || "").trim();
+    if(!w) return "the patient";
+    if(/^(the|his|her|their|a|an)\b/i.test(w)) return w;
+    if(/^patients?\b/i.test(w)) return "the " + w;
+    if(/^(wife|husband|partner|mother|father|mum|dad|son|daughter|brother|sister|carer|caregiver|relatives?|family|parents?|children|next of kin)\b/i.test(w)){
+      var poss = (WZ.title === "Mr") ? "his" : ((WZ.title === "Ms" || WZ.title === "Mrs") ? "her" : "the");
+      return poss + " " + w;
+    }
+    return w;
   }
 
   function applyWizard(){
@@ -1362,7 +1383,8 @@
       pron: (WZ.title === "Mr") ? "He" : ((WZ.title === "Ms" || WZ.title === "Mrs") ? "She" : "He/She"),
       procedure: proc,
       type: typeWord,
-      formation: mentionsStoma ? "" : (" with formation of a " + typeWord),
+      a: _an(typeWord),
+      formation: mentionsStoma ? "" : (" with formation of " + _an(typeWord) + " " + typeWord),
       date: _fmtDate(WZ.opdate) || "[date of operation]",
       consultant: WZ.consultant || "[consultant]",
       retracted: WZ.stomaRetraction === 'yes' ? "retracted, " : "",
@@ -1370,7 +1392,7 @@
       "function": (WZ.stomaFunctionWell === 'no' && WZ.stomaFunction) ? ("functioning " + _lcFirst(WZ.stomaFunction)) : (_lcFirst(WZ.stomaFunction) || "[function]"),
       skin: _lcFirst(WZ.peristomalSkin) || "[peristomal skin]",
       rod: "",
-      teaching: WZ.teaching === 'yes' ? (" A teaching session has been carried out with " + (WZ.teachingWith || "the patient") + ".") : "",
+      teaching: WZ.teaching === 'yes' ? (" A teaching session has been carried out with " + _teachingWithPhrase() + ".") : "",
       stents: ""
     };
     var tpl = bodyTemplateFor(WZ.type || curType);
@@ -1392,7 +1414,7 @@
       applianceText = (formatItemPhrase(base, WZ.baseplateSize) || "[flange]") + " with " + bagsText;
     }
     if(WZ.accessories.length){
-      applianceText += ", with " + _humanList(WZ.accessories.map(function(a){ return a.toLowerCase(); }));
+      applianceText += " and " + _humanList(WZ.accessories.map(function(a){ return a.toLowerCase(); }));
     }
     setApplianceSlot(applianceText);
     renderPlan(buildPlan());
@@ -1411,26 +1433,26 @@
   ----------------------------------------------------------------- */
   var DEFAULT_PLAN_PHRASES = {
     // --- two-piece systems ---
-    "two.flangeChange":   "Flange to be changed on alternate days. Next change due: {date}.",
-    "two.uroStentsA":     "Bag is to be changed on alternate days with the flange while the stents are in situ.",
-    "two.uroStentsB":     "Once the stents come out on their own, the bag should be changed daily and emptied when one-third full.",
-    "two.uroNoStents":    "Urostomy bag should be changed daily and emptied when one-third full.",
-    "two.rodA":           "Bag is to be changed on alternate days with the flange while the rod is in situ{rodWhen}.",
-    "two.rodB":           "Empty the bag when one-third full. Once the rod is removed, the bag may be changed as required.",
-    "two.closed":         "Bag is to be changed when it is 1/3 full.",
-    "two.drainable":      "Bag is to be changed daily and emptied when 1/3 full.",
-    "two.default":        "Bag to be changed according to outlet type and emptied/changed when one-third full.",
-    "two.drainableExtra": "If the output becomes liquid, the drainable bag may be used and emptied when one-third full.",
+    "two.flangeChange":   "The flange is to be changed on alternate days. Next change due: {date}.",
+    "two.uroStentsA":     "The bag is to be changed on alternate days with the flange while the stents are in situ.",
+    "two.uroStentsB":     "Once the stents come out on their own, the bag should be changed daily and emptied when 1/3 full.",
+    "two.uroNoStents":    "The urostomy bag should be changed daily and emptied when 1/3 full.",
+    "two.rodA":           "The bag is to be changed on alternate days with the flange while the rod is in situ{rodWhen}.",
+    "two.rodB":           "Empty the bag when 1/3 full. Once the rod is removed, the bag may be changed as required.",
+    "two.closed":         "The bag is to be changed when it is 1/3 full.",
+    "two.drainable":      "The bag is to be changed daily and emptied when 1/3 full.",
+    "two.default":        "The bag is to be changed according to the outlet type and emptied when 1/3 full.",
+    "two.drainableExtra": "If the output becomes liquid, the drainable bag may be used and emptied when 1/3 full.",
     "two.removeOther":    "A <strong>minimal</strong> amount of adhesive remover spray must be used to remove the flange gently.",
     // --- one-piece systems ---
     "one.uroStentsA":     "While the stents are in situ, change the pouch on alternate days.",
-    "one.uroStentsB":     "Once the stents come out on their own, change the pouch daily and empty it when one-third full.",
-    "one.uroNoStents":    "Urostomy pouch should be changed daily and emptied when one-third full.",
+    "one.uroStentsB":     "Once the stents come out on their own, change the pouch daily and empty it when 1/3 full.",
+    "one.uroNoStents":    "The urostomy pouch should be changed daily and emptied when 1/3 full.",
     "one.rodA":           "The pouch is to be changed on alternate days while the rod is in situ{rodWhen}.",
-    "one.rodB":           "Empty the pouch when one-third full. Once the rod is removed, change the pouch as required.",
-    "one.closed":         "Pouch to be changed when one-third full, from once to twice daily.",
+    "one.rodB":           "Empty the pouch when 1/3 full. Once the rod is removed, change the pouch as required.",
+    "one.closed":         "The pouch is to be changed when 1/3 full, once or twice daily.",
     "one.drainable":      "The pouch is to be <strong>changed daily</strong> and <strong>emptied when 1/3 full</strong>.",
-    "one.default":        "Pouch to be changed according to outlet type and emptied/changed when one-third full.",
+    "one.default":        "The pouch is to be changed according to the outlet type and emptied when 1/3 full.",
     "one.removeSpray":    "A <strong>minimal</strong> amount of adhesive remover spray must be used to remove the pouch gently.",
     // --- common / accessory bullets ---
     "common.wash":        "Wash stoma and peristomal skin well with tap water and pat dry.",
@@ -1439,19 +1461,19 @@
     "acc.powder":         "Apply {treatment} over the skin excoriation and dust off the excess; stop once the skin heals.",
     "acc.redness":        "Peristomal skin redness present: <span style=\"color:#c0392b;font-weight:bold\">[click to elaborate]</span>",
     "acc.mucoSep":        "Apply {treatment} over the mucocutaneous separation{location} and dust off the excess; stop once the separation heals.",
-    "acc.belt":           "Stoma belt should be kept on at all times, especially during bedtime.",
+    "acc.belt":           "The stoma belt should be kept on at all times, especially at bedtime.",
     "acc.seal":           "Apply a stoma seal around the base of the stoma before fitting the appliance to improve the seal and prevent leakage.",
-    "common.hair":        "Peristomal hair shaving is to be done as necessary to prevent hair folliculitis.",
-    "acc.filler":         "Apply a generous amount of filler paste from {from} to {to} o'clock location around the stoma.",
-    "acc.mucusFistula":   "<strong>Mucus fistula{location}:</strong> wash the stoma and peristomal skin well and pat dry. Apply Bactigras/Paraffin dressing and a dry dressing to cover. Dressing to be changed on alternate days.",
-    "plan.rod":           "Rod in situ, due removal <strong>{rodDate}</strong>."
+    "common.hair":        "Peristomal hair shaving is to be done as necessary to prevent folliculitis.",
+    "acc.filler":         "Apply a generous amount of filler paste from {from} to {to} o'clock around the stoma.",
+    "acc.mucusFistula":   "<strong>Mucus fistula{location}:</strong> wash the stoma and peristomal skin well and pat dry. Apply a Bactigras/paraffin dressing and cover with a dry dressing. The dressing is to be changed on alternate days.",
+    "plan.rod":           "Rod in situ, due for removal on <strong>{rodDate}</strong>."
   };
   // Bullets that are shown in bold in the letter (house style).
   var PLAN_BOLD_KEYS = { "two.uroStentsA":1, "two.rodA":1, "one.uroStentsA":1, "one.rodA":1, "acc.belt":1, "acc.filler":1 };
   var PLAN_PHRASES = loadPlanPhrases();
   function loadPlanPhrases(){
     try{
-      var raw = localStorage.getItem('stomaLetterPlanPhrasesV2');
+      var raw = localStorage.getItem('stomaLetterPlanPhrasesV3');
       if(raw){
         var saved = JSON.parse(raw), out = clone(DEFAULT_PLAN_PHRASES);
         Object.keys(out).forEach(function(k){ if(typeof saved[k] === 'string') out[k] = saved[k]; });
@@ -1461,7 +1483,7 @@
     return clone(DEFAULT_PLAN_PHRASES);
   }
   function savePlanPhrases(){
-    try{ localStorage.setItem('stomaLetterPlanPhrasesV2', JSON.stringify(PLAN_PHRASES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterPlanPhrasesV3', JSON.stringify(PLAN_PHRASES)); }catch(e){}
   }
   // Look up a plan phrase, fill {placeholders}, and bold it if it is a bold-key.
   function planPhrase(key, vars){
@@ -1741,7 +1763,7 @@
   function renderBodyTemplatesSection(){
     var types = [['colostomy','Colostomy'],['ileostomy','Ileostomy'],['urostomy','Urostomy']];
     var html = '<div class="cat-section"><h3>Body wording &mdash; per stoma type</h3>'
-      + '<p class="wording-sub">Placeholders: {who} {pron} {procedure} {formation} {date} {consultant} {retracted} {colour} {function} {skin} {rod} {teaching} {stents}. Press <b>Save changes</b> when done.</p>';
+      + '<p class="wording-sub">Placeholders: {who} {pron} {procedure} {formation} {a} {type} {date} {consultant} {retracted} {colour} {function} {skin} {rod} {teaching} {stents}. Press <b>Save changes</b> when done.</p>';
     types.forEach(function(t){
       var tpl = bodyTemplateFor(t[0]);
       html += '<div style="margin:0 0 12px"><b style="font-family:var(--sans);font-size:13px;color:var(--navy)">'+t[1]+'</b>'
