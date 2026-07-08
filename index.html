@@ -332,7 +332,7 @@
 
   <div class="toolbar">
     <span class="title" id="ribbonTitle" onclick="openWizard()" title="Click to reopen the fill-in / edit questions">Stoma Discharge Letter</span>
-    <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print. <span class="build-stamp" title="Build version — if this differs from the latest, refresh the page">v2026-07-08c</span></span>
+    <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print. <span class="build-stamp" title="Build version — if this differs from the latest, refresh the page">v2026-07-08d</span></span>
     <span class="actions">
       <button class="btn green" onclick="saveToSharePoint()">Save</button>
       <button class="btn" onclick="sendToEmail()">Send to Email</button>
@@ -1287,27 +1287,27 @@
      Each type has an "opening" line and a "discharge" paragraph.
      Placeholders in {curly braces} are filled from the wizard/letter:
        {who} {pron} {procedure} {type} {date} {consultant}
-       {colour} {function} {skin} {rod} {teaching} {stents}
+       {retracted} {colour} {function} {skin} {rod} {teaching} {stents}
      These are saved in the browser and can be exported/imported.
   ----------------------------------------------------------------- */
   var DEFAULT_BODY_TEMPLATES = {
     colostomy: {
       opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      discharge: "On discharge the stoma is {retracted}{colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     ileostomy: {
       opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      discharge: "On discharge the stoma is {retracted}{colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     },
     urostomy: {
       opening:   "{who} underwent surgery and a {type} was formed on {date}. {pron} is under the care of {consultant}.",
-      discharge: "On discharge the stoma is {colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
+      discharge: "On discharge the stoma is {retracted}{colour} and {function}, and the peristomal skin is {skin}. During hospitalisation {who} was informed about appliance management.{teaching} However, {who} still needs assistance with stoma care until fully able to integrate stoma care into the home environment."
     }
   };
   var BODY_TEMPLATES = loadBodyTemplates();
   function loadBodyTemplates(){
     try{
-      var raw = localStorage.getItem('stomaLetterBodyTemplatesV3');
+      var raw = localStorage.getItem('stomaLetterBodyTemplatesV4');
       if(raw){
         var saved = JSON.parse(raw), out = clone(DEFAULT_BODY_TEMPLATES);
         ['colostomy','ileostomy','urostomy'].forEach(function(t){
@@ -1322,7 +1322,7 @@
     return clone(DEFAULT_BODY_TEMPLATES);
   }
   function saveBodyTemplates(){
-    try{ localStorage.setItem('stomaLetterBodyTemplatesV3', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterBodyTemplatesV4', JSON.stringify(BODY_TEMPLATES)); }catch(e){}
   }
   function bodyTemplateFor(type){
     return BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES[type] || DEFAULT_BODY_TEMPLATES.colostomy;
@@ -1365,7 +1365,8 @@
       formation: mentionsStoma ? "" : (" with formation of a " + typeWord),
       date: _fmtDate(WZ.opdate) || "[date of operation]",
       consultant: WZ.consultant || "[consultant]",
-      colour: _lcFirst(WZ.stomaColour) || "[stoma colour]",
+      retracted: WZ.stomaRetraction === 'yes' ? "retracted, " : "",
+      colour: (WZ.stomaRetraction === 'yes' && WZ.stomaColour) ? (_lcFirst(WZ.stomaColour) + " in colour") : (_lcFirst(WZ.stomaColour) || "[stoma colour]"),
       "function": (WZ.stomaFunctionWell === 'no' && WZ.stomaFunction) ? ("functioning " + _lcFirst(WZ.stomaFunction)) : (_lcFirst(WZ.stomaFunction) || "[function]"),
       skin: _lcFirst(WZ.peristomalSkin) || "[peristomal skin]",
       rod: "",
@@ -1740,7 +1741,7 @@
   function renderBodyTemplatesSection(){
     var types = [['colostomy','Colostomy'],['ileostomy','Ileostomy'],['urostomy','Urostomy']];
     var html = '<div class="cat-section"><h3>Body wording &mdash; per stoma type</h3>'
-      + '<p class="wording-sub">Placeholders: {who} {pron} {procedure} {formation} {date} {consultant} {colour} {function} {skin} {rod} {teaching} {stents}. Press <b>Save changes</b> when done.</p>';
+      + '<p class="wording-sub">Placeholders: {who} {pron} {procedure} {formation} {date} {consultant} {retracted} {colour} {function} {skin} {rod} {teaching} {stents}. Press <b>Save changes</b> when done.</p>';
     types.forEach(function(t){
       var tpl = bodyTemplateFor(t[0]);
       html += '<div style="margin:0 0 12px"><b style="font-family:var(--sans);font-size:13px;color:var(--navy)">'+t[1]+'</b>'
