@@ -57,6 +57,10 @@
   .btn.ghost:hover{background:rgba(255,255,255,.14);color:#fff}
   .btn.grey{background:#8a929c;color:#fff;border-color:#8a929c}
   .btn.grey:hover{background:#727a84;color:#fff;border-color:#727a84}
+  .btn.green{background:#1e8f4e;color:#fff;border-color:#1e8f4e}
+  .btn.green:hover{background:#176e3c;color:#fff;border-color:#176e3c}
+  .btn.yellow{background:#f2c200;color:#3a2f00;border-color:#f2c200}
+  .btn.yellow:hover{background:#d9ae00;color:#3a2f00;border-color:#d9ae00}
   .tb-select{
     font-family:var(--sans);font-size:13px;font-weight:700;
     border:1px solid rgba(255,255,255,.5);
@@ -322,10 +326,10 @@
     <span class="title" id="ribbonTitle" onclick="openWizard()" title="Click to reopen the fill-in / edit questions">Stoma Discharge Letter</span>
     <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print.</span>
     <span class="actions">
-      <button class="btn" onclick="saveToSharePoint()">Save to SharePoint</button>
+      <button class="btn green" onclick="saveToSharePoint()">Save</button>
       <button class="btn" onclick="sendToEmail()">Send to Email</button>
       <button class="btn" onclick="window.print()">Print</button>
-      <button class="btn grey" onclick="openWizard()" title="Step-by-step questions that fill in the letter">Fill in / Edit Letter</button>
+      <button class="btn yellow" onclick="openWizard()" title="Step-by-step questions that fill in the letter">Fill in / Edit Letter</button>
       <button class="btn ghost" onclick="addBullet()">+ Care-plan line</button>
       <button class="btn ghost" onclick="clearForm()">Clear</button>
       <span class="format-tools" aria-label="Text formatting tools">
@@ -2190,19 +2194,27 @@
     };
     makeLetterPDF(function(blob){
       var file = new File([blob], buildFilename() + '.pdf', { type: 'application/pdf' });
+      // The ONLY way a web page can attach the PDF to an email is the Web Share
+      // sheet (works on tablets/phones and on Windows Edge/Chrome). mailto: links
+      // can never carry an attachment, so on unsupported browsers we download the
+      // PDF and tell the user to attach it manually.
       if(navigator.canShare && navigator.canShare({ files: [file] })){
-        // Share sheet: pick the email app and the PDF arrives as an attachment.
         navigator.share({ files: [file], title: subject, text: subject })
-          .catch(function(){ _saveBlob(blob, file.name); openDraft(); });
+          .catch(function(err){
+            if(err && err.name === 'AbortError') return; // user cancelled the share sheet
+            _saveBlob(blob, file.name); openDraft();
+            alert('Could not open the share sheet. The PDF has been saved to your Downloads folder — please attach it to the email that just opened.');
+          });
       } else {
-        // No file sharing (desktop browsers): download the PDF and open a draft.
         _saveBlob(blob, file.name);
         openDraft();
+        alert('The letter has been saved as a PDF in your Downloads folder.\n\nPlease attach it to the email that just opened — email programs do not let a website attach files automatically.');
       }
     }, function(){
-      // Offline / PDF library unavailable: fall back to the Word download + draft.
+      // PDF library unavailable (offline / CDN blocked): fall back to a Word copy.
       exportWord();
       openDraft();
+      alert('A PDF could not be created (you may be offline). A Word copy has been saved to your Downloads folder to attach to the email instead.');
     });
   }
 
