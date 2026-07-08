@@ -302,7 +302,7 @@
     }
     input.fld, select.fld{padding:0 !important;margin:0 !important}
     select.fld{background-image:none !important;padding-right:0 !important}
-    input.fld{width:auto !important}
+    input.fld{width:auto}
     input.fld::placeholder{color:transparent}
     #applianceSlot{padding:0 !important}
     .appl-picker{display:none !important}          /* hide the inline pickers on paper */
@@ -479,6 +479,16 @@
 
   function _esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function _lcFirst(s){ s = s || ''; return s.charAt(0).toLowerCase() + s.slice(1); }
+  // Shrink the patient-line fields to fit their text so the line reads as one
+  // centred unit (Name Surname  ID No: x) instead of spread-out boxes.
+  function autosizeFld(el){
+    if(!el) return;
+    var len = (el.value || el.placeholder || '').length;
+    el.style.width = Math.max(4, len + 1.5) + 'ch';
+  }
+  function autosizePatientFlds(){
+    ['.fld-fname','.fld-sname','.fld-id'].forEach(function(sel){ autosizeFld(document.querySelector(sel)); });
+  }
   function _v(sel){ var el = document.querySelector(sel); return el ? (el.value || '') : ''; }
   function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
 
@@ -1321,6 +1331,7 @@
     setFld('.fld-fname', WZ.fname);
     setFld('.fld-sname', WZ.sname);
     setFld('.fld-id', WZ.id);
+    autosizePatientFlds();
 
     // Values available to the body templates as {placeholders}
     var proc = WZ.procedure || "[procedure]";
@@ -2264,6 +2275,11 @@
   lastAutoPlan = planText();
   applyLetterChrome();
   initBodyCaretTracking();
+  ['.fld-fname','.fld-sname','.fld-id'].forEach(function(sel){
+    var el = document.querySelector(sel);
+    if(el) el.addEventListener('input', function(){ autosizeFld(el); });
+  });
+  autosizePatientFlds();
   openWizard();
 </script>
 </body>
