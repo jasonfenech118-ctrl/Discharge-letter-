@@ -303,6 +303,9 @@
     input.fld, select.fld{padding:0 !important;margin:0 !important}
     select.fld{background-image:none !important;padding-right:0 !important}
     input.fld{width:auto}
+    /* patient line prints as one compact centred line: Title Name Surname ID */
+    .l-patient .fld-title{width:auto}
+    .l-patient input.fld{text-align:center}
     input.fld::placeholder{color:transparent}
     #applianceSlot{padding:0 !important}
     .appl-picker{display:none !important}          /* hide the inline pickers on paper */
@@ -484,7 +487,7 @@
   function autosizeFld(el){
     if(!el) return;
     var len = (el.value || el.placeholder || '').length;
-    el.style.width = Math.max(4, len + 1.5) + 'ch';
+    el.style.width = Math.max(3, len + 1) + 'ch';
   }
   function autosizePatientFlds(){
     ['.fld-fname','.fld-sname','.fld-id'].forEach(function(sel){ autosizeFld(document.querySelector(sel)); });
