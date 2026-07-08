@@ -52,6 +52,14 @@
   .btn:hover{background:var(--blue);color:var(--navy);border-color:var(--blue)}
   .btn.ghost{background:transparent;color:#fff}
   .btn.ghost:hover{background:rgba(255,255,255,.14);color:#fff}
+  .btn.grey{background:#8a929c;color:#fff;border-color:#8a929c}
+  .btn.grey:hover{background:#727a84;color:#fff;border-color:#727a84}
+  .btn.green{background:#1e8f4e;color:#fff;border-color:#1e8f4e}
+  .btn.green:hover{background:#176e3c;color:#fff;border-color:#176e3c}
+  .btn.yellow{background:#f2c200;color:#3a2f00;border-color:#f2c200}
+  .btn.yellow:hover{background:#d9ae00;color:#3a2f00;border-color:#d9ae00}
+  .btn.amber{background:#d4a600;color:#fff;border-color:#d4a600}
+  .btn.amber:hover{background:#b38a00;color:#fff;border-color:#b38a00}
   .tb-select{
     font-family:var(--sans);font-size:13px;font-weight:700;
     border:1px solid rgba(255,255,255,.5);
@@ -317,22 +325,11 @@
     <span class="title" id="ribbonTitle" onclick="openWizard()" title="Click to reopen the setup wizard">Stoma Discharge Letter</span>
     <span class="hint">Choose the stoma type when prompted, then pick one-piece/two-piece and the appliance inside the letter. Fill the fields, then Save or Print.</span>
     <span class="actions">
-      <button class="btn" onclick="saveToSharePoint()">Save to SharePoint</button>
+      <button class="btn green" onclick="saveToSharePoint()">Save</button>
+      <button class="btn" onclick="sendToEmail()">Send to Email</button>
       <button class="btn" onclick="window.print()">Print</button>
-      <button class="btn ghost" onclick="openWizard()">Wizard</button>
-      <span class="dropdown">
-        <button class="btn ghost" onclick="toggleEditsMenu(event)" aria-haspopup="true" aria-expanded="false" id="editsBtn">Edits &#9662;</button>
-        <div class="dropdown-menu" id="editsMenu" role="menu">
-          <button role="menuitem" onclick="openEdits('catalogue')">Catalogue &amp; consultants</button>
-          <button role="menuitem" onclick="openEdits('wording')">Body &amp; care-plan wording</button>
-          <button role="menuitem" onclick="openEdits('printing')">Printing &amp; letterhead</button>
-          <button role="menuitem" onclick="openEdits('wizard')">Wizard</button>
-          <button role="menuitem" onclick="openEdits('custom')">Custom wording</button>
-          <button role="menuitem" onclick="openEdits('backup')">Export / import file</button>
-        </div>
-      </span>
-      <button class="btn ghost" onclick="addBullet()">+ Care-plan line</button>
-      <button class="btn ghost" onclick="clearForm()">Clear</button>
+      <button class="btn yellow" onclick="openWizard()" title="Step-by-step questions that fill in the letter">Fill in / Edit Letter</button>
+      <button class="btn amber" onclick="clearForm()">Clear</button>
       <span class="format-tools" aria-label="Text formatting tools">
         <button class="btn ghost fmt" title="Bold" onclick="formatDoc('bold')"><b>B</b></button>
         <button class="btn ghost fmt" title="Italic" onclick="formatDoc('italic')"><i>I</i></button>
