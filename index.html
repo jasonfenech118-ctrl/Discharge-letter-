@@ -627,7 +627,7 @@
 
   var DEFAULT_ACCESSORIES = [
     "Stoma belt", "Stoma seal", "Stoma powder", "Protective skin wipe",
-    "Adhesive removal spray", "Filler paste"
+    "Adhesive removal spray", "Filler paste", "None"
   ];
   var ACCESSORIES = loadAccessories();
   function loadAccessories(){
@@ -636,11 +636,13 @@
       if(raw){
         var a = JSON.parse(raw);
         if(Array.isArray(a) && a.length){
-          return a.map(function(x){
+          a = a.map(function(x){
             if(x === "Protective stoma powder") return "Stoma powder";
             if(x === "Barrier / skin-protective wipe") return "Protective skin wipe";
             return x;
           });
+          if(a.indexOf("None") < 0) a.push("None");
+          return a;
         }
       }
     }catch(e){}
@@ -998,8 +1000,8 @@
         html += '<div class="wz-field"><label>Elaborate on stoma function</label><input value="'+_esc(WZ.stomaFunction)+'" oninput="WZ.stomaFunction=this.value" placeholder="e.g. high output, minimal output, non-functioning"></div>';
       }
       html += '<p class="wz-cap">Is the stoma retracted?</p>'
-        + '<button class="wz-choice'+(WZ.stomaRetraction==='yes'?' sel':'')+'" onclick="WZ.stomaRetraction=\'yes\'; renderWizard();">Yes</button>'
-        + '<button class="wz-choice'+(WZ.stomaRetraction==='no'?' sel':'')+'" onclick="WZ.stomaRetraction=\'no\'; renderWizard();">No</button>';
+        + '<button class="wz-choice'+(WZ.stomaRetraction==='yes'?' sel':'')+'" onclick="wzSetRetraction(\'yes\')">Yes</button>'
+        + '<button class="wz-choice'+(WZ.stomaRetraction==='no'?' sel':'')+'" onclick="wzSetRetraction(\'no\')">No</button>';
       if(rodApplies()){
         html += '<label class="wz-check'+(WZ.rodInSitu==='yes'?' sel':'')+'"><input type="checkbox"'+_checked(WZ.rodInSitu)+' onchange="WZ.rodInSitu=this.checked?\'yes\':\'no\'; renderWizard();"> Rod in situ ('+_esc(subtypeLabel())+')</label>';
         if(WZ.rodInSitu === 'yes'){
@@ -1209,9 +1211,28 @@
   }
   function wzToggleAcc(i, on){
     var a = ACCESSORIES[i];
+    if(on && a === "None"){
+      WZ.accessories = ["None"];           // "None" excludes everything else
+      return;
+    }
+    if(on){
+      var noneIdx = WZ.accessories.indexOf("None");
+      if(noneIdx >= 0) WZ.accessories.splice(noneIdx, 1);
+    }
     var idx = WZ.accessories.indexOf(a);
     if(on && idx < 0) WZ.accessories.push(a);
     if(!on && idx >= 0) WZ.accessories.splice(idx, 1);
+  }
+
+  // A retracted stoma needs a stoma belt — tick it automatically on Yes.
+  function wzSetRetraction(v){
+    WZ.stomaRetraction = v;
+    if(v === 'yes' && WZ.accessories.indexOf("Stoma belt") < 0){
+      WZ.accessories.push("Stoma belt");
+      var noneIdx = WZ.accessories.indexOf("None");
+      if(noneIdx >= 0) WZ.accessories.splice(noneIdx, 1);
+    }
+    renderWizard();
   }
 
   // ---- Mucus fistula (one or more, each with a location) ----
@@ -1437,8 +1458,9 @@
       var bagsText = bagPhrases.length ? _humanList(bagPhrases) : "[bag]";
       applianceText = (formatItemPhrase(base, WZ.baseplateSize) || "[flange]") + " with " + bagsText;
     }
-    if(WZ.accessories.length){
-      applianceText += " and " + _humanList(WZ.accessories.map(function(a){ return a.toLowerCase(); }));
+    var accForLetter = WZ.accessories.filter(function(a){ return a !== "None"; });
+    if(accForLetter.length){
+      applianceText += " and " + _humanList(accForLetter.map(function(a){ return a.toLowerCase(); }));
     }
     setApplianceSlot(applianceText);
     renderPlan(buildPlan());
