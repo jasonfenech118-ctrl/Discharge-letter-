@@ -20,7 +20,7 @@
     --serif:"Times New Roman", Times, Georgia, serif;
     --sans:"Arial Narrow", Arial, "Helvetica Neue", sans-serif;
     --body-size:11.5pt;
-    --line:1.45;
+    --line:1.5;
   }
 
   *{box-sizing:border-box}
@@ -84,11 +84,11 @@
   }
 
   /* section rhythm */
-  .sec{margin:0 0 14px}
+  .sec{margin:0 0 1.5em}   /* one blank line between sections */
   .sec:last-child{margin-bottom:0}
 
   /* ---------- 1. Header (Mater Dei letterhead) ---------- */
-  .l-header{margin-bottom:16px}
+  .l-header{margin-bottom:1.5em}
   .l-header .lh-top{display:flex;align-items:center;min-height:86px}
   .l-header .logo{width:205px;height:auto;display:block;flex:0 0 auto}
   .l-header .lh-divider{flex:0 0 auto;align-self:stretch;width:0.75pt;background:#000080;margin:0 26px}
@@ -98,10 +98,10 @@
   .l-header .rule{height:0.75pt;background:#000080;width:100%;margin-top:6px}
 
   /* ---------- 2. Date ---------- */
-  .l-date{margin-bottom:16px}
+  .l-date{margin-bottom:1.5em}
 
   /* ---------- 3. Patient ---------- */
-  .l-patient{font-weight:700;margin-bottom:14px;white-space:nowrap;text-align:center}
+  .l-patient{font-weight:700;margin-bottom:1.5em;white-space:nowrap;text-align:center}
   .l-patient .lbl{font-weight:700}
 
   /* ---------- 4. Main text ---------- */
@@ -111,14 +111,14 @@
   .body p:last-child{margin-bottom:0}
 
   /* ---------- 5. Care plan ---------- */
-  .l-plan{margin-top:16px}
+  .l-plan{margin-top:0}
   .plan-h{font-weight:700;text-decoration:underline;margin-bottom:6px}
   ul.plan-list{margin:0;padding-left:22px}
   ul.plan-list li{margin:0 0 5px}
   ul.plan-list li:last-child{margin-bottom:0}
 
   /* ---------- 6. Regards + signature ---------- */
-  .l-sign{margin-top:18px}
+  .l-sign{margin-top:0}
   .l-sign .regards{margin-bottom:2px}
   .l-sign .sig-gap{height:58px}
   .l-sign .clinic{}
@@ -2163,9 +2163,10 @@
     var planHTML = document.getElementById('planList') ? document.getElementById('planList').innerHTML : '';
 
     var css = '@page{size:' + (LETTER.pageSize || 'A4') + ';margin:' + (LETTER.pageMargin || '1.6cm 2cm') + ';}'
-      + "body{font-family:'Times New Roman',serif;font-size:" + (LETTER.fontSize || '11.5pt') + ";line-height:1.4;color:#000;}"
+      + "body{font-family:'Times New Roman',serif;font-size:" + (LETTER.fontSize || '11.5pt') + ";line-height:1.5;color:#000;}"
       + '.logo{display:block;width:205px;}'
-      + '.rule{border-bottom:0.75pt solid #000080;margin-bottom:14px;}'
+      + '.rule{border-bottom:0.75pt solid #000080;margin-bottom:17pt;}'
+      + '.gap{margin:0 0 17pt;}'
       + '.lh-tbl{width:100%;border-collapse:collapse;margin-bottom:2px;}'
       + '.lh-logo-cell{width:231px;padding:0;vertical-align:middle;border-right:0.75pt solid #000080;}'
       + '.lh-text-cell{padding:0 0 0 26px;vertical-align:middle;font-family:Arial Narrow,sans-serif;color:#000080;}'
@@ -2173,9 +2174,9 @@
       + '.lh-tel{font-size:14pt;font-weight:bold;line-height:1.2;}'
       + 'p{margin:0 0 10px;}'
       + '.patient{font-weight:bold;text-align:center;}'
-      + '.body-txt{text-align:justify;}'
+      + '.body-txt{text-align:justify;margin-bottom:17pt;}'
       + '.plan-h{font-weight:bold;text-decoration:underline;margin-bottom:6px;}'
-      + 'ul{margin:0 0 10px;padding-left:24px;}li{margin:0 0 5px;}'
+      + 'ul{margin:0 0 17pt;padding-left:24px;}li{margin:0 0 5px;}'
       + ".footer{font-family:'Arial Narrow',sans-serif;font-size:9.5pt;line-height:1.35;text-align:center;color:#222;border-top:1px solid #9aa3ad;margin-top:26px;padding-top:6px;}";
 
     var html =
@@ -2188,8 +2189,8 @@
         + '<td class="lh-text-cell"><div class="lh-title">' + mdBold(LETTER.headerTitle) + '</div><div class="lh-tel">' + mdBold(LETTER.headerTel) + '</div></td>'
         + '</tr></table>'
       + '<div class="rule"></div>'
-      + '<p>' + date + '</p>'
-      + '<p class="patient">' + [title, first, surname].filter(Boolean).join(' ')
+      + '<p class="gap">' + date + '</p>'
+      + '<p class="patient gap">' + [title, first, surname].filter(Boolean).join(' ')
         + '&nbsp;&nbsp;ID No: ' + idno + '</p>'
       + '<p>' + salutation + '</p>'
       + '<div class="body-txt">' + bodyHTML + '</div>'
