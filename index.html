@@ -105,21 +105,21 @@
   .l-patient .lbl{font-weight:700}
 
   /* ---------- 4. Main text ---------- */
-  .l-main .salutation{margin-bottom:10px}
+  .l-main .salutation{margin-bottom:1.5em}
   .body{min-height:120px;text-align:justify}
   .body p{margin:0 0 10px}
   .body p:last-child{margin-bottom:0}
 
   /* ---------- 5. Care plan ---------- */
   .l-plan{margin-top:0}
-  .plan-h{font-weight:700;text-decoration:underline;margin-bottom:6px}
+  .plan-h{font-weight:700;text-decoration:underline;margin-bottom:1.5em}
   ul.plan-list{margin:0;padding-left:22px}
   ul.plan-list li{margin:0 0 5px}
   ul.plan-list li:last-child{margin-bottom:0}
 
   /* ---------- 6. Regards + signature ---------- */
   .l-sign{margin-top:0}
-  .l-sign .regards{margin-bottom:2px}
+  .l-sign .regards{margin-bottom:1.5em}
   .l-sign .sig-gap{height:58px}
   .l-sign .clinic{}
 
@@ -1502,14 +1502,14 @@
     "one.removeSpray":    "A <strong>minimal</strong> amount of adhesive remover spray must be used to remove the pouch gently.",
     // --- common / accessory bullets ---
     "common.wash":        "Wash stoma and peristomal skin well with tap water and pat dry.",
-    "common.aperture":    "Aperture to be cut to the shape and size of the stoma. A new cutting template has been provided; however, it needs to be adjusted <strong>accordingly</strong>.",
+    "common.aperture":    "Aperture to be cut to the shape and size of the stoma. A cutting template has been provided (template to be adjusted <strong>accordingly</strong>).",
     "acc.barrierWipe":    "Use a protective wipe {freq} after cleansing and drying the stoma and peristomal skin.",
     "acc.powder":         "Apply <strong>{treatment}</strong> over the skin excoriation and dust off the excess; stop once the skin heals.",
     "acc.redness":        "Peristomal skin redness present: <span style=\"color:#c0392b;font-weight:bold\">[click to elaborate]</span>",
     "acc.mucoSep":        "Apply <strong>{treatment}</strong> over the mucocutaneous separation{location} and dust off the excess; stop once the separation heals.",
     "acc.belt":           "Stoma belt should be kept on at all times, especially at bedtime.",
     "acc.seal":           "Stoma seal should be applied to snuggly fit around the stoma with every {change} change.",
-    "common.hair":        "Peristomal hair shaving is to be done as necessary to prevent folliculitis.",
+    "common.hair":        "Peristomal hair removal to be done as necessary to prevent folliculitis.",
     "acc.filler":         "Apply a generous amount of filler paste from {from} to {to} o'clock location around the stoma.",
     "acc.mucusFistula":   "<strong>Mucus fistula{location}:</strong> wash the stoma and peristomal skin well and pat dry. Apply a Bactigras/paraffin dressing and cover with a dry dressing. The dressing is to be changed on alternate days.",
     "plan.rod":           "Rod in situ, due for removal on <strong>{rodDate}</strong>."
@@ -1519,7 +1519,7 @@
   var PLAN_PHRASES = loadPlanPhrases();
   function loadPlanPhrases(){
     try{
-      var raw = localStorage.getItem('stomaLetterPlanPhrasesV4');
+      var raw = localStorage.getItem('stomaLetterPlanPhrasesV5');
       if(raw){
         var saved = JSON.parse(raw), out = clone(DEFAULT_PLAN_PHRASES);
         Object.keys(out).forEach(function(k){ if(typeof saved[k] === 'string') out[k] = saved[k]; });
@@ -1529,7 +1529,7 @@
     return clone(DEFAULT_PLAN_PHRASES);
   }
   function savePlanPhrases(){
-    try{ localStorage.setItem('stomaLetterPlanPhrasesV4', JSON.stringify(PLAN_PHRASES)); }catch(e){}
+    try{ localStorage.setItem('stomaLetterPlanPhrasesV5', JSON.stringify(PLAN_PHRASES)); }catch(e){}
   }
   // Look up a plan phrase, fill {placeholders}, and bold it if it is a bold-key.
   function planPhrase(key, vars){
@@ -2175,7 +2175,7 @@
       + 'p{margin:0 0 10px;}'
       + '.patient{font-weight:bold;text-align:center;}'
       + '.body-txt{text-align:justify;margin-bottom:17pt;}'
-      + '.plan-h{font-weight:bold;text-decoration:underline;margin-bottom:6px;}'
+      + '.plan-h{font-weight:bold;text-decoration:underline;margin-bottom:17pt;}'
       + 'ul{margin:0 0 17pt;padding-left:24px;}li{margin:0 0 5px;}'
       + ".footer{font-family:'Arial Narrow',sans-serif;font-size:9.5pt;line-height:1.35;text-align:center;color:#222;border-top:1px solid #9aa3ad;margin-top:26px;padding-top:6px;}";
 
@@ -2192,7 +2192,7 @@
       + '<p class="gap">' + date + '</p>'
       + '<p class="patient gap">' + [title, first, surname].filter(Boolean).join(' ')
         + '&nbsp;&nbsp;ID No: ' + idno + '</p>'
-      + '<p>' + salutation + '</p>'
+      + '<p class="gap">' + salutation + '</p>'
       + '<div class="body-txt">' + bodyHTML + '</div>'
       + '<p class="plan-h">Stoma Care Plan:</p>'
       + '<ul>' + planHTML + '</ul>'
