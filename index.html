@@ -2177,7 +2177,10 @@
       + '.body-txt{text-align:justify;margin-bottom:17pt;}'
       + '.plan-h{font-weight:bold;text-decoration:underline;margin-bottom:17pt;}'
       + 'ul{margin:0 0 17pt;padding-left:24px;}li{margin:0 0 5px;}'
-      + ".footer{font-family:'Arial Narrow',sans-serif;font-size:9.5pt;line-height:1.35;text-align:center;color:#222;border-top:1px solid #9aa3ad;margin-top:26px;padding-top:6px;}";
+      + ".footer{font-family:'Arial Narrow',sans-serif;font-size:9.5pt;line-height:1.35;text-align:center;color:#222;border-top:1px solid #9aa3ad;margin-top:26px;padding-top:6px;}"
+      // Pin the footer to the bottom of the A4 page in the PDF render.
+      // Word ignores @media blocks, so the .doc export keeps the flow layout above.
+      + '@media all{body{display:flex;flex-direction:column;min-height:262mm;}.footer{margin-top:auto;}}';
 
     var html =
       '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
