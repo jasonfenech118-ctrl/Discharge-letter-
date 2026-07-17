@@ -2187,9 +2187,9 @@
       // bottom of the printed page in the .doc export.
       + '@page WordSection1{size:21cm 29.7cm;margin:' + (LETTER.pageMargin || '1.6cm 2cm') + ';mso-footer:f1;mso-footer-margin:0.5cm;}'
       + 'div.WordSection1{page:WordSection1;}'
-      // Browsers/PDF: Word ignores @media blocks, so this only affects the
-      // html2pdf render — one full-height page with the footer pushed down.
-      + '@media all{.WordSection1{display:flex;flex-direction:column;min-height:262mm;}#f1{margin-top:auto;}}';
+      ;
+      // (The PDF path pins the footer by measuring the page and setting an
+      // explicit margin — see makeLetterPDF — so no @media rules are needed.)
 
     var html =
       '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
@@ -2288,15 +2288,21 @@
     var cleanup = function(){ document.body.removeChild(iframe); };
     setTimeout(function(){ // give the logo a moment to load inside the frame
       try{
-        // Pin the hospital address block to the bottom of the A4 page:
-        // stretch the body to one full page and push the footer down.
-        // Inline styles survive html2canvas cloning reliably.
+        // Pin the hospital address block to the bottom of the A4 page.
+        // Measure the letter's natural height and insert an explicit pixel
+        // padding above the footer — padding (unlike margins) never
+        // collapses, and the inline value survives the renderer's cloning.
+        doc.body.style.margin = '0';
         var pdfSect = doc.querySelector('.WordSection1') || doc.body;
-        pdfSect.style.display = 'flex';
-        pdfSect.style.flexDirection = 'column';
-        pdfSect.style.minHeight = '262mm';
         var pdfFooter = doc.getElementById('f1') || doc.querySelector('.footer');
-        if(pdfFooter) pdfFooter.style.marginTop = 'auto';
+        var pageContentPx = Math.round(262 * 96 / 25.4);     // 262mm printable height at 96dpi
+        var pdfGap = pageContentPx - pdfSect.offsetHeight;
+        if(pdfFooter && pdfGap > 0){
+          pdfFooter.style.paddingTop = pdfGap + 'px';
+          // second pass: absorb margins that stopped collapsing once padding exists
+          var pdfOver = pdfSect.offsetHeight - pageContentPx;
+          if(pdfOver > 0) pdfFooter.style.paddingTop = Math.max(0, pdfGap - pdfOver) + 'px';
+        }
         html2pdf().set({
           margin: [16, 20, 16, 20],
           image: { type: 'jpeg', quality: 0.95 },
