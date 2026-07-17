@@ -2270,6 +2270,14 @@
     var cleanup = function(){ document.body.removeChild(iframe); };
     setTimeout(function(){ // give the logo a moment to load inside the frame
       try{
+        // Pin the hospital address block to the bottom of the A4 page:
+        // stretch the body to one full page and push the footer down.
+        // Inline styles survive html2canvas cloning reliably.
+        var pdfBody = doc.body, pdfFooter = doc.querySelector('.footer');
+        pdfBody.style.display = 'flex';
+        pdfBody.style.flexDirection = 'column';
+        pdfBody.style.minHeight = '262mm';
+        if(pdfFooter) pdfFooter.style.marginTop = 'auto';
         html2pdf().set({
           margin: [16, 20, 16, 20],
           image: { type: 'jpeg', quality: 0.95 },
