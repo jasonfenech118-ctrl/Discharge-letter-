@@ -2183,14 +2183,20 @@
       + 'ul{margin:0 0 17pt;padding-left:24px;}li{margin:0 0 5px;}'
       + ".footer{font-family:'Arial Narrow',sans-serif;font-size:9.5pt;line-height:1.35;text-align:center;color:#222;border-top:1px solid #9aa3ad;margin-top:26px;padding-top:6px;}"
       // Pin the footer to the bottom of the A4 page in the PDF render.
-      // Word ignores @media blocks, so the .doc export keeps the flow layout above.
-      + '@media all{body{display:flex;flex-direction:column;min-height:262mm;}.footer{margin-top:auto;}}';
+      // Word: a real page footer (mso-element) pins the address block to the
+      // bottom of the printed page in the .doc export.
+      + '@page WordSection1{size:21cm 29.7cm;margin:' + (LETTER.pageMargin || '1.6cm 2cm') + ';mso-footer:f1;mso-footer-margin:0.5cm;}'
+      + 'div.WordSection1{page:WordSection1;}'
+      // Browsers/PDF: Word ignores @media blocks, so this only affects the
+      // html2pdf render — one full-height page with the footer pushed down.
+      + '@media all{.WordSection1{display:flex;flex-direction:column;min-height:262mm;}#f1{margin-top:auto;}}';
 
     var html =
       '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
       + '<head><meta charset="utf-8"><title>Discharge Letter</title>'
       + '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->'
       + '<style>' + css + '</style></head><body>'
+      + '<div class="WordSection1">'
       + '<table class="lh-tbl"><tr>'
         + '<td class="lh-logo-cell">' + (logoSrc ? '<img class="logo" width="205" src="' + logoSrc + '" alt="Sptar Mater Dei Hospital">' : '') + '</td>'
         + '<td class="lh-text-cell"><div class="lh-title">' + mdBold(LETTER.headerTitle) + '</div><div class="lh-tel">' + mdBold(LETTER.headerTel) + '</div></td>'
@@ -2205,9 +2211,12 @@
       + '<ul>' + planHTML + '</ul>'
       + '<p>' + mdBold(LETTER.closing) + '</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>'
       + '<p>' + (name ? name + '<br>' : '') + mdBold(LETTER.signRole1) + '<br>' + mdBold(LETTER.signRole2) + '</p>'
-      + '<div class="footer">' + mdBold(LETTER.footerAddress) + '<br>'
+      + '<div style="mso-element:footer" id="f1">'
+        + '<div class="footer">' + mdBold(LETTER.footerAddress) + '<br>'
         + mdBold(LETTER.footerContact) + '<br>'
         + mdBold(LETTER.footerMinistry) + '</div>'
+      + '</div>'
+      + '</div>'
       + '</body></html>';
     return html;
   }
@@ -2273,10 +2282,11 @@
         // Pin the hospital address block to the bottom of the A4 page:
         // stretch the body to one full page and push the footer down.
         // Inline styles survive html2canvas cloning reliably.
-        var pdfBody = doc.body, pdfFooter = doc.querySelector('.footer');
-        pdfBody.style.display = 'flex';
-        pdfBody.style.flexDirection = 'column';
-        pdfBody.style.minHeight = '262mm';
+        var pdfSect = doc.querySelector('.WordSection1') || doc.body;
+        pdfSect.style.display = 'flex';
+        pdfSect.style.flexDirection = 'column';
+        pdfSect.style.minHeight = '262mm';
+        var pdfFooter = doc.getElementById('f1') || doc.querySelector('.footer');
         if(pdfFooter) pdfFooter.style.marginTop = 'auto';
         html2pdf().set({
           margin: [16, 20, 16, 20],
