@@ -1613,7 +1613,11 @@
     }
 
     b.push(planPhrase("common.wash"));
-    b.push(planPhrase("common.aperture", { word: word }));
+    // Deep convexity flanges come pre-cut, so no aperture-cutting instruction
+    var isDeepConvexity = system === "two" && base && (base.kind === "deep" || /deep convexity/i.test(base.label || ""));
+    if(!isDeepConvexity){
+      b.push(planPhrase("common.aperture", { word: word }));
+    }
 
     if(WZ.accessories.indexOf("Protective skin wipe") >= 0){
       b.push(planPhrase("acc.barrierWipe", { freq: system === "two" ? "on alternate days" : "once daily" }));
