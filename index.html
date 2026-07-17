@@ -2230,17 +2230,238 @@
     return html;
   }
 
+  /* ===================== REAL .DOCX EXPORT =====================
+     Word is unreliable at opening HTML masquerading as .doc, so Save
+     builds a genuine Office Open XML document instead: letterhead
+     table, formatted letter text, and a real page footer that Word
+     itself keeps at the bottom of every page. */
+
+  var _CRC_TABLE = null;
+  function _crc32(u8){
+    if(!_CRC_TABLE){
+      _CRC_TABLE = new Int32Array(256);
+      for(var n=0;n<256;n++){ var c=n; for(var k=0;k<8;k++){ c = (c&1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1); } _CRC_TABLE[n]=c; }
+    }
+    var crc = -1;
+    for(var i=0;i<u8.length;i++) crc = _CRC_TABLE[(crc ^ u8[i]) & 0xFF] ^ (crc>>>8);
+    return (crc ^ -1) >>> 0;
+  }
+  // Minimal ZIP writer (stored, no compression) \u2014 a valid .docx container.
+  function _zipStore(entries){
+    var enc = new TextEncoder();
+    var chunks = [], central = [], offset = 0;
+    entries.forEach(function(e){
+      var name = enc.encode(e.name);
+      var data = (e.data instanceof Uint8Array) ? e.data : enc.encode(e.data);
+      var crc = _crc32(data);
+      var h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true);
+      h.setUint32(14, crc, true);
+      h.setUint32(18, data.length, true); h.setUint32(22, data.length, true);
+      h.setUint16(26, name.length, true);
+      chunks.push(new Uint8Array(h.buffer), name, data);
+      var c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true);
+      c.setUint32(16, crc, true);
+      c.setUint32(20, data.length, true); c.setUint32(24, data.length, true);
+      c.setUint16(28, name.length, true);
+      c.setUint32(42, offset, true);
+      central.push({ head: new Uint8Array(c.buffer), name: name });
+      offset += 30 + name.length + data.length;
+    });
+    var cdStart = offset, cdLen = 0;
+    central.forEach(function(c){ chunks.push(c.head, c.name); cdLen += 46 + c.name.length; });
+    var end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true);
+    end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+    end.setUint32(12, cdLen, true); end.setUint32(16, cdStart, true);
+    chunks.push(new Uint8Array(end.buffer));
+    return new Blob(chunks, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  }
+
+  function _xw(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function _rpr(o){
+    o = o || {};
+    var s = '';
+    if(o.font) s += '<w:rFonts w:ascii="'+o.font+'" w:hAnsi="'+o.font+'" w:cs="'+o.font+'"/>';
+    if(o.b) s += '<w:b/>';
+    if(o.i) s += '<w:i/>';
+    if(o.u) s += '<w:u w:val="single"/>';
+    if(o.color) s += '<w:color w:val="'+o.color+'"/>';
+    if(o.sz) s += '<w:sz w:val="'+o.sz+'"/><w:szCs w:val="'+o.sz+'"/>';
+    return s ? '<w:rPr>'+s+'</w:rPr>' : '';
+  }
+  function _wrun(t, o){
+    if(o && o.br) return '<w:r>'+_rpr(o)+'<w:br/></w:r>';
+    return '<w:r>'+_rpr(o)+'<w:t xml:space="preserve">'+_xw(t)+'</w:t></w:r>';
+  }
+  function _wp(content, ppr){ return '<w:p>'+(ppr ? '<w:pPr>'+ppr+'</w:pPr>' : '')+content+'</w:p>'; }
+  // Runs from **bold** markup (letterhead/footer settings strings).
+  function _mdRunsX(md, base){
+    var out = '';
+    String(md || '').split('**').forEach(function(seg, i){
+      if(!seg) return;
+      var o = {}; for(var k in base) o[k] = base[k];
+      if(i % 2 === 1) o.b = true;
+      out += _wrun(seg, o);
+    });
+    return out;
+  }
+  // Runs from letter HTML (bold/italic/underline/colour survive).
+  function _domRunsX(node){
+    var out = '';
+    function walk(n, o){
+      if(n.nodeType === 3){
+        var t = n.nodeValue.replace(/\u00a0/g, ' ');
+        if(t) out += _wrun(t, o);
+        return;
+      }
+      if(n.nodeType !== 1) return;
+      if(n.tagName === 'BR'){ var bo = {}; for(var k in o) bo[k] = o[k]; bo.br = true; out += _wrun('', bo); return; }
+      var no = {}; for(var k2 in o) no[k2] = o[k2];
+      if(n.tagName === 'B' || n.tagName === 'STRONG') no.b = true;
+      if(n.tagName === 'I' || n.tagName === 'EM') no.i = true;
+      if(n.tagName === 'U') no.u = true;
+      var st = (n.getAttribute && n.getAttribute('style')) || '';
+      if(/font-weight\s*:\s*bold/i.test(st)) no.b = true;
+      var cm = /color\s*:\s*#?([0-9a-f]{6})/i.exec(st);
+      if(cm) no.color = cm[1].toUpperCase();
+      Array.prototype.forEach.call(n.childNodes, function(c){ walk(c, no); });
+    }
+    Array.prototype.forEach.call(node.childNodes, function(c){ walk(c, {}); });
+    return out;
+  }
+
+  function buildLetterDocx(){
+    var NAVY = '000080';
+    var GAP = '<w:spacing w:after="340"/>';   // one blank line (17pt)
+    var date = _v('#letterDate') || _v('.fld-date');
+    var patient = [_v('.fld-title'), _v('.fld-fname'), _v('.fld-sname')].filter(Boolean).join(' ');
+    var idno = _v('.fld-id');
+    var salutation = _v('.fld-salutation');
+    var name = _v('.fld-name');
+
+    // ---- letterhead: logo | navy divider | service name + phone
+    var logoImg = document.querySelector('.l-header .logo');
+    var media = null, logoXml = '';
+    if(logoImg && /^data:image\/png;base64,/.test(logoImg.src)){
+      var bin = atob(logoImg.src.split(',')[1]);
+      media = new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++) media[i] = bin.charCodeAt(i);
+      var nw = logoImg.naturalWidth || 205, nh = logoImg.naturalHeight || 90;
+      var cx = 205 * 9525, cy = Math.round(205 * nh / nw) * 9525;
+      logoXml = '<w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="'+cx+'" cy="'+cy+'"/><wp:docPr id="1" name="Logo"/>'
+        + '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+        + '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="logo.png"/><pic:cNvPicPr/></pic:nvPicPr>'
+        + '<pic:blipFill><a:blip r:embed="rIdImg"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'
+        + '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+cx+'" cy="'+cy+'"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>';
+    }
+    var doc = '<w:tbl><w:tblPr><w:tblW w:w="9638" w:type="dxa"/><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="0" w:type="dxa"/><w:right w:w="0" w:type="dxa"/></w:tblCellMar></w:tblPr>'
+      + '<w:tblGrid><w:gridCol w:w="3465"/><w:gridCol w:w="6173"/></w:tblGrid>'
+      + '<w:tr><w:trPr><w:trHeight w:val="1290" w:hRule="atLeast"/></w:trPr>'
+      + '<w:tc><w:tcPr><w:tcW w:w="3465" w:type="dxa"/><w:tcBorders><w:right w:val="single" w:sz="6" w:space="0" w:color="'+NAVY+'"/></w:tcBorders><w:vAlign w:val="center"/></w:tcPr>'
+        + _wp('<w:r>'+logoXml+'</w:r>', '<w:spacing w:line="240" w:lineRule="auto"/>')
+      + '</w:tc>'
+      + '<w:tc><w:tcPr><w:tcW w:w="6173" w:type="dxa"/><w:tcMar><w:left w:w="390" w:type="dxa"/></w:tcMar><w:vAlign w:val="center"/></w:tcPr>'
+        + _wp(_mdRunsX(LETTER.headerTitle, { font:'Arial Narrow', color:NAVY, sz:32, b:true }), '<w:spacing w:line="276" w:lineRule="auto"/>')
+        + _wp(_mdRunsX(LETTER.headerTel,   { font:'Arial Narrow', color:NAVY, sz:28, b:true }), '<w:spacing w:line="276" w:lineRule="auto"/>')
+      + '</w:tc></w:tr></w:tbl>'
+      // navy rule under the letterhead, then one blank line
+      + _wp('', '<w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="'+NAVY+'"/></w:pBdr><w:spacing w:before="90" w:after="340" w:line="240" w:lineRule="auto"/>');
+    if(date) doc += _wp(_wrun(date), GAP);
+    doc += _wp(_wrun(patient + (idno ? '  ID No: ' + idno : ''), { b:true }), GAP + '<w:jc w:val="center"/>');
+    if(salutation) doc += _wp(_wrun(salutation), GAP);
+    var bodyEl = document.querySelector('.body');
+    var ps = bodyEl ? bodyEl.children : [];
+    for(var bi=0; bi<ps.length; bi++){
+      doc += _wp(_domRunsX(ps[bi]), '<w:spacing w:after="' + (bi === ps.length-1 ? 340 : 150) + '"/><w:jc w:val="both"/>');
+    }
+    doc += _wp(_wrun('Stoma Care Plan:', { b:true, u:true }), GAP);
+    var planUl = document.getElementById('planList');
+    var lis = planUl ? planUl.children : [];
+    for(var li2=0; li2<lis.length; li2++){
+      if(!lis[li2].textContent.replace(/\s+/g,' ').trim()) continue;
+      doc += _wp(_domRunsX(lis[li2]), '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr><w:spacing w:after="75"/><w:ind w:left="425" w:hanging="212"/>');
+    }
+    doc += _wp('', '');   // blank line after the plan
+    doc += _wp(_mdRunsX(LETTER.closing, {}), GAP);
+    doc += _wp('', '') + _wp('', '') + _wp('', '');   // room to sign with a pen
+    var sig = '';
+    if(name) sig += _wrun(name) + '<w:r><w:br/></w:r>';
+    sig += _mdRunsX(LETTER.signRole1, {}) + '<w:r><w:br/></w:r>' + _mdRunsX(LETTER.signRole2, {});
+    doc += _wp(sig, '');
+    doc += '<w:sectPr><w:footerReference w:type="default" r:id="rIdFtr"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="907" w:right="1134" w:bottom="907" w:left="1134" w:header="720" w:footer="283" w:gutter="0"/></w:sectPr>';
+
+    var documentXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">'
+      + '<w:body>' + doc + '</w:body></w:document>';
+
+    var footerBase = { font:'Arial Narrow', sz:19, color:'222222' };
+    var footerPPr = '<w:spacing w:line="240" w:lineRule="auto" w:after="0"/><w:jc w:val="center"/>';
+    var footerXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<w:ftr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+      + _wp(_mdRunsX(LETTER.footerAddress, footerBase), '<w:pBdr><w:top w:val="single" w:sz="6" w:space="4" w:color="9AA3AD"/></w:pBdr>' + footerPPr)
+      + _wp(_mdRunsX(LETTER.footerContact, footerBase), footerPPr)
+      + _wp(_mdRunsX(LETTER.footerMinistry, footerBase), footerPPr)
+      + '</w:ftr>';
+
+    var stylesXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults>'
+      + '<w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/><w:sz w:val="23"/><w:szCs w:val="23"/></w:rPr></w:rPrDefault>'
+      + '<w:pPrDefault><w:pPr><w:spacing w:line="360" w:lineRule="auto" w:after="0"/></w:pPr></w:pPrDefault>'
+      + '</w:docDefaults></w:styles>';
+
+    var numberingXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+      + '<w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="\uf0b7"/><w:lvlJc w:val="left"/>'
+      + '<w:pPr><w:ind w:left="425" w:hanging="212"/></w:pPr><w:rPr><w:rFonts w:ascii="Symbol" w:hAnsi="Symbol"/></w:rPr></w:lvl></w:abstractNum>'
+      + '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>';
+
+    var relsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+      + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+
+    var docRelsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+      + '<Relationship Id="rIdFtr" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>'
+      + '<Relationship Id="rIdSty" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+      + '<Relationship Id="rIdNum" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>'
+      + (media ? '<Relationship Id="rIdImg" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>' : '')
+      + '</Relationships>';
+
+    var contentTypesXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+      + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+      + '<Default Extension="xml" ContentType="application/xml"/>'
+      + '<Default Extension="png" ContentType="image/png"/>'
+      + '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+      + '<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>'
+      + '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>'
+      + '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>'
+      + '</Types>';
+
+    var entries = [
+      { name: '[Content_Types].xml', data: contentTypesXml },
+      { name: '_rels/.rels', data: relsXml },
+      { name: 'word/document.xml', data: documentXml },
+      { name: 'word/_rels/document.xml.rels', data: docRelsXml },
+      { name: 'word/footer1.xml', data: footerXml },
+      { name: 'word/styles.xml', data: stylesXml },
+      { name: 'word/numbering.xml', data: numberingXml }
+    ];
+    if(media) entries.push({ name: 'word/media/image1.png', data: media });
+    return _zipStore(entries);
+  }
+
   function exportWord(){
-    var html = buildLetterHTML();
-    var blob = new Blob(['\ufeff', html], { type: 'application/msword' });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = buildFilename() + '.doc';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+    var blob = null, ext = '.docx';
+    try{ blob = buildLetterDocx(); }catch(e){ blob = null; }
+    if(!blob){
+      // fallback: legacy HTML-based .doc
+      blob = new Blob(['\ufeff', buildLetterHTML()], { type: 'application/msword' });
+      ext = '.doc';
+    }
+    _saveBlob(blob, buildFilename() + ext);
   }
   function saveToSharePoint(){
     exportWord();
