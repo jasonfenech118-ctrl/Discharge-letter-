@@ -2197,11 +2197,19 @@
       + '<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->'
       + '<style>' + css + '</style></head><body>'
       + '<div class="WordSection1">'
-      + '<table class="lh-tbl"><tr>'
-        + '<td class="lh-logo-cell">' + (logoSrc ? '<img class="logo" width="205" src="' + logoSrc + '" alt="Sptar Mater Dei Hospital">' : '') + '</td>'
-        + '<td class="lh-text-cell"><div class="lh-title">' + mdBold(LETTER.headerTitle) + '</div><div class="lh-tel">' + mdBold(LETTER.headerTel) + '</div></td>'
-        + '</tr></table>'
-      + '<div class="rule"></div>'
+      // Header built with inline styles: Word/SharePoint conversions drop
+      // <style> classes, so the divider and letterhead styling must live
+      // on the elements themselves to survive in the saved document.
+      + '<table cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin-bottom:2px"><tr>'
+        + '<td style="width:231px;height:86px;padding:0;vertical-align:middle;border-right:1.0pt solid #000080">'
+          + (logoSrc ? '<img width="205" style="display:block" src="' + logoSrc + '" alt="Sptar Mater Dei Hospital">' : '')
+        + '</td>'
+        + '<td style="height:86px;padding:0 0 0 26px;vertical-align:middle;font-family:\'Arial Narrow\',Arial,sans-serif;color:#000080">'
+          + '<div style="font-size:16pt;font-weight:bold;line-height:1.2;color:#000080">' + mdBold(LETTER.headerTitle) + '</div>'
+          + '<div style="font-size:14pt;font-weight:bold;line-height:1.2;color:#000080">' + mdBold(LETTER.headerTel) + '</div>'
+        + '</td>'
+      + '</tr></table>'
+      + '<div style="border-bottom:1.0pt solid #000080;height:5px;margin-bottom:17pt;font-size:1px">&nbsp;</div>'
       + '<p class="gap">' + date + '</p>'
       + '<p class="patient gap">' + [title, first, surname].filter(Boolean).join(' ')
         + '&nbsp;&nbsp;ID No: ' + idno + '</p>'
@@ -2212,7 +2220,8 @@
       + '<p>' + mdBold(LETTER.closing) + '</p><p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>'
       + '<p>' + (name ? name + '<br>' : '') + mdBold(LETTER.signRole1) + '<br>' + mdBold(LETTER.signRole2) + '</p>'
       + '<div style="mso-element:footer" id="f1">'
-        + '<div class="footer">' + mdBold(LETTER.footerAddress) + '<br>'
+        + '<div class="footer" style="font-family:\'Arial Narrow\',Arial,sans-serif;font-size:9.5pt;line-height:1.35;text-align:center;color:#222;border-top:1px solid #9aa3ad;padding-top:6px">'
+        + mdBold(LETTER.footerAddress) + '<br>'
         + mdBold(LETTER.footerContact) + '<br>'
         + mdBold(LETTER.footerMinistry) + '</div>'
       + '</div>'
