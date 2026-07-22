@@ -2283,12 +2283,14 @@
   function _rpr(o){
     o = o || {};
     var s = '';
+    // NB: element order must follow the CT_RPr schema sequence, or Word
+    // treats the file as corrupt: rFonts, b, i, color, sz, szCs, u.
     if(o.font) s += '<w:rFonts w:ascii="'+o.font+'" w:hAnsi="'+o.font+'" w:cs="'+o.font+'"/>';
-    if(o.b) s += '<w:b/>';
-    if(o.i) s += '<w:i/>';
-    if(o.u) s += '<w:u w:val="single"/>';
+    if(o.b) s += '<w:b/><w:bCs/>';
+    if(o.i) s += '<w:i/><w:iCs/>';
     if(o.color) s += '<w:color w:val="'+o.color+'"/>';
     if(o.sz) s += '<w:sz w:val="'+o.sz+'"/><w:szCs w:val="'+o.sz+'"/>';
+    if(o.u) s += '<w:u w:val="single"/>';
     return s ? '<w:rPr>'+s+'</w:rPr>' : '';
   }
   function _wrun(t, o){
@@ -2419,7 +2421,24 @@
 
     var relsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
       + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-      + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+      + '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
+      + '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>'
+      + '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>'
+      + '</Relationships>';
+
+    var nowIso = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
+    var corePropsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+      + '<dc:title>Stoma Discharge Letter</dc:title>'
+      + '<dc:creator>Stoma Care Service</dc:creator>'
+      + '<cp:lastModifiedBy>Stoma Care Service</cp:lastModifiedBy>'
+      + '<dcterms:created xsi:type="dcterms:W3CDTF">'+nowIso+'</dcterms:created>'
+      + '<dcterms:modified xsi:type="dcterms:W3CDTF">'+nowIso+'</dcterms:modified>'
+      + '</cp:coreProperties>';
+
+    var appPropsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+      + '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">'
+      + '<Application>Stoma Discharge Letter</Application></Properties>';
 
     var docRelsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
       + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
@@ -2438,11 +2457,15 @@
       + '<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>'
       + '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>'
       + '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>'
+      + '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>'
+      + '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>'
       + '</Types>';
 
     var entries = [
       { name: '[Content_Types].xml', data: contentTypesXml },
       { name: '_rels/.rels', data: relsXml },
+      { name: 'docProps/core.xml', data: corePropsXml },
+      { name: 'docProps/app.xml', data: appPropsXml },
       { name: 'word/document.xml', data: documentXml },
       { name: 'word/_rels/document.xml.rels', data: docRelsXml },
       { name: 'word/footer1.xml', data: footerXml },
